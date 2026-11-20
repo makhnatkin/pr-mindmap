@@ -1,0 +1,1786 @@
+{
+ "title": "Карта баннер-стека",
+ "root": {
+  "title": "Баннер в markdown-editor",
+  "essence": "Блок-баннер: Markdown-плагины и визуальный редактор для фона, заголовка, описания, картинки и раскладки; 15 PR по одному коммиту."
+ },
+ "cats": [
+  {
+   "id": "schema",
+   "name": "Схема",
+   "desc": "Функции, которые описывают узлы ProseMirror: схема, атрибуты, части баннера и опции расширения."
+  },
+  {
+   "id": "md",
+   "name": "Markdown",
+   "desc": "Функции по работе с Markdown: плагины markdown-it, разбор токенов и запись директив обратно."
+  },
+  {
+   "id": "model",
+   "name": "Модель",
+   "desc": "Функции модели данных: нормализация значений, дефолты и HTML/data-атрибуты блока."
+  },
+  {
+   "id": "cmd",
+   "name": "Команды",
+   "desc": "Команды ProseMirror, которые меняют документ: атрибуты, части баннера, шаги undo."
+  },
+  {
+   "id": "nav",
+   "name": "Курсор",
+   "desc": "Функции по работе с курсором, выделением и клавишами: Backspace, Delete, Enter, стрелки."
+  },
+  {
+   "id": "guard",
+   "name": "Защита",
+   "desc": "Функции, которые защищают структуру баннера: одна часть каждого типа, разворачивание лишнего."
+  },
+  {
+   "id": "text",
+   "name": "Текст",
+   "desc": "Функции по работе с вводом, вставкой и перетаскиванием текста: одна строка без марок."
+  },
+  {
+   "id": "dom",
+   "name": "DOM",
+   "desc": "Функции по работе с DOM редактора: NodeView, атрибуты элементов, клики по блоку."
+  },
+  {
+   "id": "ui",
+   "name": "Интерфейс",
+   "desc": "React-компоненты и поповеры: окна настроек, тулбары, палитра, превью, фокус и закрытие."
+  },
+  {
+   "id": "upload",
+   "name": "Загрузка",
+   "desc": "Функции по работе с картинками и файлами: форма ссылки или файла, загрузка, отмена."
+  }
+ ],
+ "sims": [
+  {
+   "id": "values",
+   "label": "Значения, отличные от дефолтов: все через valuesOtherThan",
+   "members": [
+    "valuesOtherThan",
+    "headerBackgroundValues",
+    "headerTitleValues",
+    "headerImageValues",
+    "headerLayoutValues"
+   ]
+  },
+  {
+   "id": "fromAttrs",
+   "label": "Модель из data-атрибутов через AttrGetter",
+   "members": [
+    "headerDimensionsFromAttrs",
+    "headerBackgroundFromAttrs",
+    "headerTitleFromAttrs",
+    "headerImageFromAttrs",
+    "headerLayoutFromAttrs"
+   ]
+  },
+  {
+   "id": "normalize",
+   "label": "Нормализация значений части с дефолтами",
+   "members": [
+    "headerBackground",
+    "headerTitleModel",
+    "headerImage",
+    "headerLayout"
+   ]
+  },
+  {
+   "id": "htmlAttrs",
+   "label": "HTML-атрибуты блока для рендера",
+   "members": [
+    "headerAttrs",
+    "headerRender",
+    "headerTitleAttrs",
+    "headerImageAttrs",
+    "headerContentAttrs"
+   ]
+  },
+  {
+   "id": "mdPlugin",
+   "label": "markdown-it плагин одной части баннера",
+   "members": [
+    "headerTitlePlugin",
+    "headerContentPlugin",
+    "headerImagePlugin"
+   ]
+  },
+  {
+   "id": "onePerBannerMd",
+   "label": "В Markdown вторая часть того же типа не создаётся",
+   "members": [
+    "headerHasTitle",
+    "afterBannerImage",
+    "keepOneDescriptionPerHeader",
+    "keepOneTitlePerHeader"
+   ]
+  },
+  {
+   "id": "onePerBanner",
+   "label": "В редакторе вторая часть того же типа отклоняется",
+   "members": [
+    "oneChildPerHeader",
+    "headerImageGuardPlugin",
+    "misplacedHeaderContents"
+   ]
+  },
+  {
+   "id": "schemaSpecs",
+   "label": "Узел части в схеме",
+   "members": [
+    "HeaderTitleSchemaSpecs",
+    "HeaderContentSchemaSpecs",
+    "HeaderImageSchemaSpecs"
+   ]
+  },
+  {
+   "id": "parserSpecs",
+   "label": "Токен markdown-it → узел",
+   "members": [
+    "HeaderTitleParserSpecs",
+    "HeaderContentParserSpecs",
+    "HeaderImageParserSpecs"
+   ]
+  },
+  {
+   "id": "serializerSpecs",
+   "label": "Узел → директива Markdown",
+   "members": [
+    "HeaderTitleSerializerSpecs",
+    "HeaderContentSerializerSpecs",
+    "HeaderImageSerializerSpecs"
+   ]
+  },
+  {
+   "id": "setAttrs",
+   "label": "Команда: только изменённые атрибуты узла",
+   "members": [
+    "setNodeAttrs",
+    "setHeaderDimension",
+    "setHeaderLayout",
+    "setHeaderBackground",
+    "setButtonAttrs",
+    "setHeaderTitleAttrs",
+    "setHeaderImageAttrs"
+   ]
+  },
+  {
+   "id": "selectNear",
+   "label": "Backspace/Delete выделяют узел рядом",
+   "members": [
+    "selectNodeNear",
+    "selectButtonBefore/After",
+    "selectHeaderImageBefore/After"
+   ]
+  },
+  {
+   "id": "edges",
+   "label": "Края блока не склеиваются с соседями",
+   "members": [
+    "stopAtBlockEdge",
+    "stopAtHeaderTitleStart/End",
+    "stopAtHeaderContentStart/End"
+   ]
+  },
+  {
+   "id": "enterKeep",
+   "label": "Enter не выводит текст из блока",
+   "members": [
+    "leaveHeaderTitle",
+    "keepEmptyHeaderContentText"
+   ]
+  },
+  {
+   "id": "unwrap",
+   "label": "Лишнее описание разворачивается в блоки",
+   "members": [
+    "unwrapOutsideHeader",
+    "unwrapHeaderContents",
+    "asParagraph"
+   ]
+  },
+  {
+   "id": "cancel",
+   "label": "Отмена или сброс загрузки в узел",
+   "members": [
+    "cancelHeaderUploads",
+    "dropHeaderUploads",
+    "cancelUpload"
+   ]
+  },
+  {
+   "id": "pasteDrop",
+   "label": "Вставка и drop как одна строка",
+   "members": [
+    "pasteLine",
+    "dropLine"
+   ]
+  },
+  {
+   "id": "toolbars",
+   "label": "Тулбар блока",
+   "members": [
+    "HeaderToolbar",
+    "HeaderTitleToolbar",
+    "BlockToolbar"
+   ]
+  },
+  {
+   "id": "popupClose",
+   "label": "Закрытие поповера без лишних срабатываний",
+   "members": [
+    "closeUnlessAnchor",
+    "closeOnTabOut"
+   ]
+  },
+  {
+   "id": "domSync",
+   "label": "Атрибуты NodeView только изменённые",
+   "members": [
+    "syncDomAttrs",
+    "WHeaderNodeView.renderAttrs",
+    "WHeaderImageNodeView"
+   ]
+  }
+ ],
+ "stacks": [
+  {
+   "name": "Основа",
+   "gh": "stack 1491",
+   "essence": "Общие окна настроек, команды частей баннера, директивы и загрузка картинок; на них строятся фон, заголовок, описание и картинка.",
+   "prs": [
+    {
+     "n": 1475,
+     "url": "https://github.com/gravity-ui/markdown-editor/pull/1475",
+     "branch": "feat/hdr-common-settings",
+     "title": "Общие окна настроек и копирование баннера как Markdown",
+     "essence": "Диалог, строка и переключатель настроек становятся общими для всех окон; поповеры закрываются по Tab и не реагируют на свой якорь; Copy копирует Markdown баннера.",
+     "groups": [
+      {
+       "name": "Окна настроек",
+       "fns": [
+        {
+         "name": "SettingsDialog",
+         "why": "Общее окно настроек блока",
+         "key": true,
+         "kind": "s",
+         "cat": "ui"
+        },
+        {
+         "name": "SettingsRow",
+         "why": "Строка: подпись и контрол с aria-связью",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        },
+        {
+         "name": "SettingsSwitch",
+         "why": "Строка с переключателем",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        }
+       ]
+      },
+      {
+       "name": "Поповеры",
+       "fns": [
+        {
+         "name": "nodeAnchor",
+         "why": "Якорь поповера по DOM-узлу блока",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        },
+        {
+         "name": "closeUnlessAnchor",
+         "why": "Не закрывать при клике по своему якорю",
+         "key": true,
+         "kind": "u",
+         "cat": "ui"
+        },
+        {
+         "name": "closeOnTabOut",
+         "why": "Закрыть при Tab за первый/последний контрол",
+         "key": true,
+         "kind": "u",
+         "cat": "ui"
+        },
+        {
+         "name": "tabbable",
+         "why": "Список фокусируемых контролов окна",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        }
+       ]
+      },
+      {
+       "name": "Баннер",
+       "fns": [
+        {
+         "name": "headerAt",
+         "why": "Узел баннера по позиции или null",
+         "key": false,
+         "kind": "s",
+         "cat": "cmd"
+        },
+        {
+         "name": "headerMarkup",
+         "why": "Markdown баннера, как он сохранится",
+         "key": true,
+         "kind": "u",
+         "cat": "md"
+        },
+        {
+         "name": "HeaderCopyButton",
+         "why": "Кнопка Copy: Markdown баннера в буфер",
+         "key": false,
+         "kind": "u",
+         "cat": "ui"
+        },
+        {
+         "name": "HeaderToolbar",
+         "why": "Тулбар баннера на общих окнах",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "n": 1476,
+     "url": "https://github.com/gravity-ui/markdown-editor/pull/1476",
+     "branch": "feat/hdr-common-parts",
+     "title": "Общие команды для частей баннера",
+     "essence": "Части баннера (картинка, заголовок, описание) объявляются через headerPart в схеме; общие команды вставляют, удаляют и восстанавливают их; общие хелперы директив и выделения.",
+     "groups": [
+      {
+       "name": "Части баннера",
+       "fns": [
+        {
+         "name": "headerPartSpec",
+         "why": "Описание части из spec узла",
+         "key": false,
+         "kind": "s",
+         "cat": "schema"
+        },
+        {
+         "name": "headerPartTypes",
+         "why": "Типы частей, доступные в схеме",
+         "key": false,
+         "kind": "s",
+         "cat": "schema"
+        },
+        {
+         "name": "findParts",
+         "why": "Найти блоки частей внутри баннера",
+         "key": true,
+         "kind": "u",
+         "cat": "cmd"
+        },
+        {
+         "name": "lastPartBefore",
+         "why": "Последняя часть перед данной по порядку",
+         "key": false,
+         "kind": "u",
+         "cat": "cmd"
+        },
+        {
+         "name": "headerParts",
+         "why": "Какие части есть в баннере",
+         "key": false,
+         "kind": "s",
+         "cat": "cmd"
+        }
+       ]
+      },
+      {
+       "name": "Команды частей",
+       "fns": [
+        {
+         "name": "setHeaderPart",
+         "why": "Вставить/удалить часть на своём месте",
+         "key": true,
+         "kind": "u",
+         "cat": "cmd"
+        },
+        {
+         "name": "toggleHeaderPart",
+         "why": "Переключить часть и вернуть удалённую",
+         "key": true,
+         "kind": "u",
+         "cat": "cmd"
+        },
+        {
+         "name": "insertChild",
+         "why": "Вставить блок, заменив пустой абзац",
+         "key": false,
+         "kind": "u",
+         "cat": "cmd"
+        },
+        {
+         "name": "onlyParagraph",
+         "why": "Единственный абзац баннера или null",
+         "key": false,
+         "kind": "u",
+         "cat": "cmd"
+        },
+        {
+         "name": "keepSelection",
+         "why": "Выделить баннер и закрыть шаг undo",
+         "key": false,
+         "kind": "u",
+         "cat": "cmd"
+        },
+        {
+         "name": "removeChild",
+         "why": "Удалить блок, оставив валидного родителя",
+         "key": false,
+         "kind": "s",
+         "cat": "cmd"
+        },
+        {
+         "name": "runCommand",
+         "why": "Выполнить команду на view",
+         "key": false,
+         "kind": "s",
+         "cat": "cmd"
+        }
+       ]
+      },
+      {
+       "name": "Выделение",
+       "fns": [
+        {
+         "name": "selectNodeNear",
+         "why": "Выделить узел типа рядом с курсором",
+         "key": true,
+         "kind": "s",
+         "cat": "nav"
+        },
+        {
+         "name": "nodeBeside",
+         "why": "Inline-узел до или после курсора",
+         "key": false,
+         "kind": "s",
+         "cat": "nav"
+        },
+        {
+         "name": "selectButtonBefore/After",
+         "why": "Backspace/Delete выделяют кнопку",
+         "key": false,
+         "kind": "s",
+         "cat": "nav"
+        },
+        {
+         "name": "selectionInsidePlugin",
+         "why": "Держать выделение внутри блока",
+         "key": true,
+         "kind": "u",
+         "cat": "nav"
+        },
+        {
+         "name": "selectionInside",
+         "why": "Обрезать выделение по тексту блока",
+         "key": false,
+         "kind": "u",
+         "cat": "nav"
+        },
+        {
+         "name": "findDepth",
+         "why": "Глубина ближайшего предка типа",
+         "key": false,
+         "kind": "s",
+         "cat": "nav"
+        },
+        {
+         "name": "textRange",
+         "why": "Первый и последний текст в блоке",
+         "key": false,
+         "kind": "s",
+         "cat": "nav"
+        }
+       ]
+      },
+      {
+       "name": "Директивы",
+       "fns": [
+        {
+         "name": "directiveAttrs",
+         "why": "Атрибуты директивы {a=\"b\"} в одну строку",
+         "key": true,
+         "kind": "s",
+         "cat": "md"
+        },
+        {
+         "name": "escapeDirectiveLabel",
+         "why": "Экранировать [ ] и \\ в метке",
+         "key": false,
+         "kind": "s",
+         "cat": "md"
+        },
+        {
+         "name": "singleLine",
+         "why": "Переводы строк → пробел",
+         "key": false,
+         "kind": "s",
+         "cat": "md"
+        }
+       ]
+      },
+      {
+       "name": "Панель настроек",
+       "fns": [
+        {
+         "name": "SettingsFields",
+         "why": "Поля панели: переключатели частей",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        },
+        {
+         "name": "PartSwitch",
+         "why": "Переключатель одной части",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        },
+        {
+         "name": "removedPartsOf",
+         "why": "Удалённые части баннера для возврата",
+         "key": false,
+         "kind": "u",
+         "cat": "cmd"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "n": 1477,
+     "url": "https://github.com/gravity-ui/markdown-editor/pull/1477",
+     "branch": "feat/hdr-common-upload",
+     "title": "Общая форма источника картинки и загрузчик",
+     "essence": "ImageSource задаёт картинку ссылкой или файлом с проверкой типа и размера; загрузчик следит за позицией узла и отбрасывает устаревший результат.",
+     "groups": [
+      {
+       "name": "Форма картинки",
+       "fns": [
+        {
+         "name": "ImageSource",
+         "why": "Ссылка или файл, замена, отмена загрузки",
+         "key": true,
+         "kind": "u",
+         "cat": "upload"
+        },
+        {
+         "name": "keepEnterInField",
+         "why": "Enter в поле не закрывает окно",
+         "key": false,
+         "kind": "u",
+         "cat": "upload"
+        },
+        {
+         "name": "imageFileError",
+         "why": "Ошибка типа или размера файла",
+         "key": false,
+         "kind": "s",
+         "cat": "upload"
+        },
+        {
+         "name": "uploadHint",
+         "why": "Подсказка о форматах и лимите",
+         "key": false,
+         "kind": "s",
+         "cat": "upload"
+        },
+        {
+         "name": "imageName",
+         "why": "Имя файла из адреса",
+         "key": false,
+         "kind": "s",
+         "cat": "upload"
+        },
+        {
+         "name": "formatImageSize",
+         "why": "Размер в КБ/МБ",
+         "key": false,
+         "kind": "s",
+         "cat": "upload"
+        },
+        {
+         "name": "imageFormat",
+         "why": "Формат из MIME-типа",
+         "key": false,
+         "kind": "s",
+         "cat": "upload"
+        }
+       ]
+      },
+      {
+       "name": "Загрузка",
+       "fns": [
+        {
+         "name": "uploadHeaderFile",
+         "why": "Загрузить и записать в узел, где он сейчас",
+         "key": true,
+         "kind": "u",
+         "cat": "upload"
+        },
+        {
+         "name": "cancelHeaderUploads",
+         "why": "Отменить загрузки в узел",
+         "key": true,
+         "kind": "u",
+         "cat": "upload"
+        },
+        {
+         "name": "headerUploadPlugin",
+         "why": "Отслеживать позиции загрузок",
+         "key": false,
+         "kind": "u",
+         "cat": "upload"
+        }
+       ]
+      },
+      {
+       "name": "Адреса (plugin)",
+       "fns": [
+        {
+         "name": "safeImageUrl",
+         "why": "Адрес картинки без опасной схемы",
+         "key": true,
+         "kind": "u",
+         "cat": "model"
+        },
+        {
+         "name": "hasControlChars",
+         "why": "Есть ли управляющие символы",
+         "key": false,
+         "kind": "s",
+         "cat": "model"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Фон",
+   "gh": "stack 1492",
+   "essence": "Фон баннера: заливка, картинка, тема и размытие; рендер в Markdown, синхронизация DOM и окно настроек с палитрой и превью.",
+   "prs": [
+    {
+     "n": 1478,
+     "url": "https://github.com/gravity-ui/markdown-editor/pull/1478",
+     "branch": "feat/hdr-bg-render",
+     "title": "Рендер фона баннера",
+     "essence": "headerAttrs рендерит заливку, картинку в style, тему и размытие; NodeView пишут в DOM только изменения; команды не создают транзакцию при тех же значениях.",
+     "groups": [
+      {
+       "name": "Модель фона (plugin)",
+       "fns": [
+        {
+         "name": "headerBackground",
+         "why": "Нормализовать фон: цвет, картинка, тема",
+         "key": true,
+         "kind": "u",
+         "cat": "model"
+        },
+        {
+         "name": "headerBackgroundValues",
+         "why": "Значения фона, отличные от дефолта",
+         "key": false,
+         "kind": "s",
+         "cat": "model"
+        },
+        {
+         "name": "headerBackgroundFromAttrs",
+         "why": "Фон из data-атрибутов",
+         "key": false,
+         "kind": "s",
+         "cat": "model"
+        },
+        {
+         "name": "toCssUrl",
+         "why": "Безопасный CSS url() из адреса",
+         "key": true,
+         "kind": "u",
+         "cat": "model"
+        },
+        {
+         "name": "percentEncode",
+         "why": "Кодировать символы, ломающие CSS",
+         "key": false,
+         "kind": "s",
+         "cat": "model"
+        }
+       ]
+      },
+      {
+       "name": "Атрибуты (plugin)",
+       "fns": [
+        {
+         "name": "headerAttrs",
+         "why": "HTML-атрибуты баннера",
+         "key": true,
+         "kind": "s",
+         "cat": "model"
+        },
+        {
+         "name": "headerDimensionsFromAttrs",
+         "why": "Размеры из data-атрибутов",
+         "key": false,
+         "kind": "s",
+         "cat": "model"
+        },
+        {
+         "name": "valuesOtherThan",
+         "why": "Значения, отличные от дефолтов, строками",
+         "key": true,
+         "kind": "s",
+         "cat": "model"
+        },
+        {
+         "name": "includes",
+         "why": "Значение входит в список (type guard)",
+         "key": false,
+         "kind": "s",
+         "cat": "model"
+        },
+        {
+         "name": "AttrGetter",
+         "why": "Тип: чтение атрибута по имени",
+         "key": false,
+         "kind": "s",
+         "cat": "model"
+        }
+       ]
+      },
+      {
+       "name": "DOM и команды",
+       "fns": [
+        {
+         "name": "syncDomAttrs",
+         "why": "Писать в DOM только изменения, классы PM",
+         "key": true,
+         "kind": "u",
+         "cat": "dom"
+        },
+        {
+         "name": "changedAttrs",
+         "why": "Пары с изменившимся значением",
+         "key": true,
+         "kind": "s",
+         "cat": "model"
+        },
+        {
+         "name": "WHeaderNodeView.renderAttrs",
+         "why": "Атрибуты баннера через syncDomAttrs",
+         "key": false,
+         "kind": "s",
+         "cat": "dom"
+        },
+        {
+         "name": "setHeaderDimension",
+         "why": "Размер; тот же — без транзакции",
+         "key": false,
+         "kind": "s",
+         "cat": "cmd"
+        },
+        {
+         "name": "setButtonAttrs",
+         "why": "Атрибуты кнопки только изменённые",
+         "key": false,
+         "kind": "s",
+         "cat": "cmd"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "n": 1479,
+     "url": "https://github.com/gravity-ui/markdown-editor/pull/1479",
+     "branch": "feat/hdr-bg-settings",
+     "title": "Настройки фона баннера",
+     "essence": "Окно фона: палитра, картинка ссылкой или загрузкой, тема, размытие и превью в двух темах; каждое изменение — один шаг undo, новый источник отменяет загрузку.",
+     "groups": [
+      {
+       "name": "Команды",
+       "fns": [
+        {
+         "name": "setHeaderBackground",
+         "why": "Фон одним шагом undo, сброс темы",
+         "key": true,
+         "kind": "u",
+         "cat": "cmd"
+        },
+        {
+         "name": "dropHeaderUploads",
+         "why": "Отбросить загрузки в той же транзакции",
+         "key": true,
+         "kind": "u",
+         "cat": "upload"
+        }
+       ]
+      },
+      {
+       "name": "Схема и рендер",
+       "fns": [
+        {
+         "name": "headerNodeAttrs",
+         "why": "Атрибуты узла из Markdown и DOM",
+         "key": false,
+         "kind": "s",
+         "cat": "schema"
+        },
+        {
+         "name": "headerRender",
+         "why": "Классы, CSS-адрес и data-атрибуты",
+         "key": true,
+         "kind": "u",
+         "cat": "model"
+        },
+        {
+         "name": "Header (options)",
+         "why": "fileUploadHandler, imageTypes, maxSize",
+         "key": false,
+         "kind": "s",
+         "cat": "schema"
+        }
+       ]
+      },
+      {
+       "name": "Окно фона",
+       "fns": [
+        {
+         "name": "BackgroundPopup",
+         "why": "Окно: вкладки заливки и картинки",
+         "key": true,
+         "kind": "u",
+         "cat": "ui"
+        },
+        {
+         "name": "FillPalette",
+         "why": "Палитра с навигацией стрелками",
+         "key": true,
+         "kind": "u",
+         "cat": "ui"
+        },
+        {
+         "name": "BannerPreview",
+         "why": "Превью баннера в светлой/тёмной теме",
+         "key": false,
+         "kind": "u",
+         "cat": "ui"
+        },
+        {
+         "name": "ImageTab",
+         "why": "Вкладка картинки на ImageSource",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        },
+        {
+         "name": "SegmentedSelect",
+         "why": "Строка с выбором иконками",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        },
+        {
+         "name": "BackgroundField",
+         "why": "Поле Background в панели",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        },
+        {
+         "name": "BackgroundPreview",
+         "why": "Миниатюра фона в поле",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        },
+        {
+         "name": "bgColorLabel",
+         "why": "Подпись цвета палитры",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        },
+        {
+         "name": "bgColorStyle",
+         "why": "Стиль образца цвета",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Заголовок",
+   "gh": "stack 1493",
+   "essence": "Заголовок баннера: директива ::header-title, однострочный текст в редакторе с защитой от второго заголовка и тулбар размера и цвета.",
+   "prs": [
+    {
+     "n": 1480,
+     "url": "https://github.com/gravity-ui/markdown-editor/pull/1480",
+     "branch": "feat/hdr-title-markdown",
+     "title": "markdown-it плагин заголовка",
+     "essence": "::header-title[Текст]{size color} рендерит заголовок; размер 1–6 как h1–h6, цвет из палитры; второй заголовок в баннере остаётся абзацем.",
+     "groups": [
+      {
+       "name": "Плагин",
+       "fns": [
+        {
+         "name": "headerTitlePlugin",
+         "why": "Директива ::header-title и рендер",
+         "key": true,
+         "kind": "s",
+         "cat": "md"
+        },
+        {
+         "name": "headerHasTitle",
+         "why": "Есть ли уже заголовок в этом баннере",
+         "key": true,
+         "kind": "u",
+         "cat": "md"
+        }
+       ]
+      },
+      {
+       "name": "Модель",
+       "fns": [
+        {
+         "name": "headerTitleModel",
+         "why": "Нормализовать size и color",
+         "key": false,
+         "kind": "s",
+         "cat": "model"
+        },
+        {
+         "name": "oneOf",
+         "why": "Значение списка из числа или строки",
+         "key": false,
+         "kind": "u",
+         "cat": "model"
+        },
+        {
+         "name": "headerTitleValues",
+         "why": "Значения, отличные от дефолта",
+         "key": false,
+         "kind": "s",
+         "cat": "model"
+        },
+        {
+         "name": "headerTitleAttrs",
+         "why": "HTML-атрибуты заголовка",
+         "key": false,
+         "kind": "s",
+         "cat": "model"
+        },
+        {
+         "name": "headerTitleFromAttrs",
+         "why": "Модель из data-атрибутов",
+         "key": false,
+         "kind": "s",
+         "cat": "model"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "n": 1481,
+     "url": "https://github.com/gravity-ui/markdown-editor/pull/1481",
+     "branch": "feat/hdr-title-node",
+     "title": "Заголовок в визуальном редакторе",
+     "essence": "Узел заголовка: простой текст без марок, одна строка при вводе и вставке, Enter не делит, края не склеиваются; второй заголовок в баннере отклоняется.",
+     "groups": [
+      {
+       "name": "Схема",
+       "fns": [
+        {
+         "name": "HeaderTitleSchemaSpecs",
+         "why": "Узел заголовка и часть баннера",
+         "key": false,
+         "kind": "s",
+         "cat": "schema"
+        },
+        {
+         "name": "HeaderTitleParserSpecs",
+         "why": "Токен → узел",
+         "key": false,
+         "kind": "s",
+         "cat": "md"
+        },
+        {
+         "name": "HeaderTitleSerializerSpecs",
+         "why": "Узел → ::header-title",
+         "key": false,
+         "kind": "s",
+         "cat": "md"
+        },
+        {
+         "name": "plainParagraph",
+         "why": "Абзац без марок → заголовок",
+         "key": false,
+         "kind": "u",
+         "cat": "schema"
+        },
+        {
+         "name": "attrSpecs",
+         "why": "attrs схемы из объекта дефолтов",
+         "key": false,
+         "kind": "s",
+         "cat": "schema"
+        },
+        {
+         "name": "placeholderSpec",
+         "why": "Плейсхолдер пустого блока",
+         "key": false,
+         "kind": "s",
+         "cat": "schema"
+        }
+       ]
+      },
+      {
+       "name": "Команды",
+       "fns": [
+        {
+         "name": "leaveHeaderTitle",
+         "why": "Enter не делит заголовок",
+         "key": false,
+         "kind": "u",
+         "cat": "cmd"
+        },
+        {
+         "name": "deleteHeaderTitleText",
+         "why": "Удаление до блоков оставляет заголовок",
+         "key": false,
+         "kind": "u",
+         "cat": "cmd"
+        },
+        {
+         "name": "stopAtHeaderTitleStart/End",
+         "why": "Края заголовка не склеиваются",
+         "key": false,
+         "kind": "u",
+         "cat": "nav"
+        },
+        {
+         "name": "stopAtBlockEdge",
+         "why": "Backspace/Delete у блока не склеивают",
+         "key": true,
+         "kind": "u",
+         "cat": "nav"
+        },
+        {
+         "name": "siblingBlock",
+         "why": "Соседний блок у края текста",
+         "key": false,
+         "kind": "s",
+         "cat": "nav"
+        },
+        {
+         "name": "atTextblockEdge",
+         "why": "Курсор в начале/конце блока",
+         "key": false,
+         "kind": "s",
+         "cat": "nav"
+        }
+       ]
+      },
+      {
+       "name": "Защита",
+       "fns": [
+        {
+         "name": "oneChildPerHeader",
+         "why": "Отклонить вторую часть того же типа",
+         "key": true,
+         "kind": "u",
+         "cat": "guard"
+        },
+        {
+         "name": "keepsTitles",
+         "why": "Правка не ломает заголовки",
+         "key": true,
+         "kind": "u",
+         "cat": "guard"
+        },
+        {
+         "name": "changedRange",
+         "why": "Диапазон, изменённый транзакцией",
+         "key": true,
+         "kind": "s",
+         "cat": "guard"
+        },
+        {
+         "name": "coveringRanges",
+         "why": "Диапазоны пачки транзакций",
+         "key": false,
+         "kind": "s",
+         "cat": "guard"
+        }
+       ]
+      },
+      {
+       "name": "Текст и вставка",
+       "fns": [
+        {
+         "name": "plainTextInput",
+         "why": "Ввод без марок",
+         "key": false,
+         "kind": "u",
+         "cat": "text"
+        },
+        {
+         "name": "joinTextLines",
+         "why": "Склеить строки в одну",
+         "key": false,
+         "kind": "u",
+         "cat": "text"
+        },
+        {
+         "name": "pasteLine",
+         "why": "Вставка как одна строка текста",
+         "key": true,
+         "kind": "u",
+         "cat": "text"
+        },
+        {
+         "name": "dropLine",
+         "why": "Перетаскивание как одна строка",
+         "key": false,
+         "kind": "u",
+         "cat": "text"
+        },
+        {
+         "name": "trackDrop",
+         "why": "Запомнить место drop",
+         "key": false,
+         "kind": "s",
+         "cat": "text"
+        },
+        {
+         "name": "innerSlice",
+         "why": "Развернуть обёртки слайса",
+         "key": false,
+         "kind": "s",
+         "cat": "text"
+        },
+        {
+         "name": "markupSlice",
+         "why": "Markdown слайса для разбора",
+         "key": false,
+         "kind": "s",
+         "cat": "text"
+        },
+        {
+         "name": "headerTitlePastePlugin",
+         "why": "Вставка и drop в заголовок",
+         "key": false,
+         "kind": "u",
+         "cat": "text"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "n": 1482,
+     "url": "https://github.com/gravity-ui/markdown-editor/pull/1482",
+     "branch": "feat/hdr-title-toolbar",
+     "title": "Тулбар заголовка",
+     "essence": "Курсор в заголовке открывает тулбар с меню размера и цвета; работает мышью и с клавиатуры (Tab, стрелки, Enter, Escape); каждое изменение — один шаг undo.",
+     "groups": [
+      {
+       "name": "Общий тулбар блока",
+       "fns": [
+        {
+         "name": "BlockToolbar",
+         "why": "Тулбар блока с меню и фокусом",
+         "key": true,
+         "kind": "u",
+         "cat": "ui"
+        },
+        {
+         "name": "blockTooltip",
+         "why": "Показ тулбара у блока под курсором",
+         "key": true,
+         "kind": "u",
+         "cat": "ui"
+        },
+        {
+         "name": "optionsButton",
+         "why": "Кнопка-меню выбора значения",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        },
+        {
+         "name": "moveFocus",
+         "why": "Стрелки между кнопками и пунктами",
+         "key": false,
+         "kind": "u",
+         "cat": "nav"
+        },
+        {
+         "name": "pointerFocusEvents",
+         "why": "Фокус мышью без показа тулбара",
+         "key": false,
+         "kind": "u",
+         "cat": "ui"
+        }
+       ]
+      },
+      {
+       "name": "Заголовок",
+       "fns": [
+        {
+         "name": "HeaderTitleToolbar",
+         "why": "Меню размера и цвета заголовка",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        },
+        {
+         "name": "setHeaderTitleAttrs",
+         "why": "Размер и цвет заголовка",
+         "key": false,
+         "kind": "s",
+         "cat": "cmd"
+        },
+        {
+         "name": "setNodeAttrs",
+         "why": "Фабрика: изменённые атрибуты узла",
+         "key": true,
+         "kind": "s",
+         "cat": "cmd"
+        },
+        {
+         "name": "colorIcon",
+         "why": "Иконка-образец цвета",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Описание",
+   "gh": "stack 1494",
+   "essence": "Описание баннера: контейнер :::header-content с форматированным текстом, один на баннер, редактирование на месте и переключатель в настройках.",
+   "prs": [
+    {
+     "n": 1483,
+     "url": "https://github.com/gravity-ui/markdown-editor/pull/1483",
+     "branch": "feat/hdr-content-markdown",
+     "title": "markdown-it плагин описания",
+     "essence": ":::header-content рендерит описание с форматированием; пустое не занимает места; второе описание в баннере разворачивается в свои блоки.",
+     "groups": [
+      {
+       "name": "Плагин",
+       "fns": [
+        {
+         "name": "headerContentPlugin",
+         "why": "Контейнер :::header-content",
+         "key": true,
+         "kind": "s",
+         "cat": "md"
+        },
+        {
+         "name": "keepOneDescriptionPerHeader",
+         "why": "Одно описание на баннер",
+         "key": true,
+         "kind": "u",
+         "cat": "md"
+        },
+        {
+         "name": "keepOneTitlePerHeader",
+         "why": "Второй заголовок из описания → текст",
+         "key": false,
+         "kind": "u",
+         "cat": "md"
+        },
+        {
+         "name": "asParagraph",
+         "why": "Блок как абзац из исходника",
+         "key": false,
+         "kind": "u",
+         "cat": "md"
+        },
+        {
+         "name": "headerContentAttrs",
+         "why": "Класс описания",
+         "key": false,
+         "kind": "s",
+         "cat": "model"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "n": 1484,
+     "url": "https://github.com/gravity-ui/markdown-editor/pull/1484",
+     "branch": "feat/hdr-content-edit",
+     "title": "Описание в визуальном редакторе",
+     "essence": "Описание редактируется на месте как rich text; Enter, Backspace и Delete не выводят текст наружу; описание вне баннера или второе — разворачивается.",
+     "groups": [
+      {
+       "name": "Схема",
+       "fns": [
+        {
+         "name": "HeaderContentSchemaSpecs",
+         "why": "Узел описания",
+         "key": false,
+         "kind": "s",
+         "cat": "schema"
+        },
+        {
+         "name": "HeaderContentParserSpecs",
+         "why": "Токены → узел",
+         "key": false,
+         "kind": "s",
+         "cat": "md"
+        },
+        {
+         "name": "unwrapOutsideHeader",
+         "why": "Описание вне баннера → блоки",
+         "key": false,
+         "kind": "u",
+         "cat": "md"
+        },
+        {
+         "name": "HeaderContentSerializerSpecs",
+         "why": "Узел → :::header-content",
+         "key": false,
+         "kind": "s",
+         "cat": "md"
+        }
+       ]
+      },
+      {
+       "name": "Команды",
+       "fns": [
+        {
+         "name": "keepEmptyHeaderContentText",
+         "why": "Enter в пустом абзаце ничего не делает",
+         "key": false,
+         "kind": "u",
+         "cat": "cmd"
+        },
+        {
+         "name": "clearHeaderContent",
+         "why": "Удалить всё → пустой абзац",
+         "key": false,
+         "kind": "u",
+         "cat": "cmd"
+        },
+        {
+         "name": "stopAtHeaderContentStart/End",
+         "why": "Края описания не склеиваются",
+         "key": false,
+         "kind": "u",
+         "cat": "nav"
+        }
+       ]
+      },
+      {
+       "name": "Разворачивание",
+       "fns": [
+        {
+         "name": "headerContentUnwrapPlugin",
+         "why": "Лишние описания после правки → блоки",
+         "key": true,
+         "kind": "u",
+         "cat": "guard"
+        },
+        {
+         "name": "misplacedHeaderContents",
+         "why": "Найти лишние описания",
+         "key": true,
+         "kind": "u",
+         "cat": "guard"
+        },
+        {
+         "name": "unwrapHeaderContents",
+         "why": "Заменить описание его блоками",
+         "key": false,
+         "kind": "u",
+         "cat": "guard"
+        },
+        {
+         "name": "changedBlocks",
+         "why": "Блоки, затронутые транзакциями",
+         "key": false,
+         "kind": "s",
+         "cat": "guard"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "n": 1485,
+     "url": "https://github.com/gravity-ui/markdown-editor/pull/1485",
+     "branch": "feat/hdr-content-toggle",
+     "title": "Переключатель описания в настройках",
+     "essence": "Переключатель Description показывает наличие описания, добавляет его с примером или из единственного абзаца и возвращает удалённое; один шаг undo.",
+     "groups": [
+      {
+       "name": "Часть баннера",
+       "fns": [
+        {
+         "name": "headerPart.create",
+         "why": "Новое описание с примером текста",
+         "key": false,
+         "kind": "s",
+         "cat": "schema"
+        },
+        {
+         "name": "headerPart.adopt",
+         "why": "Единственный абзац → описание",
+         "key": true,
+         "kind": "u",
+         "cat": "schema"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Картинка",
+   "gh": "stack 1495",
+   "essence": "Картинка баннера: директива ::header-image, атом-узел с плейсхолдером, выделение с клавиатуры и окно для ссылки или загрузки.",
+   "prs": [
+    {
+     "n": 1486,
+     "url": "https://github.com/gravity-ui/markdown-editor/pull/1486",
+     "branch": "feat/hdr-image-markdown",
+     "title": "markdown-it плагин картинки",
+     "essence": "::header-image{src alt title} рендерит картинку в потоке баннера; небезопасный адрес не рендерится; вторая картинка остаётся текстом; галерея файлов её пропускает.",
+     "groups": [
+      {
+       "name": "Плагин",
+       "fns": [
+        {
+         "name": "headerImagePlugin",
+         "why": "Директива ::header-image и рендер",
+         "key": true,
+         "kind": "s",
+         "cat": "md"
+        },
+        {
+         "name": "afterBannerImage",
+         "why": "В баннере уже есть картинка",
+         "key": true,
+         "kind": "u",
+         "cat": "md"
+        }
+       ]
+      },
+      {
+       "name": "Модель",
+       "fns": [
+        {
+         "name": "headerImage",
+         "why": "Нормализовать src, alt, title",
+         "key": false,
+         "kind": "s",
+         "cat": "model"
+        },
+        {
+         "name": "headerImageValues",
+         "why": "Значения, отличные от дефолта",
+         "key": false,
+         "kind": "s",
+         "cat": "model"
+        },
+        {
+         "name": "headerImageAttrs",
+         "why": "HTML-атрибуты и исключение из галереи",
+         "key": false,
+         "kind": "u",
+         "cat": "model"
+        },
+        {
+         "name": "headerImageFromAttrs",
+         "why": "Модель из атрибутов",
+         "key": false,
+         "kind": "s",
+         "cat": "model"
+        },
+        {
+         "name": "isExcludedFromGallery",
+         "why": "Viewer: пропустить в галерее",
+         "key": false,
+         "kind": "s",
+         "cat": "md"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "n": 1487,
+     "url": "https://github.com/gravity-ui/markdown-editor/pull/1487",
+     "branch": "feat/hdr-image-node",
+     "title": "Узел картинки и её переключатель",
+     "essence": "Картинка — атом-блок в потоке баннера, без адреса это плейсхолдер; клик, стрелки, Backspace и Delete выделяют её; переключатель Image вставляет и возвращает.",
+     "groups": [
+      {
+       "name": "Узел",
+       "fns": [
+        {
+         "name": "HeaderImageSchemaSpecs",
+         "why": "Атом-узел и часть баннера",
+         "key": false,
+         "kind": "s",
+         "cat": "schema"
+        },
+        {
+         "name": "HeaderImageParserSpecs",
+         "why": "Токен → узел",
+         "key": false,
+         "kind": "s",
+         "cat": "md"
+        },
+        {
+         "name": "HeaderImageSerializerSpecs",
+         "why": "Узел → ::header-image",
+         "key": false,
+         "kind": "s",
+         "cat": "md"
+        },
+        {
+         "name": "WHeaderImageNodeView",
+         "why": "img или плейсхолдер в редакторе",
+         "key": true,
+         "kind": "u",
+         "cat": "dom"
+        },
+        {
+         "name": "HeaderImagePlaceholder",
+         "why": "Плейсхолдер «Добавить картинку»",
+         "key": false,
+         "kind": "s",
+         "cat": "dom"
+        }
+       ]
+      },
+      {
+       "name": "Команды",
+       "fns": [
+        {
+         "name": "setHeaderImageAttrs",
+         "why": "Атрибуты; опасный адрес отклоняется",
+         "key": true,
+         "kind": "s",
+         "cat": "cmd"
+        },
+        {
+         "name": "removeHeaderImage",
+         "why": "Удалить и поставить курсор рядом",
+         "key": false,
+         "kind": "u",
+         "cat": "cmd"
+        },
+        {
+         "name": "selectHeaderImageBefore/After",
+         "why": "Backspace/Delete выделяют картинку",
+         "key": false,
+         "kind": "s",
+         "cat": "nav"
+        },
+        {
+         "name": "selectedHeaderImage",
+         "why": "Выделенная картинка",
+         "key": false,
+         "kind": "s",
+         "cat": "nav"
+        }
+       ]
+      },
+      {
+       "name": "Плагины",
+       "fns": [
+        {
+         "name": "headerImageClickPlugin",
+         "why": "Клик выделяет и открывает окно",
+         "key": false,
+         "kind": "u",
+         "cat": "dom"
+        },
+        {
+         "name": "headerImageGuardPlugin",
+         "why": "Одна картинка на баннер",
+         "key": false,
+         "kind": "s",
+         "cat": "guard"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "n": 1488,
+     "url": "https://github.com/gravity-ui/markdown-editor/pull/1488",
+     "branch": "feat/hdr-image-upload",
+     "title": "Картинка по адресу или загрузкой",
+     "essence": "Клик или Enter открывает окно картинки с формой редактора; ссылка проходит проверку, файл — лимиты; загруженный адрес следует за картинкой; Reset возвращает плейсхолдер.",
+     "groups": [
+      {
+       "name": "Окно",
+       "fns": [
+        {
+         "name": "headerImagePopupPlugin",
+         "why": "Открыть/закрыть окно, Enter и Escape",
+         "key": true,
+         "kind": "u",
+         "cat": "ui"
+        },
+        {
+         "name": "HeaderImagePopupView",
+         "why": "Показ окна у выделенной картинки",
+         "key": true,
+         "kind": "u",
+         "cat": "ui"
+        },
+        {
+         "name": "HeaderImagePopup",
+         "why": "Окно с формой ImageSource",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        },
+        {
+         "name": "setHeaderImagePopupOpen",
+         "why": "Мета-флаг открытия в транзакции",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        }
+       ]
+      },
+      {
+       "name": "Действия окна",
+       "fns": [
+        {
+         "name": "upload",
+         "why": "Загрузить файл в картинку",
+         "key": false,
+         "kind": "s",
+         "cat": "upload"
+        },
+        {
+         "name": "setSrc",
+         "why": "Записать ссылку, отменив загрузку",
+         "key": false,
+         "kind": "u",
+         "cat": "upload"
+        },
+        {
+         "name": "reset",
+         "why": "Вернуть плейсхолдер",
+         "key": false,
+         "kind": "s",
+         "cat": "upload"
+        },
+        {
+         "name": "cancelUpload",
+         "why": "Отменить загрузку в картинку",
+         "key": false,
+         "kind": "s",
+         "cat": "upload"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Раскладка",
+   "gh": "без stack",
+   "essence": "Раскладка баннера: выравнивание текста и вертикальная позиция, одна CSS-сетка и узкий режим через container query.",
+   "prs": [
+    {
+     "n": 1369,
+     "url": "https://github.com/gravity-ui/markdown-editor/pull/1369",
+     "branch": "feat/header-flat",
+     "title": "Раскладка с выравниванием и узким режимом",
+     "essence": "align и vertical проходят через Markdown, узел и панель; одна CSS-сетка: текст и картинка на всю высоту; уже 600 px картинка над текстом.",
+     "groups": [
+      {
+       "name": "Модель (plugin)",
+       "fns": [
+        {
+         "name": "headerLayout",
+         "why": "Нормализовать align и vertical",
+         "key": true,
+         "kind": "s",
+         "cat": "model"
+        },
+        {
+         "name": "headerLayoutValues",
+         "why": "Значения, отличные от дефолта",
+         "key": false,
+         "kind": "s",
+         "cat": "model"
+        },
+        {
+         "name": "headerLayoutFromAttrs",
+         "why": "Раскладка из data-атрибутов",
+         "key": false,
+         "kind": "s",
+         "cat": "model"
+        }
+       ]
+      },
+      {
+       "name": "Редактор",
+       "fns": [
+        {
+         "name": "setHeaderLayout",
+         "why": "Раскладка; шаг undo на изменение",
+         "key": true,
+         "kind": "s",
+         "cat": "cmd"
+        },
+        {
+         "name": "SettingsFields (alignment)",
+         "why": "Два SegmentedSelect выравнивания",
+         "key": false,
+         "kind": "s",
+         "cat": "ui"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

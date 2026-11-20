@@ -1,0 +1,1753 @@
+<title>/*TITLE*/</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Layout: a full-bleed board with a tree that grows to both sides of the root; all chrome floats over it in one grid and folds away. */
+/* Skins: each gives a light (-l) and a dark (-d) value of every color, and its own shapes, type and connectors. */
+:root, [data-skin="studio"] {
+  --bg-l: #e9ebee; --bg-d: #0a0b0d;
+  --grid-l: #c6cad2; --grid-d: #262a31;
+  --surface-l: #ffffff; --surface-d: #15171b;
+  --glass-l: rgb(255 255 255 / 84%); --glass-d: rgb(21 23 27 / 82%);
+  --ink-l: #0d0f13; --ink-d: #eef0f3;
+  --invert-l: #ffffff; --invert-d: #0a0b0d;
+  --muted-l: #596070; --muted-d: #a0a7b3;
+  --faint-l: #8a909c; --faint-d: #6c7380;
+  --line-l: #d5d8de; --line-d: #2a2e36;
+  --frame-l: #d5d8de; --frame-d: #2a2e36;
+  --edge-l: #a4aab5; --edge-d: #4b525e;
+  --soft-l: #eef0f3; --soft-d: #1e2127;
+  --focus-l: #2f5bff; --focus-d: #8fa8ff;
+  --accent-l: #0d0f13; --accent-d: #eef0f3;
+  --on-accent-l: #ffffff; --on-accent-d: #0a0b0d;
+  --root-bg-l: #0d0f13; --root-bg-d: #eef0f3;
+  --root-fg-l: #ffffff; --root-fg-d: #0a0b0d;
+  --seg-on-l: #ffffff; --seg-on-d: #15171b;
+  --seg-fg-l: #0d0f13; --seg-fg-d: #eef0f3;
+  --shadow-l: 0 1px 1px rgb(13 15 19 / 4%), 0 10px 30px -12px rgb(13 15 19 / 22%); --shadow-d: 0 1px 1px rgb(0 0 0 / 40%), 0 14px 34px -12px rgb(0 0 0 / 70%);
+  --node-shadow-l: 0 0 #0000; --node-shadow-d: 0 0 #0000;
+  --font-display: "Unbounded", "Onest", system-ui, sans-serif;
+  --font-ui: "Onest", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-code: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r-panel: 14px; --r-ctl: 9px; --r-node: 12px; --r-root: 16px; --r-card: 12px; --r-pill: 999px; --r-row: 8px; --r-tg: 11px; --r-dot: 50%;
+  --blur: blur(16px) saturate(1.5); --edge-w: 1.25px; --edge-r: 9; --edge-style: elbow; --sel-ring: 1px; --card-border: solid;
+  --grid-image: radial-gradient(var(--grid) 1px, transparent 1.3px);
+  --press-bg: var(--accent); --press-fg: var(--on-accent); --sel: var(--accent); --sel-halo: var(--accent);
+  --card-frame: var(--line); --card-fill: color-mix(in srgb, var(--surface) 72%, transparent);
+}
+[data-skin="strict"] {
+  --bg-l: #ffffff; --bg-d: #000000;
+  --grid-l: #ffffff; --grid-d: #000000;
+  --surface-l: #ffffff; --surface-d: #000000;
+  --glass-l: #ffffff; --glass-d: #000000;
+  --ink-l: #000000; --ink-d: #ffffff;
+  --invert-l: #ffffff; --invert-d: #000000;
+  --muted-l: #4d4d4d; --muted-d: #b3b3b3;
+  --faint-l: #8c8c8c; --faint-d: #757575;
+  --line-l: #d9d9d9; --line-d: #333333;
+  --frame-l: #000000; --frame-d: #ffffff;
+  --edge-l: #000000; --edge-d: #ffffff;
+  --soft-l: #f0f0f0; --soft-d: #1c1c1c;
+  --focus-l: #000000; --focus-d: #ffffff;
+  --accent-l: #000000; --accent-d: #ffffff;
+  --on-accent-l: #ffffff; --on-accent-d: #000000;
+  --root-bg-l: #000000; --root-bg-d: #ffffff;
+  --root-fg-l: #ffffff; --root-fg-d: #000000;
+  --seg-on-l: #000000; --seg-on-d: #ffffff;
+  --seg-fg-l: #ffffff; --seg-fg-d: #000000;
+  --shadow-l: none; --shadow-d: none;
+  --node-shadow-l: 0 0 #0000; --node-shadow-d: 0 0 #0000;
+  --font-display: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-ui: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-code: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r-panel: 0px; --r-ctl: 0px; --r-node: 0px; --r-root: 0px; --r-card: 0px; --r-pill: 0px; --r-row: 0px; --r-tg: 0px; --r-dot: 0px;
+  --blur: none; --edge-w: 1px; --edge-r: 0; --edge-style: elbow; --sel-ring: 2px; --card-border: solid;
+  --grid-image: none;
+  --press-bg: var(--accent); --press-fg: var(--on-accent); --sel: var(--accent); --sel-halo: var(--accent);
+  --card-frame: var(--line); --card-fill: var(--surface);
+}
+[data-skin="mac"] {
+  --bg-l: #f5f5f7; --bg-d: #1c1c1e;
+  --grid-l: #d1d1d6; --grid-d: #38383a;
+  --surface-l: #ffffff; --surface-d: #2c2c2e;
+  --glass-l: rgb(246 246 246 / 72%); --glass-d: rgb(44 44 46 / 70%);
+  --ink-l: #1d1d1f; --ink-d: #f5f5f7;
+  --invert-l: #ffffff; --invert-d: #1c1c1e;
+  --muted-l: #6e6e73; --muted-d: #98989d;
+  --faint-l: #aeaeb2; --faint-d: #636366;
+  --line-l: rgb(0 0 0 / 9%); --line-d: rgb(255 255 255 / 10%);
+  --frame-l: rgb(0 0 0 / 11%); --frame-d: rgb(255 255 255 / 12%);
+  --edge-l: #b8b8be; --edge-d: #58585c;
+  --soft-l: rgb(0 0 0 / 5.5%); --soft-d: rgb(255 255 255 / 8%);
+  --focus-l: #007aff; --focus-d: #0a84ff;
+  --accent-l: #007aff; --accent-d: #0a84ff;
+  --on-accent-l: #ffffff; --on-accent-d: #ffffff;
+  --root-bg-l: #007aff; --root-bg-d: #0a84ff;
+  --root-fg-l: #ffffff; --root-fg-d: #ffffff;
+  --seg-on-l: #ffffff; --seg-on-d: #636366;
+  --seg-fg-l: #1d1d1f; --seg-fg-d: #ffffff;
+  --shadow-l: 0 0 0 .5px rgb(0 0 0 / 14%), 0 12px 36px -8px rgb(0 0 0 / 22%); --shadow-d: 0 0 0 .5px rgb(255 255 255 / 16%), 0 16px 44px -8px rgb(0 0 0 / 65%);
+  --node-shadow-l: 0 1px 2.5px rgb(0 0 0 / 9%); --node-shadow-d: 0 1px 3px rgb(0 0 0 / 45%);
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+  --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+  --font-code: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r-panel: 12px; --r-ctl: 7px; --r-node: 10px; --r-root: 12px; --r-card: 10px; --r-pill: 999px; --r-row: 6px; --r-tg: 11px; --r-dot: 50%;
+  --blur: blur(30px) saturate(1.8); --edge-w: 1.5px; --edge-r: 8; --edge-style: curve; --sel-ring: 3px; --card-border: solid;
+  --grid-image: radial-gradient(var(--grid) 1px, transparent 1.3px);
+  --press-bg: color-mix(in srgb, var(--accent) 15%, transparent); --press-fg: var(--accent);
+  --sel: var(--accent); --sel-halo: color-mix(in srgb, var(--accent) 32%, transparent);
+  --card-frame: var(--frame); --card-fill: color-mix(in srgb, var(--surface) 78%, transparent);
+}
+[data-skin="blueprint"] {
+  --bg-l: #e8f0f9; --bg-d: #0b2545;
+  --grid-l: #c9daee; --grid-d: #143258;
+  --surface-l: #f4f8fd; --surface-d: #0e2b52;
+  --glass-l: #f4f8fd; --glass-d: #0e2b52;
+  --ink-l: #0f2f5f; --ink-d: #dce9ff;
+  --invert-l: #f4f8fd; --invert-d: #0b2545;
+  --muted-l: #46689a; --muted-d: #9fbbe3;
+  --faint-l: #86a2c6; --faint-d: #6283b0;
+  --line-l: #b7cbe3; --line-d: #1f426f;
+  --frame-l: #0f2f5f; --frame-d: #a8c5ee;
+  --edge-l: #35598f; --edge-d: #7da2d8;
+  --soft-l: #dbe7f5; --soft-d: #143660;
+  --focus-l: #0b5cd6; --focus-d: #8ab8ff;
+  --accent-l: #0f2f5f; --accent-d: #dce9ff;
+  --on-accent-l: #f4f8fd; --on-accent-d: #0b2545;
+  --root-bg-l: #f4f8fd; --root-bg-d: #0e2b52;
+  --root-fg-l: #0f2f5f; --root-fg-d: #dce9ff;
+  --seg-on-l: #0f2f5f; --seg-on-d: #dce9ff;
+  --seg-fg-l: #f4f8fd; --seg-fg-d: #0b2545;
+  --shadow-l: none; --shadow-d: none;
+  --node-shadow-l: 0 0 #0000; --node-shadow-d: 0 0 #0000;
+  --font-display: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --font-ui: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --font-code: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --r-panel: 3px; --r-ctl: 2px; --r-node: 0px; --r-root: 0px; --r-card: 0px; --r-pill: 2px; --r-row: 0px; --r-tg: 0px; --r-dot: 50%;
+  --blur: none; --edge-w: 1px; --edge-r: 0; --edge-style: elbow; --sel-ring: 2px; --card-border: dashed;
+  --grid-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  --press-bg: var(--accent); --press-fg: var(--on-accent); --sel: var(--accent); --sel-halo: var(--accent);
+  --card-frame: var(--edge); --card-fill: transparent;
+}
+/* Theme: the light values by default, the dark ones for a dark system theme or an explicit dark choice. */
+/* A swatch of the skin menu resolves the colors of its own skin the same way. */
+:root, .sw {
+  --bg: var(--bg-l); --grid: var(--grid-l); --surface: var(--surface-l); --glass: var(--glass-l); --ink: var(--ink-l);
+  --invert: var(--invert-l); --muted: var(--muted-l); --faint: var(--faint-l); --line: var(--line-l); --frame: var(--frame-l);
+  --edge: var(--edge-l); --soft: var(--soft-l); --focus: var(--focus-l); --accent: var(--accent-l); --on-accent: var(--on-accent-l);
+  --root-bg: var(--root-bg-l); --root-fg: var(--root-fg-l); --seg-on: var(--seg-on-l); --seg-fg: var(--seg-fg-l); --shadow: var(--shadow-l);
+  --node-shadow: var(--node-shadow-l);
+}
+:root {
+/*CAT_LIGHT*/
+  /* Distances of the tree; the script reads them to size the map without laying it out again. */
+  --gap: 36px; --gap-stack: 26px; --gap-pr: 12px; --gap-group: 6px; --gap-col: 8px; --bracket: 14px; --pad: 28px;
+  --cardw: 300px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]), :root:not([data-theme="light"]) .sw {
+    --bg: var(--bg-d); --grid: var(--grid-d); --surface: var(--surface-d); --glass: var(--glass-d); --ink: var(--ink-d);
+    --invert: var(--invert-d); --muted: var(--muted-d); --faint: var(--faint-d); --line: var(--line-d); --frame: var(--frame-d);
+    --edge: var(--edge-d); --soft: var(--soft-d); --focus: var(--focus-d); --accent: var(--accent-d); --on-accent: var(--on-accent-d);
+    --root-bg: var(--root-bg-d); --root-fg: var(--root-fg-d); --seg-on: var(--seg-on-d); --seg-fg: var(--seg-fg-d); --shadow: var(--shadow-d);
+    --node-shadow: var(--node-shadow-d);
+  }
+  :root:not([data-theme="light"]) {
+/*CAT_DARK*/
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"], :root[data-theme="dark"] .sw {
+  --bg: var(--bg-d); --grid: var(--grid-d); --surface: var(--surface-d); --glass: var(--glass-d); --ink: var(--ink-d);
+  --invert: var(--invert-d); --muted: var(--muted-d); --faint: var(--faint-d); --line: var(--line-d); --frame: var(--frame-d);
+  --edge: var(--edge-d); --soft: var(--soft-d); --focus: var(--focus-d); --accent: var(--accent-d); --on-accent: var(--on-accent-d);
+  --root-bg: var(--root-bg-d); --root-fg: var(--root-fg-d); --seg-on: var(--seg-on-d); --seg-fg: var(--seg-fg-d); --shadow: var(--shadow-d);
+  --node-shadow: var(--node-shadow-d);
+}
+:root[data-theme="dark"] {
+/*CAT_DARK*/
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { margin: 0; overflow: hidden auto; background: var(--bg); color: var(--ink); font: 13px/1.4 var(--font-ui); }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:disabled { opacity: .35; cursor: default; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.ic { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.dot { width: 8px; height: 8px; border-radius: var(--r-dot); background: var(--c); flex: none; }
+.micro { font: 500 10px/1.2 var(--font-code); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.grow { flex: 1 1 0; }
+kbd { font: 500 10px/1.4 var(--font-code); color: var(--muted); border: 1px solid var(--line); border-radius: min(5px, var(--r-ctl)); padding: 0 5px; }
+
+/* ---------- Board and chrome ---------- */
+/* The minimum height keeps the map usable in a frame that gives the page no height of its own. */
+.app { position: relative; height: 100%; min-height: 420px; overflow: hidden; }
+.nodata { max-width: 60ch; margin: 0 auto; padding: 20vh max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px)); font-size: 15px; line-height: 1.5; }
+.nodata code { font: 500 13px var(--font-code); }
+.board {
+  position: absolute; inset: 0; outline-offset: -3px; touch-action: none; overscroll-behavior: none; cursor: grab;
+  background-color: var(--bg); background-image: var(--grid-image);
+}
+.board.panning { cursor: grabbing; user-select: none; }
+.canvas { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+.chrome {
+  position: absolute; inset: 0; display: grid; gap: 10px; pointer-events: none;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: "bar bar bar" "index . insp" "foot foot foot";
+  padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.chrome > * { pointer-events: auto; min-width: 0; }
+.glass {
+  background: var(--glass); border: 1px solid var(--frame); border-radius: var(--r-panel); box-shadow: var(--shadow);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+}
+.zen .chrome > :not(.reveal) { display: none; }
+.reveal { grid-area: bar; justify-self: end; display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; font-size: 12px; opacity: .55; }
+.reveal:hover, .reveal:focus-visible { opacity: 1; }
+
+.ib { display: inline-grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: var(--r-ctl); background: transparent; flex: none; }
+.ib.sm { width: 26px; height: 26px; }
+.ib:hover:not(:disabled) { background: var(--soft); }
+.ib[aria-pressed="true"] { background: var(--press-bg); color: var(--press-fg); }
+.sep { width: 1px; align-self: stretch; background: var(--line); margin: 5px 3px; flex: none; }
+.seg { display: inline-flex; gap: 1px; padding: 2px; border-radius: calc(var(--r-ctl) + 1px); background: var(--soft); flex: none; }
+.seg button { height: 28px; padding: 0 9px; border: 0; border-radius: var(--r-ctl); background: transparent; color: var(--muted); font: 500 11.5px var(--font-ui); }
+.seg button:hover { color: var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--seg-on); color: var(--seg-fg); box-shadow: 0 1px 2px rgb(0 0 0 / 14%); }
+[data-tip] { position: relative; }
+[data-tip]:hover::after, [data-tip]:focus-visible::after {
+  content: attr(data-tip); position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); z-index: 9;
+  white-space: nowrap; pointer-events: none; padding: 4px 8px; border-radius: min(7px, var(--r-ctl));
+  background: var(--ink); color: var(--invert); font: 500 11px/1.3 var(--font-ui); letter-spacing: 0; text-transform: none;
+}
+[data-tip].up::after { top: auto; bottom: calc(100% + 8px); }
+[data-tip].tip-end::after { left: auto; right: 0; transform: none; }
+[data-tip].tip-start::after { left: 0; transform: none; }
+
+/* ---------- Top bar ---------- */
+.bar { grid-area: bar; position: relative; z-index: 3; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 5px; }
+.mark { margin: 0 2px 0 4px; font: 700 11px/1 var(--font-display); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.mark button { height: 32px; padding: 0 6px; border: 0; border-radius: var(--r-ctl); background: transparent; font: inherit; letter-spacing: inherit; text-transform: inherit; }
+.mark button:hover { background: var(--soft); }
+.counts { font: 500 10.5px var(--font-code); color: var(--muted); white-space: nowrap; margin-right: 4px; }
+.search { position: relative; display: flex; align-items: center; gap: 8px; height: 32px; flex: 0 1 250px; min-width: 150px; padding: 0 8px 0 10px; border-radius: var(--r-ctl); background: var(--soft); color: var(--muted); }
+.search:focus-within { box-shadow: inset 0 0 0 1.5px var(--sel); color: var(--ink); }
+.search input { flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 13px; }
+.search input::placeholder { color: var(--faint); }
+.search input::-webkit-search-cancel-button { display: none; }
+.results { position: absolute; top: calc(100% + 8px); left: 0; z-index: 6; width: 380px; max-width: calc(100vw - 32px); max-height: min(60vh, 420px); overflow: auto; padding: 5px; }
+.results, .pop { background: var(--surface); }
+.res { display: grid; grid-template-columns: 12px minmax(0, 1fr); column-gap: 8px; align-items: baseline; width: 100%; padding: 6px 8px; border: 0; border-radius: var(--r-row); background: transparent; text-align: left; }
+.res:hover, .res:focus-visible { background: var(--soft); outline: 0; }
+.res b { font: 500 12px/1.4 var(--font-code); overflow-wrap: anywhere; }
+.res small { grid-column: 2; font-size: 11.5px; color: var(--muted); }
+.res .dot { align-self: center; }
+.res-empty { margin: 0; padding: 10px; font-size: 12px; color: var(--muted); }
+.tools { display: flex; align-items: center; gap: 4px; }
+.pop { position: absolute; top: calc(100% + 8px); right: 0; z-index: 6; width: 320px; max-width: calc(100vw - 32px); max-height: 70vh; overflow: auto; padding: 12px 14px; font-size: 12px; }
+.pop h2 { margin: 10px 0 6px; }
+.pop h2:first-child { margin-top: 0; }
+.pop dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin: 0; }
+.pop dt { font: 500 11px/1.5 var(--font-code); white-space: nowrap; }
+.pop dd { margin: 0; color: var(--muted); }
+
+/* ---------- Index, inspector, legend, dock, minimap ---------- */
+.ph { display: flex; align-items: center; gap: 4px; min-height: 26px; padding-left: 8px; }
+.index { grid-area: index; align-self: start; width: 212px; max-height: 100%; overflow: auto; padding: 5px; }
+.ix-stack { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; column-gap: 6px; align-items: baseline; width: 100%; padding: 6px 8px; border: 0; border-radius: var(--r-ctl); background: transparent; text-align: left; }
+.ix-stack:hover { background: var(--soft); }
+.ix-stack .num { font: 500 9.5px var(--font-display); color: var(--faint); }
+.ix-stack .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ix-stack .ct { font: 500 10.5px var(--font-code); color: var(--muted); }
+.ix-stack[aria-current="true"] { background: var(--accent); color: var(--on-accent); }
+.ix-stack[aria-current="true"] .num, .ix-stack[aria-current="true"] .ct { color: inherit; opacity: .7; }
+.ix-prs { display: none; gap: 1px; padding: 3px 0 5px 28px; }
+.ix-stack[aria-current="true"] + .ix-prs { display: grid; }
+.ix-pr { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px; align-items: baseline; padding: 3px 6px; border: 0; border-radius: var(--r-row); background: transparent; text-align: left; font-size: 12px; }
+.ix-pr:hover { background: var(--soft); }
+.ix-pr b { font: 500 10.5px var(--font-code); color: var(--muted); }
+.ix-pr span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.index.rail { width: auto; }
+.index.rail .ph .micro, .index.rail .nm, .index.rail .ct, .index.rail .ix-prs { display: none !important; }
+.index.rail .ph { padding-left: 0; justify-content: center; }
+.index.rail .ix-stack { grid-template-columns: auto; justify-items: center; padding: 7px 6px; }
+
+.insp { grid-area: insp; align-self: start; width: 296px; max-height: 100%; overflow: auto; padding: 5px 5px 10px; border-left: 3px solid var(--c, var(--line)); }
+.insp.folded { padding-bottom: 5px; }
+.insp.folded .insp-body { display: none; }
+.insp.folded #insp-fold .ic { transform: rotate(-90deg); }
+#insp-fold .ic { transform: rotate(90deg); }
+.insp-body { display: grid; gap: 8px; padding: 2px 8px 0; }
+.insp-body h2 { margin: 0; font: 600 15px/1.25 var(--font-ui); text-wrap: balance; overflow-wrap: anywhere; }
+.insp-body h2.code { font: 500 13.5px/1.35 var(--font-code); }
+.insp-body p { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+.insp-body p.lead { color: var(--ink); }
+.insp-body p.branch { font: 500 11px/1.4 var(--font-code); overflow-wrap: anywhere; }
+.insp-body p.sim-label { margin-top: 2px; font-weight: 600; color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; padding: 2px 8px; border: 1px solid var(--line); border-radius: var(--r-pill); background: transparent; font-size: 11.5px; text-decoration: none; color: var(--ink); }
+button.chip:hover, a.chip:hover { border-color: var(--ink); }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.list { display: grid; gap: 1px; }
+.item { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; column-gap: 8px; align-items: center; width: 100%; padding: 4px 6px; border: 0; border-radius: var(--r-row); background: transparent; text-align: left; font-size: 12px; }
+.item:hover { background: var(--soft); }
+.item .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item .nm.code { font: 500 11.5px var(--font-code); }
+.item .ct { font: 500 10.5px var(--font-code); color: var(--muted); }
+.item .num { font: 500 10.5px var(--font-code); color: var(--muted); }
+.item.numbered { grid-template-columns: max-content minmax(0, 1fr) auto; }
+
+.legend { grid-area: foot; align-self: end; justify-self: start; display: flex; align-items: flex-end; gap: 2px; max-width: 100%; padding: 4px; }
+.cats { display: flex; flex-wrap: wrap; gap: 1px; min-width: 0; }
+.cat { display: inline-flex; align-items: center; gap: 7px; height: 26px; min-width: 26px; padding: 0 9px; border: 0; border-radius: var(--r-ctl); background: transparent; font-size: 12px; white-space: nowrap; }
+.cat:hover { background: var(--soft); }
+.cat .nm, .cat .ct { display: none; }
+.cat .ct { margin-left: auto; padding-left: 10px; font: 500 10.5px var(--font-code); color: var(--muted); }
+.cat[aria-pressed="true"] { background: color-mix(in srgb, var(--c) 16%, var(--surface)); box-shadow: inset 0 0 0 1px var(--c); }
+.cat[aria-pressed="true"] .nm { display: inline; }
+.legend.open .cats { flex-direction: column; flex-wrap: nowrap; }
+.legend.open .cat .nm, .legend.open .cat .ct { display: inline; }
+.legend.open #legend-fold .ic { transform: rotate(90deg); }
+#legend-fold .ic { transform: rotate(-90deg); }
+.legend.open .cat::after { display: none; }
+
+.dock { grid-area: foot; align-self: end; justify-self: center; display: flex; align-items: center; gap: 2px; padding: 4px; }
+.pct { min-width: 52px; height: 26px; padding: 0 6px; border: 0; border-radius: var(--r-ctl); background: transparent; font: 500 11px var(--font-code); font-variant-numeric: tabular-nums; }
+.pct:hover { background: var(--soft); }
+.stat { padding: 0 8px 0 6px; font: 500 10.5px var(--font-code); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.mini { grid-area: foot; align-self: end; justify-self: end; width: 172px; padding: 6px; }
+.mini.idle { display: none; }
+.mini svg { display: block; width: 100%; cursor: crosshair; touch-action: none; }
+.mini .mn { fill: var(--ink); opacity: .55; }
+.mini .mg { fill: var(--edge); opacity: .7; }
+.mini .mv { fill: color-mix(in srgb, var(--focus) 12%, transparent); stroke: var(--focus); stroke-width: 1.5; }
+
+/* ---------- Tree ---------- */
+.edges, .links { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.edges path { fill: none; stroke: var(--edge); stroke-width: var(--edge-w); }
+.edges path.on { stroke: var(--sel); stroke-width: calc(var(--edge-w) + .5px); }
+.links path { fill: none; stroke: var(--c); stroke-width: 1.5; stroke-dasharray: 2 5; stroke-linecap: round; }
+.mind { position: relative; display: flex; align-items: center; width: max-content; padding: var(--pad); }
+.mind ul { list-style: none; margin: 0; padding: 0; padding-inline-start: var(--gap); display: flex; flex-direction: column; justify-content: center; gap: var(--gap-group); }
+.mind li { display: flex; align-items: center; }
+.mind ul.branch { gap: var(--gap-stack); }
+.mind ul.branch > li > ul { gap: var(--gap-pr); }
+.branch.l { direction: rtl; }
+.branch.l .node, .branch.l .gcard { direction: ltr; }
+li.closed > ul { display: none; }
+/* Open groups of a PR stand in columns behind one bracket, so a PR with many functions grows wide, not tall. */
+.mind ul.multi {
+  display: block; column-count: var(--cols); column-gap: var(--gap-col); padding-inline-start: calc(var(--gap) + var(--bracket));
+  width: calc(var(--gap) + var(--bracket) + var(--cols) * var(--cardw) + (var(--cols) - 1) * var(--gap-col));
+}
+.mind ul.multi > li { display: block; break-inside: avoid; padding-bottom: var(--gap-group); }
+.mind ul.multi .gcard.folded { display: inline-flex; max-width: 100%; }
+
+.node { position: relative; flex: none; padding: 9px 12px; border: 1px solid var(--frame); border-radius: var(--r-node); background: var(--surface); box-shadow: var(--node-shadow); cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.node:hover { border-color: var(--edge); }
+.node.is-sel { border-color: var(--sel); box-shadow: 0 0 0 var(--sel-ring) var(--sel-halo), var(--node-shadow); }
+.node .meta { display: flex; gap: 8px; font: 500 10.5px/1.3 var(--font-code); color: var(--muted); }
+.node .ess { display: none; margin-top: 6px; font-size: 12px; line-height: 1.4; color: var(--muted); }
+.d-l .node .ess { display: block; }
+.root { max-width: 236px; padding: 14px 16px; border-color: var(--root-bg); border-radius: var(--r-root); background: var(--root-bg); color: var(--root-fg); }
+.root:hover { border-color: var(--root-bg); }
+.root b { display: block; font: 700 13px/1.3 var(--font-display); text-wrap: balance; }
+.root .meta { margin-top: 7px; color: inherit; opacity: .7; }
+.root .ess { color: inherit; opacity: .8; }
+.root.is-sel { border-color: var(--root-bg); box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--sel); }
+.stack { width: 172px; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; align-items: center; }
+.stack .num { grid-row: span 2; font: 500 17px/1 var(--font-display); color: var(--faint); }
+.stack .nm { font: 600 14px/1.2 var(--font-ui); }
+.stack .ess, .stack .mix { grid-column: 1 / -1; }
+.pr { width: 236px; }
+.pr .head { display: flex; align-items: baseline; gap: 8px; }
+.pr .n { font: 500 11px var(--font-code); color: var(--muted); text-decoration: none; flex: none; }
+.pr .n:hover { color: var(--ink); text-decoration: underline; }
+.pr .t { font: 600 13px/1.3 var(--font-ui); }
+.pr .meta { margin-top: 5px; }
+.pr .meta .hit { color: var(--ink); }
+.mix { display: flex; gap: 1px; height: 3px; margin-top: 8px; border-radius: 2px; overflow: hidden; }
+.mix i { background: var(--c); flex: 1 1 0; transition: background-color .15s; }
+.mix i.off { background: color-mix(in srgb, var(--c) 15%, transparent); }
+.tg {
+  position: absolute; top: 50%; right: -11px; z-index: 1; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 22px; padding: 0 5px; border: 1px solid var(--edge); border-radius: var(--r-tg); background: var(--surface); color: var(--ink);
+  font: 700 10.5px/1 var(--font-code);
+}
+.branch.l .tg { right: auto; left: -11px; }
+.tg:hover { border-color: var(--ink); }
+li.closed > .node > .tg { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
+
+.gcard { flex: none; width: var(--cardw); padding: 3px; border: 1px var(--card-border) var(--card-frame); border-radius: var(--r-card); background: var(--card-fill); }
+.d-s { --cardw: 256px; }
+.gh { display: flex; align-items: center; gap: 6px; width: 100%; height: 24px; padding: 0 6px 0 4px; border: 0; border-radius: var(--r-row); background: transparent; text-align: left; }
+.gh:hover { background: var(--soft); }
+.gh .ic { width: 12px; height: 12px; color: var(--faint); transform: rotate(90deg); transition: transform .15s; }
+.gh .nm { font: 600 11.5px/1.2 var(--font-ui); white-space: nowrap; }
+.gh .ct { margin-left: auto; font: 500 10px var(--font-code); color: var(--faint); }
+.dots { display: none; align-items: center; flex-wrap: wrap; padding-right: 4px; }
+.gcard.folded { display: flex; align-items: center; width: auto; max-width: 340px; padding: 1px 3px 1px 1px; border-style: solid; border-radius: min(var(--r-pill), 13px); background: var(--surface); }
+.gcard.folded .rows { display: none; }
+.gcard.folded .dots { display: flex; }
+.gcard.folded .gh { width: auto; flex: none; }
+.gcard.folded .gh .ic { transform: none; }
+.gcard.folded .gh .ct { display: none; }
+.d { display: grid; place-items: center; width: 13px; height: 22px; padding: 0; border: 0; background: transparent; }
+.d i { width: 7px; height: 7px; border-radius: var(--r-dot); background: var(--c); transition: transform .12s; }
+.d:hover i { transform: scale(1.5); }
+.d.key i { width: 5px; height: 5px; box-shadow: 0 0 0 1.5px var(--surface), 0 0 0 3px var(--c); }
+/* Dimmed marks change color, not opacity: opacity and filters would make the browser lay the tree out again. */
+.d.is-dim i { --c: color-mix(in srgb, var(--edge) 45%, transparent); box-shadow: none; }
+.d.key.is-dim i { box-shadow: 0 0 0 1.5px var(--surface), 0 0 0 3px var(--c); }
+.d.is-sel i { outline: 2px solid var(--ink); outline-offset: 3px; }
+.d.is-sim i { outline: 1.5px dashed var(--ink); outline-offset: 3px; }
+.rows { display: grid; gap: 1px; padding-top: 2px; }
+.fn {
+  display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; column-gap: 8px; align-items: center; width: 100%;
+  padding: 4px 8px; border: 0; border-radius: var(--r-row); background: transparent; text-align: left; transition: background-color .12s, color .15s;
+}
+.fn:hover { background: color-mix(in srgb, var(--c) 12%, transparent); }
+.fn .name { font: 500 12px/1.35 var(--font-code); overflow-wrap: anywhere; }
+.fn .star { margin-left: 6px; color: var(--c); font-size: 10.5px; }
+.fn .tags { display: inline-flex; align-items: center; gap: 5px; }
+.fn .kind { font: 500 9px var(--font-code); letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+.fn .kind.u { color: var(--ink); }
+.fn .sim { display: none; min-width: 16px; padding: 0 4px; border-radius: min(5px, var(--r-ctl)); background: var(--ink); color: var(--invert); font: 700 10.5px/16px var(--font-code); text-align: center; }
+.fn .why { grid-column: 2 / -1; font-size: 11.5px; line-height: 1.3; color: var(--muted); }
+.d-s .fn .why { display: none; }
+.fn.is-sel { background: color-mix(in srgb, var(--c) 16%, transparent); box-shadow: inset 0 0 0 1.5px var(--c); }
+.fn.is-sim { outline: 1px dashed var(--ink); outline-offset: -1px; }
+.fn.is-sim .sim { display: inline-block; }
+.fn.is-dim { color: color-mix(in srgb, var(--ink) 30%, transparent); }
+.fn.is-dim .why, .fn.is-dim .kind, .fn.is-dim .star { color: inherit; }
+.fn.is-dim .dot { background: color-mix(in srgb, var(--faint) 55%, transparent); }
+
+/* ---------- Skin menu ---------- */
+[aria-expanded="true"][data-tip]::after { display: none; }
+.skins { width: 300px; padding: 5px; }
+.skins .micro { display: block; padding: 5px 8px 6px; }
+.skin-item { display: grid; grid-template-columns: 44px minmax(0, 1fr) 16px; column-gap: 10px; align-items: center; width: 100%; padding: 6px 8px; border: 0; border-radius: var(--r-row); background: transparent; text-align: left; }
+.skin-item:hover { background: var(--soft); }
+.skin-item b { display: block; font-weight: 600; font-size: 13px; }
+.skin-item small { display: block; font-size: 11.5px; color: var(--muted); }
+.skin-item > .ic { visibility: hidden; }
+.skin-item[aria-checked="true"] > .ic { visibility: visible; }
+.sw { position: relative; width: 44px; height: 30px; overflow: hidden; border: 1px solid var(--frame); border-radius: var(--r-ctl); background: var(--bg); }
+.sw i { position: absolute; }
+.sw i:nth-child(1) { left: 5px; top: 10px; width: 13px; height: 9px; border-radius: min(3px, var(--r-root)); background: var(--root-bg); box-shadow: 0 0 0 1px var(--frame); }
+.sw i:nth-child(2) { right: 5px; top: 4px; width: 15px; height: 8px; border: 1px solid var(--frame); border-radius: min(3px, var(--r-node)); background: var(--surface); }
+.sw i:nth-child(3) { right: 5px; bottom: 4px; width: 15px; height: 8px; border: 1px solid var(--frame); border-radius: min(3px, var(--r-node)); background: var(--surface); }
+.sw i:nth-child(4) { left: 18px; top: 14px; width: 6px; height: 1px; background: var(--edge); }
+
+/* ---------- Skins: what the tokens cannot say ---------- */
+[data-skin="strict"] .mark { font: 700 12px/1 var(--font-display); letter-spacing: .14em; }
+[data-skin="strict"] .root b { font: 700 14px/1.25 var(--font-display); letter-spacing: -.01em; }
+[data-skin="strict"] .stack .num { font: 500 13px/1 var(--font-code); color: var(--muted); }
+[data-skin="strict"] .ix-stack .num { font: 500 10.5px var(--font-code); }
+/* A square toggle takes its whole box, so the text of the node steps back from it. */
+[data-skin="strict"] .branch.l .node, [data-skin="blueprint"] .branch.l .node { padding-left: 18px; }
+[data-skin="strict"] .branch.r .node, [data-skin="blueprint"] .branch.r .node { padding-right: 18px; }
+[data-skin="strict"] .seg, [data-skin="blueprint"] .seg { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+[data-skin="strict"] .seg button[aria-pressed="true"], [data-skin="blueprint"] .seg button[aria-pressed="true"] { box-shadow: none; }
+[data-skin="strict"] .search, [data-skin="blueprint"] .search { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+[data-skin="strict"] .search:focus-within, [data-skin="blueprint"] .search:focus-within { box-shadow: inset 0 0 0 1.5px var(--sel); }
+
+[data-skin="mac"] .mark { font: 600 13px/1 var(--font-display); letter-spacing: 0; text-transform: none; }
+[data-skin="mac"] .micro { font: 600 11px/1.2 var(--font-ui); letter-spacing: 0; text-transform: none; }
+[data-skin="mac"] .root b { font: 600 14px/1.25 var(--font-display); }
+[data-skin="mac"] .stack .num { font: 600 15px/1 var(--font-display); }
+[data-skin="mac"] .ix-stack .num { font: 500 10.5px var(--font-ui); }
+[data-skin="mac"] .counts, [data-skin="mac"] .stat, [data-skin="mac"] .pct, [data-skin="mac"] .node .meta, [data-skin="mac"] .ix-stack .ct { font-family: var(--font-ui); font-variant-numeric: tabular-nums; }
+[data-skin="mac"] .seg button[aria-pressed="true"] { box-shadow: 0 0 0 .5px rgb(0 0 0 / 8%), 0 1px 2.5px rgb(0 0 0 / 18%); }
+[data-skin="mac"] .tg { border-color: var(--frame); box-shadow: var(--node-shadow); }
+
+[data-skin="blueprint"] body { font-size: 12px; }
+[data-skin="blueprint"] .mark { font: 700 11px/1 var(--font-display); letter-spacing: .14em; }
+[data-skin="blueprint"] .root { box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px var(--frame); border-color: var(--frame); }
+[data-skin="blueprint"] .root.is-sel { border-color: var(--frame); box-shadow: 0 0 0 3px var(--bg), 0 0 0 6px var(--frame); }
+[data-skin="blueprint"] .root b { font: 700 12.5px/1.35 var(--font-display); letter-spacing: .05em; text-transform: uppercase; }
+[data-skin="blueprint"] .stack .nm { font: 700 12px/1.25 var(--font-ui); letter-spacing: .07em; text-transform: uppercase; }
+[data-skin="blueprint"] .stack .num { font: 500 15px/1 var(--font-display); }
+[data-skin="blueprint"] .pr .t { font: 600 12px/1.35 var(--font-ui); }
+[data-skin="blueprint"] .gh .nm { font: 600 10.5px/1.2 var(--font-ui); letter-spacing: .06em; text-transform: uppercase; }
+[data-skin="blueprint"] .fn .why, [data-skin="blueprint"] .insp-body p { font-size: 11px; }
+[data-skin="blueprint"] .insp-body h2 { font: 700 13px/1.3 var(--font-ui); }
+
+@media (max-width: 760px) {
+  .chrome { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto; grid-template-areas: "bar" "mid" "legend" "foot"; gap: 8px; }
+  .legend { grid-area: legend; }
+  .index, .mini, .counts, .bar .grow { display: none; }
+  .insp { grid-area: mid; align-self: end; width: auto; max-height: 46%; }
+  .search { flex: 1 1 140px; }
+  .tools { order: 5; flex: 1 1 100%; min-width: 0; overflow-x: auto; }
+  .mark { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .legend { overflow-x: auto; justify-self: stretch; }
+  .dock { max-width: 100%; }
+  .cats { flex-wrap: nowrap; }
+  .legend.open .cats { flex-wrap: nowrap; max-height: 40vh; overflow-y: auto; }
+  [data-tip]::after { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+</style>
+
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.7l5.9-.8Z"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16l-6.2 7.4V18l-3.6 2v-7.6Z"/></symbol>
+<symbol id="i-both" viewBox="0 0 24 24"><rect x="9.5" y="9.5" width="5" height="5" rx="1.2"/><path d="M9.5 12H6m0-6v12M6 6H3m3 6H3m3 6H3M14.5 12H18m0-6v12m0-12h3m-3 6h3m-3 6h3"/></symbol>
+<symbol id="i-right" viewBox="0 0 24 24"><rect x="3" y="9.5" width="5" height="5" rx="1.2"/><path d="M8 12h5m0-6v12m0-12h8m-8 6h8m-8 6h8"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2m0 15v2M2.5 12h2m15 0h2M5.3 5.3l1.4 1.4m10.6 10.6 1.4 1.4m-13.4 0 1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
+<symbol id="i-skin" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.1 0 1.9-.8 1.9-1.8 0-.5-.2-.9-.5-1.3-.3-.3-.4-.7-.4-1.2 0-1 .8-1.8 1.8-1.8h1.9a3.8 3.8 0 0 0 3.8-3.8c0-3.9-3.8-7.1-8.5-7.1Z"/><path d="M7.6 12.3h.01M9.6 8.3h.01M14.4 8h.01"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.6 2.3c-.800.4-1.2 1-1.2 1.9M12 16.8h.01"/></symbol>
+<symbol id="i-hide" viewBox="0 0 24 24"><path d="m4 4 16 16M10.3 6.2A9 9 0 0 1 12 6c5 0 8.4 4 9.5 6-.5.9-1.3 2-2.5 3.1M6.4 7.7C4.6 9 3.2 10.7 2.5 12c1.1 2 4.5 6 9.5 6 1.4 0 2.7-.3 3.9-.8M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+<symbol id="i-fit" viewBox="0 0 24 24"><path d="M8 3.5H3.5V8m12.5-4.5h4.5V8M3.5 16v4.5H8m12.5-4.5v4.5H16"/><rect x="8" y="8" width="8" height="8" rx="1.5"/></symbol>
+<symbol id="i-map" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><rect x="12" y="11" width="6" height="5" rx="1"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13"/></symbol>
+<symbol id="i-minus" viewBox="0 0 24 24"><path d="M5.5 12h13"/></symbol>
+<symbol id="i-close" viewBox="0 0 24 24"><path d="m6.5 6.5 11 11m0-11-11 11"/></symbol>
+<symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4.5h5.5V10M19.5 4.5 11 13M10 6.5H5.5v12h12V14"/></symbol>
+<symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M9.5 4.5v15"/></symbol>
+</defs></svg>
+
+<div class="app d-m" id="app">
+  <div class="board" id="board" tabindex="0" aria-label="Холст карты: два пальца или перетаскивание двигают карту, pinch меняет масштаб, стрелки двигают с клавиатуры">
+    <div class="canvas" id="canvas">
+      <svg class="edges" id="edges" aria-hidden="true"></svg>
+      <svg class="links" id="links" aria-hidden="true"></svg>
+      <div class="mind" id="mind"></div>
+    </div>
+  </div>
+  <div class="chrome" id="chrome">
+    <header class="bar glass" id="bar">
+      <h1 class="mark"><button id="about" class="tip-start" data-tip="О карте">/*TITLE*/</button></h1>
+      <span class="counts" id="counts"></span>
+      <div class="search" id="search-box">
+        <svg class="ic" aria-hidden="true"><use href="#i-search"/></svg>
+        <input id="search" type="search" placeholder="Функция или PR" aria-label="Найти функцию или PR" aria-controls="results" aria-expanded="false" autocomplete="off" spellcheck="false">
+        <kbd aria-hidden="true">/</kbd>
+        <div class="results glass" id="results" hidden></div>
+      </div>
+      <span class="grow"></span>
+      <div class="tools">
+        <button class="ib" id="only-key" aria-pressed="false" aria-label="Только ключевые" data-tip="Только ключевые ★ · K"><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg></button>
+        <button class="ib" id="filter" aria-pressed="false" aria-label="Скрыть остальные цвета" data-tip="Скрыть остальные цвета · F"><svg class="ic" aria-hidden="true"><use href="#i-filter"/></svg></button>
+        <span class="sep"></span>
+        <div class="seg" id="depth" role="group" aria-label="Глубина дерева">
+          <button data-depth="1" data-tip="Только стеки · [ ]">Стеки</button>
+          <button data-depth="2" data-tip="До PR · [ ]">PR</button>
+          <button data-depth="3" data-tip="Группы, функции точками · [ ]">Группы</button>
+          <button data-depth="4" data-tip="Все функции · [ ]">Функции</button>
+        </div>
+        <div class="seg" id="density" role="group" aria-label="Плотность">
+          <button data-density="s" data-tip="Только названия · D">S</button>
+          <button data-density="m" data-tip="Функции с пояснением · D">M</button>
+          <button data-density="l" data-tip="Ещё суть стеков и PR · D">L</button>
+        </div>
+        <button class="ib" id="layout" aria-label="Раскладка дерева" data-tip="В обе стороны / в одну · L"><svg class="ic" aria-hidden="true"><use id="layout-icon" href="#i-both"/></svg></button>
+        <span class="sep"></span>
+        <button class="ib" id="skin" aria-haspopup="menu" aria-expanded="false" aria-controls="skin-pop" aria-label="Скин" data-tip="Скин · S"><svg class="ic" aria-hidden="true"><use href="#i-skin"/></svg></button>
+        <button class="ib" id="theme" aria-label="Светлая или тёмная тема" data-tip="Тема · T"><svg class="ic" aria-hidden="true"><use href="#i-sun"/></svg></button>
+        <button class="ib" id="help" aria-expanded="false" aria-label="Обозначения и клавиши" data-tip="Обозначения и клавиши · ?"><svg class="ic" aria-hidden="true"><use href="#i-help"/></svg></button>
+        <button class="ib tip-end" id="zen" aria-label="Скрыть интерфейс" data-tip="Скрыть интерфейс · H"><svg class="ic" aria-hidden="true"><use href="#i-hide"/></svg></button>
+      </div>
+      <div class="pop glass skins" id="skin-pop" role="menu" aria-label="Скин" hidden><span class="micro">Скин</span><div id="skin-list"></div></div>
+      <div class="pop glass" id="help-pop" hidden>
+        <h2 class="micro">Обозначения</h2>
+        <dl>
+          <dt>★</dt><dd>ключевая функция; у точки — кольцо</dd>
+          <dt>УНИК</dt><dd>своя логика проекта</dd>
+          <dt>СТАНД</dt><dd>обычный приём фреймворка</dd>
+          <dt>≈</dt><dd>похожа на выбранную функцию</dd>
+          <dt>− / +N</dt><dd>на рёбрах: свернуть и развернуть ветку</dd>
+        </dl>
+        <h2 class="micro">Холст</h2>
+        <dl>
+          <dt>pinch · ⌘ + колесо</dt><dd>масштаб</dd>
+          <dt>два пальца · тянуть</dt><dd>сдвиг</dd>
+          <dt>двойной клик</dt><dd>приблизить, с Shift — отдалить</dd>
+        </dl>
+        <h2 class="micro">Клавиши</h2>
+        <dl>
+          <dt>/</dt><dd>поиск</dd>
+          <dt>K · F</dt><dd>только ключевые · скрыть остальные цвета</dd>
+          <dt>[ · ]</dt><dd>глубина дерева</dd>
+          <dt>D · L</dt><dd>плотность · раскладка</dd>
+          <dt>0 · 1 · + · −</dt><dd>вся карта · 100% · масштаб</dd>
+          <dt>M · H</dt><dd>мини-карта · интерфейс</dd>
+          <dt>T · S</dt><dd>тема · скин</dd>
+          <dt>Esc</dt><dd>сбросить выбор</dd>
+        </dl>
+      </div>
+    </header>
+    <nav class="index glass" id="index" aria-label="Стеки и PR">
+      <div class="ph"><span class="micro">Стеки</span><span class="grow"></span><button class="ib sm tip-start" id="index-fold" aria-label="Свернуть список стеков" data-tip="Свернуть или развернуть список"><svg class="ic" aria-hidden="true"><use href="#i-panel"/></svg></button></div>
+      <div id="index-list"></div>
+    </nav>
+    <aside class="insp glass" id="insp" hidden aria-live="polite">
+      <div class="ph"><span class="micro" id="insp-label"></span><span class="grow"></span>
+        <button class="ib sm" id="insp-fold" aria-label="Свернуть панель" data-tip="Свернуть"><svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></button>
+        <button class="ib sm tip-end" id="insp-close" aria-label="Сбросить выбор" data-tip="Сбросить · Esc"><svg class="ic" aria-hidden="true"><use href="#i-close"/></svg></button>
+      </div>
+      <div class="insp-body" id="insp-body"></div>
+    </aside>
+    <div class="legend glass" id="legend">
+      <div class="cats" id="cats" role="group" aria-label="Цвета: тип работы функции"></div>
+      <button class="ib sm up tip-start" id="legend-fold" aria-expanded="false" aria-label="Названия цветов" data-tip="Названия цветов"><svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></button>
+    </div>
+    <div class="dock glass" id="dock" role="toolbar" aria-label="Масштаб карты">
+      <button class="ib sm up" id="zoom-out" aria-label="Отдалить" data-tip="Отдалить · −"><svg class="ic" aria-hidden="true"><use href="#i-minus"/></svg></button>
+      <button class="pct up" id="zoom-reset" aria-label="Масштаб 100%" data-tip="100% · 1">100%</button>
+      <button class="ib sm up" id="zoom-in" aria-label="Приблизить" data-tip="Приблизить · +"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
+      <span class="sep"></span>
+      <button class="ib sm up" id="zoom-fit" aria-label="Вся карта" data-tip="Вся карта · 0"><svg class="ic" aria-hidden="true"><use href="#i-fit"/></svg></button>
+      <button class="ib sm up" id="mini-toggle" aria-pressed="true" aria-label="Мини-карта" data-tip="Мини-карта, когда карта не помещается · M"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg></button>
+      <span class="sep"></span>
+      <span class="stat" id="stat"></span>
+    </div>
+    <div class="mini glass" id="mini"><svg id="minimap" role="img" aria-label="Мини-карта: нажмите или тяните, чтобы перейти к участку"></svg></div>
+    <button class="reveal glass" id="reveal" hidden>Показать интерфейс <kbd>H</kbd></button>
+  </div>
+</div>
+
+<script src="map-data.js"></script>
+<script>
+// A built map has its data inlined in place of the tag above; the bare template reads map-data.js next to it.
+const DATA = window.PR_MAP_DATA;
+if (!DATA) {
+  const note = document.createElement('div');
+  note.className = 'nodata';
+  const code = document.createElement('code');
+  code.textContent = 'python3 build.py data.json --html map.html';
+  note.append('Это шаблон карты, данных рядом с ним нет. Откройте готовую карту (map.html или prmap.html) или соберите её: ', code);
+  document.getElementById('app').replaceChildren(note);
+  throw new Error('template.html has no data: no inlined data and no map-data.js next to it');
+}
+const $ = (id) => document.getElementById(id);
+document.title = DATA.title;
+$('about').textContent = DATA.title;
+if (DATA.palette && !getComputedStyle(document.documentElement).getPropertyValue(`--c-${DATA.cats[0].id}`).trim()) {
+  // The bare template has no color tokens of the categories: they come with the data.
+  const tokens = (theme) => DATA.cats.map((c, i) => `--c-${c.id}:${DATA.palette[i][theme]};`).join('');
+  const style = document.createElement('style');
+  style.textContent = `:root{${tokens(0)}}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){${tokens(1)}}}:root[data-theme="dark"]{${tokens(1)}}`;
+  document.head.append(style);
+}
+const SVG = 'http://www.w3.org/2000/svg';
+const h = (tag, cls, ...kids) => {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  for (const k of kids) if (k != null) e.append(k);
+  return e;
+};
+const svgEl = (tag, attrs = {}) => {
+  const e = document.createElementNS(SVG, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  return e;
+};
+const icon = (name) => {
+  const s = svgEl('svg', {class: 'ic', 'aria-hidden': 'true'});
+  s.append(svgEl('use', {href: `#i-${name}`}));
+  return s;
+};
+const cvar = (cat) => `var(--c-${cat})`;
+const withColor = (e, cat) => { e.style.setProperty('--c', cvar(cat)); return e; };
+const plural = (n, one, few, many) => {
+  const d = n % 10, t = n % 100;
+  return `${n} ${d === 1 && t !== 11 ? one : d >= 2 && d <= 4 && (t < 12 || t > 14) ? few : many}`;
+};
+const fnWord = (n) => plural(n, 'функция', 'функции', 'функций');
+
+/* ---------- Model ---------- */
+const catById = Object.fromEntries(DATA.cats.map((c) => [c.id, c]));
+const simById = Object.fromEntries((DATA.sims ?? []).map((s) => [s.id, s]));
+const stacks = [], prs = [], groups = [], fns = [];
+const fnByName = new Map();
+DATA.stacks.forEach((st, i) => {
+  const S = {st, num: String(i + 1).padStart(2, '0'), closed: false, prs: [], fns: [], side: 'r'};
+  stacks.push(S);
+  for (const pr of st.prs) {
+    const P = {pr, stack: S, closed: false, groups: [], fns: []};
+    S.prs.push(P); prs.push(P);
+    for (const g of pr.groups) {
+      const G = {g, pr: P, folded: true, fns: []};
+      P.groups.push(G); groups.push(G);
+      for (const f of g.fns) {
+        const F = {f, group: G, pr: P, stack: S};
+        G.fns.push(F); P.fns.push(F); S.fns.push(F); fns.push(F); fnByName.set(f.name, F);
+      }
+    }
+  }
+});
+const simsOf = (F) => (F.f.sims ?? []).map((id) => simById[id]).filter(Boolean);
+
+/** `onlyKey` hides functions without ★; `filter` hides functions of other colors instead of graying them. */
+const state = {sel: null, cat: null, fn: null, onlyKey: false, filter: false, density: 'm', layout: 'both', skin: 'studio'};
+const PREFS = 'pr-mindmap:v3';
+const prefs = (() => { try { return JSON.parse(localStorage.getItem(PREFS)) ?? {}; } catch { return {}; } })();
+const savePrefs = (patch) => { Object.assign(prefs, patch); try { localStorage.setItem(PREFS, JSON.stringify(prefs)); } catch {} };
+
+/* ---------- Tree DOM ---------- */
+const app = $('app'), board = $('board'), canvas = $('canvas'), mind = $('mind');
+const pan = {pointers: new Map(), moved: false, last: null, origin: null, pinch: null};
+
+function mixBar(list) {
+  const bar = h('span', 'mix');
+  for (const c of DATA.cats) {
+    const n = list.filter((F) => F.f.cat === c.id).length;
+    if (!n) continue;
+    const i = withColor(h('i'), c.id);
+    i.style.flexGrow = n;
+    i.dataset.cat = c.id;
+    i.title = `${c.name}: ${n}`;
+    bar.append(i);
+  }
+  return bar;
+}
+function nodeBox(cls, onSelect) {
+  const n = h('div', `node ${cls}`);
+  n.tabIndex = 0;
+  n.setAttribute('role', 'button');
+  n.addEventListener('click', (e) => { if (!e.target.closest('a, .tg')) onSelect(); });
+  n.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target === n) { e.preventDefault(); onSelect(); }
+  });
+  return n;
+}
+/** A −/+N button on the edges that leave a node: it hides or shows the children. */
+function toggleButton(owner) {
+  const b = h('button', 'tg');
+  b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    owner.closed = !owner.closed;
+    refresh({anchor: owner.node});
+  });
+  return b;
+}
+const pickFn = (F) => select(state.fn === F ? {cat: F.f.cat} : {fn: F});
+
+const rootNode = nodeBox('root', () => select(state.sel?.root ? null : {root: true}));
+rootNode.append(h('b', null, DATA.root.title),
+  h('span', 'meta', `${prs.length} PR · ${fnWord(fns.length)}`), h('span', 'ess', DATA.root.essence));
+const branchL = h('ul', 'branch l'), branchR = h('ul', 'branch r');
+mind.append(branchL, rootNode, branchR);
+
+for (const S of stacks) {
+  S.node = nodeBox('stack', () => select(state.sel?.stack === S ? null : {stack: S}));
+  S.node.append(h('span', 'num', S.num), h('span', 'nm', S.st.name),
+    h('span', 'meta', `${S.prs.length} PR · ${S.fns.length} fn`), h('span', 'ess', S.st.essence), mixBar(S.fns));
+  S.tg = toggleButton(S);
+  S.node.append(S.tg);
+  S.ul = h('ul');
+  S.li = h('li', null, S.node, S.ul);
+  for (const P of S.prs) {
+    const {pr} = P;
+    P.node = nodeBox('pr', () => select(state.sel?.pr === P ? null : {pr: P}));
+    const a = h('a', 'n', `#${pr.n}`);
+    a.href = pr.url; a.target = '_blank'; a.rel = 'noopener'; a.title = 'Открыть PR на GitHub';
+    P.hit = h('span', 'hit');
+    P.node.append(h('span', 'head', a, h('span', 't', pr.title)), h('span', 'ess', pr.essence), mixBar(P.fns),
+      h('span', 'meta', h('span', null, `${P.fns.length} fn · ★ ${P.fns.filter((F) => F.f.key).length}`), P.hit));
+    P.tg = toggleButton(P);
+    P.node.append(P.tg);
+    P.ul = h('ul');
+    P.li = h('li', null, P.node, P.ul);
+    S.ul.append(P.li);
+    for (const G of P.groups) {
+      G.ct = h('span', 'ct');
+      G.head = h('button', 'gh', icon('chev'), h('span', 'nm', G.g.name), G.ct);
+      G.head.addEventListener('click', () => { G.folded = !G.folded; refresh({anchor: G.card}); });
+      G.dots = h('span', 'dots');
+      G.rows = h('div', 'rows');
+      G.card = h('div', 'gcard', G.head, G.dots, G.rows);
+      G.li = h('li', null, G.card);
+      P.ul.append(G.li);
+      for (const F of G.fns) {
+        const {f} = F;
+        const name = h('span', 'name', f.name);
+        if (f.key) name.append(h('span', 'star', '★'));
+        const sim = h('span', 'sim', '≈');
+        sim.title = 'Похожа на выбранную функцию';
+        F.row = withColor(h('button', 'fn', h('span', 'dot'), name,
+          h('span', 'tags', sim, h('span', `kind ${f.kind}`, f.kind === 'u' ? 'уник' : 'станд')), h('span', 'why', f.why)), f.cat);
+        F.row.title = f.why;
+        F.row.setAttribute('aria-pressed', 'false');
+        F.row.addEventListener('click', () => pickFn(F));
+        F.dot = withColor(h('button', `d${f.key ? ' key' : ''}`, h('i')), f.cat);
+        F.dot.title = `${f.name} — ${f.why}`;
+        F.dot.setAttribute('aria-label', f.name);
+        F.dot.addEventListener('click', () => pickFn(F));
+        G.rows.append(F.row);
+        G.dots.append(F.dot);
+      }
+    }
+  }
+}
+
+/** Stacks keep their order: the first `split` go to the right of the root, the rest to the left. */
+function placeStacks(split) {
+  const moved = stacks.some((S, i) => S.li.parentNode !== (i < split ? branchR : branchL));
+  if (moved) {
+    const focused = document.activeElement;
+    stacks.forEach((S, i) => {
+      S.side = i < split ? 'r' : 'l';
+      (S.side === 'r' ? branchR : branchL).append(S.li);
+    });
+    if (focused && focused !== document.activeElement && mind.contains(focused)) focused.focus({preventScroll: true});
+  }
+  branchL.hidden = split >= stacks.length;
+}
+let columns = 1;
+/** A PR with an open group puts its groups into up to `count` columns; folded groups stay a list of pills. */
+const columnsOf = (cards, count) => (cards.some((card) => card.open) ? Math.max(1, Math.min(count, cards.length)) : 1);
+function applyColumns(count) {
+  for (const P of prs) {
+    const cards = P.groups.filter((G) => !G.li.hidden).map((G) => ({open: !G.folded}));
+    P.cols = columnsOf(cards, count);
+    P.ul.classList.toggle('multi', P.cols > 1);
+    P.ul.style.setProperty('--cols', P.cols);
+  }
+}
+/** The distances of the tree, as the stylesheet has them. */
+function treeMetrics() {
+  const css = getComputedStyle(app);
+  const px = (name) => parseFloat(css.getPropertyValue(name)) || 0;
+  return {gap: px('--gap'), stack: px('--gap-stack'), pr: px('--gap-pr'), group: px('--gap-group'), col: px('--gap-col'),
+    bracket: px('--bracket'), pad: px('--pad'), card: px('--cardw')};
+}
+const sum = (list) => list.reduce((a, b) => a + b, 0);
+/** The size of the groups of a PR in `count` columns. */
+function blockSize(cards, count, m) {
+  if (!cards.length) return {w: 0, h: 0};
+  const cols = columnsOf(cards, count);
+  if (cols === 1) return {w: Math.max(...cards.map((c) => c.w)), h: sum(cards.map((c) => c.h)) + m.group * (cards.length - 1)};
+  // CSS columns break only between cards and make the tallest column as short as it can be.
+  const heights = cards.map((c) => c.h + m.group);
+  let low = Math.max(...heights), high = sum(heights);
+  while (high - low > 1) {
+    const limit = (low + high) / 2;
+    let used = 1, filled = 0;
+    for (const x of heights) {
+      if (filled + x > limit) { used++; filled = 0; }
+      filled += x;
+    }
+    if (used <= cols) high = limit; else low = limit;
+  }
+  return {w: m.bracket + cols * m.card + (cols - 1) * m.col, h: high};
+}
+/** A node with its children to the side: as wide as both, as tall as the taller of them. */
+const besides = (node, kids, gap, m) => {
+  const inner = kids.length ? {w: Math.max(...kids.map((k) => k.w)), h: sum(kids.map((k) => k.h)) + gap * (kids.length - 1)} : {w: 0, h: 0};
+  return {w: node.w + (inner.w ? m.gap + inner.w : 0), h: Math.max(node.h, inner.h)};
+};
+/**
+ * Picks the columns and the sides of the stacks with which the whole map is largest on the board.
+ * The sizes of nodes and cards do not depend on the arrangement, so they are measured once
+ * and every arrangement is sized by arithmetic instead of a layout of its own.
+ */
+function arrange() {
+  const m = treeMetrics(), area = safeArea();
+  const size = (e) => ({w: e.offsetWidth, h: e.offsetHeight});
+  const root = size(rootNode);
+  const tree = stacks.map((S) => (S.li.hidden ? null : {
+    node: size(S.node),
+    prs: S.closed ? [] : S.prs.filter((P) => !P.li.hidden).map((P) => ({
+      node: size(P.node),
+      cards: P.closed ? [] : P.groups.filter((G) => !G.li.hidden).map((G) => ({...size(G.card), open: !G.folded})),
+    })),
+  }));
+  const measured = root.w > 0;
+  const twoSided = state.layout === 'both' && stacks.length > 1;
+  let best = null;
+  for (const count of measured ? [1, 2, 3, 4] : [1]) {
+    const sizes = tree.map((st) => (st
+      ? besides(st.node, st.prs.map((P) => besides(P.node, [blockSize(P.cards, count, m)].filter((b) => b.w), 0, m)), m.pr, m)
+      : {w: 0, h: 0}));
+    // Without a layout (no browser) the sides are balanced by the number of PRs and groups.
+    const weights = measured ? sizes.map((s) => (s.h ? s.h + m.stack : 0))
+      : stacks.map((S) => 3 * S.prs.length + S.prs.reduce((n, P) => n + P.groups.length, 0));
+    let split = stacks.length;
+    if (twoSided) {
+      // The split that makes the taller side as short as possible.
+      const total = sum(weights);
+      let cost = Infinity, right = 0;
+      for (let k = 1; k < stacks.length; k++) {
+        right += weights[k - 1];
+        if (Math.max(right, total - right) < cost) { cost = Math.max(right, total - right); split = k; }
+      }
+    }
+    const side = (list) => {
+      const shown = list.filter((s) => s.h);
+      return shown.length ? {w: m.gap + Math.max(...shown.map((s) => s.w)), h: sum(shown.map((s) => s.h)) + m.stack * (shown.length - 1)} : {w: 0, h: 0};
+    };
+    const right = side(sizes.slice(0, split)), left = side(sizes.slice(split));
+    const w = 2 * m.pad + root.w + left.w + right.w, hgt = 2 * m.pad + Math.max(root.h, left.h, right.h);
+    const scale = measured ? Math.min(area.w / w, area.h / hgt, 1) : 0;
+    // Fewer columns win unless more of them make the map clearly larger.
+    if (!best || scale > best.scale * 1.03) best = {count, split, scale};
+  }
+  columns = best.count;
+  applyColumns(columns);
+  placeStacks(best.split);
+  $('layout-icon').setAttribute('href', state.layout === 'both' ? '#i-both' : '#i-right');
+}
+
+/* ---------- Visibility ---------- */
+/** The selected function and the functions similar to it stay visible under any filter. */
+function relatedSet() {
+  const set = new Set();
+  if (state.fn) {
+    set.add(state.fn);
+    for (const s of simsOf(state.fn)) for (const name of s.members) if (fnByName.has(name)) set.add(fnByName.get(name));
+  }
+  return set;
+}
+const filtering = () => state.filter && Boolean(state.cat);
+let shownFns = 0;
+
+function applyVisibility() {
+  const related = relatedSet();
+  const filt = filtering();
+  const strict = filt || state.onlyKey;
+  const shows = (F) => related.has(F) || ((!state.onlyKey || F.f.key) && (!filt || F.f.cat === state.cat));
+  shownFns = 0;
+  for (const S of stacks) {
+    let inStack = 0, prCount = 0;
+    for (const P of S.prs) {
+      let inPr = 0;
+      for (const G of P.groups) {
+        let inGroup = 0;
+        for (const F of G.fns) {
+          const ok = shows(F);
+          F.row.hidden = !ok;
+          F.dot.hidden = !ok;
+          if (ok) inGroup++;
+        }
+        G.li.hidden = inGroup === 0;
+        G.ct.textContent = inGroup;
+        G.card.classList.toggle('folded', G.folded);
+        G.head.setAttribute('aria-expanded', String(!G.folded));
+        G.head.title = G.folded ? `Показать: ${fnWord(inGroup)}` : 'Свернуть в точки';
+        inPr += inGroup;
+      }
+      P.li.hidden = strict && inPr === 0;
+      P.li.classList.toggle('closed', P.closed);
+      P.tg.hidden = inPr === 0;
+      P.tg.textContent = P.closed ? `+${inPr}` : '−';
+      P.tg.title = P.closed ? `Показать группы #${P.pr.n}` : `Скрыть группы #${P.pr.n}`;
+      P.tg.setAttribute('aria-expanded', String(!P.closed));
+      const hit = state.cat ? P.fns.filter((F) => F.f.cat === state.cat).length : 0;
+      P.hit.textContent = state.cat ? `${catById[state.cat].name}: ${hit}` : '';
+      if (!P.li.hidden) prCount++;
+      inStack += inPr;
+    }
+    S.li.hidden = strict && inStack === 0;
+    S.li.classList.toggle('closed', S.closed);
+    S.tg.textContent = S.closed ? `+${prCount}` : '−';
+    S.tg.title = S.closed ? 'Показать PR стека' : 'Скрыть PR стека';
+    S.tg.setAttribute('aria-expanded', String(!S.closed));
+    shownFns += inStack;
+  }
+  $('stat').textContent = `${shownFns}/${fns.length} fn`;
+}
+
+/** 1 stacks, 2 PRs, 3 groups with functions as dots, 4 every function; null when branches differ. */
+function currentDepth() {
+  const allS = (v) => stacks.every((S) => S.closed === v);
+  const allP = (v) => prs.every((P) => P.closed === v);
+  const allG = (v) => groups.every((G) => G.folded === v);
+  if (allS(true)) return 1;
+  if (allS(false) && allP(true)) return 2;
+  if (allS(false) && allP(false) && allG(true)) return 3;
+  if (allS(false) && allP(false) && allG(false)) return 4;
+  return null;
+}
+function setDepth(d) {
+  for (const S of stacks) S.closed = d < 2;
+  for (const P of prs) P.closed = d < 3;
+  for (const G of groups) G.folded = d < 4;
+  savePrefs({depth: d});
+}
+
+/* ---------- Camera ---------- */
+const view = {x: 0, y: 0, s: 1};
+const MIN = 0.05, MAX = 4;
+const clamp = (v) => Math.min(MAX, Math.max(MIN, v));
+const reduceMotion = () => Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+/** True while the view shows the whole map and the user has not moved it: then it stays fitted after changes. */
+let fitting = true;
+let anim = 0;
+let miniQueued = false;
+
+function apply() {
+  canvas.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.s})`;
+  // The dot grid moves and scales with the map, in steps, so it stays visible at any zoom.
+  let g = 24 * view.s;
+  while (g < 14) g *= 2;
+  while (g > 56) g /= 2;
+  board.style.backgroundSize = `${g}px ${g}px`;
+  board.style.backgroundPosition = `${view.x}px ${view.y}px`;
+  const percent = view.s * 100;
+  $('zoom-reset').textContent = `${percent < 10 ? percent.toFixed(1) : Math.round(percent)}%`;
+  $('zoom-out').disabled = view.s <= MIN * 1.001;
+  $('zoom-in').disabled = view.s >= MAX * 0.999;
+  if (!miniQueued) { miniQueued = true; requestAnimationFrame(() => { miniQueued = false; updateMiniView(); }); }
+}
+function stopAnim() { if (anim) cancelAnimationFrame(anim); anim = 0; }
+function moveTo(target, animate = true) {
+  stopAnim();
+  if (!animate || reduceMotion()) { Object.assign(view, target); apply(); return; }
+  const from = {...view}, t0 = performance.now(), ms = 380;
+  const step = (now) => {
+    const t = Math.min(1, (now - t0) / ms);
+    const k = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    view.x = from.x + (target.x - from.x) * k;
+    view.y = from.y + (target.y - from.y) * k;
+    view.s = from.s + (target.s - from.s) * k;
+    apply();
+    anim = t < 1 ? requestAnimationFrame(step) : 0;
+  };
+  anim = requestAnimationFrame(step);
+}
+/** The part of the board that the bar, the index and the dock do not cover. */
+function safeArea() {
+  const b = board.getBoundingClientRect();
+  const shown = (e) => e.offsetParent !== null;
+  const top = shown($('bar')) ? $('bar').getBoundingClientRect().bottom - b.top + 12 : 12;
+  const bottom = shown($('dock')) ? b.bottom - $('dock').getBoundingClientRect().top + 12 : 12;
+  const left = shown($('index')) ? $('index').getBoundingClientRect().right - b.left + 12 : 12;
+  return {x: left, y: top, w: Math.max(80, b.width - left - 12), h: Math.max(80, b.height - top - bottom)};
+}
+function boardPoint(clientX, clientY) {
+  const r = board.getBoundingClientRect();
+  return {x: clientX - r.left, y: clientY - r.top};
+}
+const center = () => { const a = safeArea(); return {x: a.x + a.w / 2, y: a.y + a.h / 2}; };
+function zoomTo(s, px, py) {
+  if (![s, px, py].every(Number.isFinite)) return;
+  stopAnim();
+  const next = clamp(s);
+  view.x = px - ((px - view.x) * next) / view.s;
+  view.y = py - ((py - view.y) * next) / view.s;
+  view.s = next;
+  fitting = false;
+  apply();
+}
+function zoomBy(factor) { const c = center(); zoomTo(view.s * factor, c.x, c.y); }
+function panBy(dx, dy) { stopAnim(); view.x += dx; view.y += dy; fitting = false; apply(); }
+function fit(animate = true) {
+  const w = mind.offsetWidth, hgt = mind.offsetHeight;
+  if (!w || !hgt) return;
+  const a = safeArea();
+  const s = clamp(Math.min(a.w / w, a.h / hgt, 1));
+  fitting = true;
+  moveTo({s, x: a.x + (a.w - w * s) / 2, y: a.y + (a.h - hgt * s) / 2}, animate);
+}
+/** Flies to `target` and keeps the zoom readable. */
+function flyTo(target, scale = Math.min(1.1, Math.max(view.s, 0.85))) {
+  if (!target.getClientRects().length) return;
+  stopAnim();
+  const r = target.getBoundingClientRect(), c = canvas.getBoundingClientRect();
+  const cx = (r.left + r.width / 2 - c.left) / view.s;
+  const cy = (r.top + r.height / 2 - c.top) / view.s;
+  const a = safeArea(), s = clamp(scale);
+  fitting = false;
+  moveTo({s, x: a.x + a.w / 2 - cx * s, y: a.y + a.h / 2 - cy * s});
+}
+
+let lastPoint = null;
+let safariGesture = null;
+board.addEventListener('pointermove', (e) => { lastPoint = boardPoint(e.clientX, e.clientY); });
+// A trackpad pinch arrives as a wheel with ctrlKey in Chrome and Firefox; a two-finger swipe pans.
+board.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  if (safariGesture) return;
+  const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? board.clientHeight : 1;
+  const dx = e.deltaX * unit, dy = e.deltaY * unit;
+  if (e.ctrlKey || e.metaKey) {
+    const p = boardPoint(e.clientX, e.clientY);
+    zoomTo(view.s * Math.exp(-dy * 0.01), p.x, p.y);
+  } else if (e.shiftKey && !dx) {
+    panBy(-dy, 0);
+  } else {
+    panBy(-dx, -dy);
+  }
+}, {passive: false});
+// Safari sends its own gesture events for a trackpad pinch, sometimes without coordinates.
+board.addEventListener('gesturestart', (e) => {
+  e.preventDefault();
+  stopAnim();
+  const p = Number.isFinite(e.clientX) && (e.clientX || e.clientY) ? boardPoint(e.clientX, e.clientY) : lastPoint ?? center();
+  safariGesture = {s: view.s, x: (p.x - view.x) / view.s, y: (p.y - view.y) / view.s, p};
+}, {passive: false});
+board.addEventListener('gesturechange', (e) => {
+  e.preventDefault();
+  if (!safariGesture || !Number.isFinite(e.scale)) return;
+  const g = safariGesture;
+  view.s = clamp(g.s * e.scale);
+  view.x = g.p.x - g.x * view.s;
+  view.y = g.p.y - g.y * view.s;
+  fitting = false;
+  apply();
+}, {passive: false});
+window.addEventListener('gestureend', () => { safariGesture = null; });
+
+function touchPair() {
+  const [a, b] = [...pan.pointers.values()];
+  return {x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, d: Math.hypot(a.x - b.x, a.y - b.y)};
+}
+board.addEventListener('pointerdown', (e) => {
+  if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 1) return;
+  stopAnim();
+  pan.pointers.set(e.pointerId, {x: e.clientX, y: e.clientY});
+  if (pan.pointers.size === 1) { pan.moved = false; pan.last = pan.origin = {x: e.clientX, y: e.clientY}; }
+  if (pan.pointers.size === 2) pan.pinch = touchPair();
+  if (e.button === 1) e.preventDefault();
+});
+board.addEventListener('pointermove', (e) => {
+  if (!pan.pointers.has(e.pointerId)) return;
+  pan.pointers.set(e.pointerId, {x: e.clientX, y: e.clientY});
+  if (pan.pointers.size === 2) {
+    const pair = touchPair(), old = pan.pinch;
+    if (old?.d > 0 && pair.d > 0) {
+      const p = boardPoint(old.x, old.y);
+      const s = clamp((view.s * pair.d) / old.d);
+      view.x = p.x - ((p.x - view.x) * s) / view.s + pair.x - old.x;
+      view.y = p.y - ((p.y - view.y) * s) / view.s + pair.y - old.y;
+      view.s = s;
+      fitting = false;
+      apply();
+    }
+    pan.pinch = pair;
+    pan.moved = true;
+    return;
+  }
+  if (pan.pointers.size !== 1) return;
+  if (!pan.moved && Math.hypot(e.clientX - pan.origin.x, e.clientY - pan.origin.y) < 4) return;
+  if (!pan.moved) {
+    pan.moved = true;
+    try { board.setPointerCapture(e.pointerId); } catch {}
+    board.classList.add('panning');
+  }
+  view.x += e.clientX - pan.last.x;
+  view.y += e.clientY - pan.last.y;
+  pan.last = {x: e.clientX, y: e.clientY};
+  fitting = false;
+  apply();
+});
+function endPointer(e) {
+  if (!pan.pointers.delete(e.pointerId)) return;
+  pan.pinch = null;
+  if (pan.pointers.size === 1) pan.last = pan.origin = [...pan.pointers.values()][0];
+  if (!pan.pointers.size) {
+    board.classList.remove('panning');
+    // A click that ends a drag is not a choice of a node.
+    setTimeout(() => { pan.moved = false; }, 0);
+  }
+}
+window.addEventListener('pointerup', endPointer);
+window.addEventListener('pointercancel', endPointer);
+board.addEventListener('click', (e) => { if (pan.moved) { e.preventDefault(); e.stopPropagation(); } }, true);
+board.addEventListener('dblclick', (e) => {
+  if (e.target.closest('button, a, .node')) return;
+  const p = boardPoint(e.clientX, e.clientY);
+  zoomTo(view.s * (e.shiftKey || e.altKey ? 1 / 1.6 : 1.6), p.x, p.y);
+});
+window.addEventListener('blur', () => { pan.pointers.clear(); pan.pinch = null; safariGesture = null; board.classList.remove('panning'); });
+
+/* ---------- Edges, similar links, minimap ---------- */
+const edgesSvg = $('edges'), linksSvg = $('links'), miniSvg = $('minimap');
+let edgeOf = new Map();
+let miniView = null;
+
+function rectsReader() {
+  const base = canvas.getBoundingClientRect();
+  return (e) => {
+    const r = e.getBoundingClientRect();
+    const l = (r.left - base.left) / view.s, t = (r.top - base.top) / view.s;
+    const w = r.width / view.s, hh = r.height / view.s;
+    return {l, t, r: l + w, b: t + hh, w, h: hh, y: t + hh / 2};
+  };
+}
+/** The shape of the connectors comes from the skin: the corner radius of an elbow, or a smooth curve. */
+function edgeLook() {
+  const css = getComputedStyle(document.documentElement);
+  return {
+    radius: parseFloat(css.getPropertyValue('--edge-r')) || 0,
+    curved: css.getPropertyValue('--edge-style').trim() === 'curve',
+    nodeRadius: parseFloat(css.getPropertyValue('--r-node')) || 0,
+  };
+}
+/** A connector out of the parent, along a shared trunk, into the child. */
+function connector(x1, y1, x2, y2, look) {
+  const dy = y2 - y1;
+  if (Math.abs(dy) < 1) return `M${x1} ${y1}H${x2}`;
+  const mx = (x1 + x2) / 2;
+  if (look.curved) return `M${x1} ${y1}C${mx} ${y1} ${mx} ${y2} ${x2} ${y2}`;
+  const dir = Math.sign(x2 - x1), sy = Math.sign(dy);
+  const r = Math.max(0, Math.min(look.radius, Math.abs(dy) / 2, Math.abs(x2 - x1) / 2 - 1));
+  if (!r) return `M${x1} ${y1}H${mx}V${y2}H${x2}`;
+  return `M${x1} ${y1}H${mx - dir * r}Q${mx} ${y1} ${mx} ${y1 + sy * r}V${y2 - sy * r}Q${mx} ${y2} ${mx + dir * r} ${y2}H${x2}`;
+}
+function drawEdges() {
+  const R = rectsReader();
+  const look = edgeLook();
+  const miniRect = (r) => ({x: r.l, y: r.t, width: r.w, height: r.h, rx: Math.min(look.nodeRadius, r.h / 2)});
+  const w = mind.offsetWidth, hgt = mind.offsetHeight;
+  for (const s of [edgesSvg, linksSvg]) { s.setAttribute('width', w); s.setAttribute('height', hgt); }
+  const paths = [];
+  edgeOf = new Map();
+  const link = (from, to, side, key) => {
+    const a = R(from), b = R(to);
+    const p = svgEl('path', {d: side === 'r' ? connector(a.r, a.y, b.l, b.y, look) : connector(a.l, a.y, b.r, b.y, look)});
+    edgeOf.set(key, p);
+    paths.push(p);
+  };
+  const mini = [svgEl('rect', {class: 'mn', ...miniRect(R(rootNode))})];
+  for (const S of stacks) {
+    if (S.li.hidden) continue;
+    link(rootNode, S.node, S.side, S);
+    mini.push(svgEl('rect', {class: 'mn', ...miniRect(R(S.node))}));
+    if (S.closed) continue;
+    for (const P of S.prs) {
+      if (P.li.hidden) continue;
+      link(S.node, P.node, S.side, P);
+      mini.push(svgEl('rect', {class: 'mn', ...miniRect(R(P.node))}));
+      if (P.closed) continue;
+      const cards = P.groups.filter((G) => !G.li.hidden);
+      for (const G of cards) mini.push(svgEl('rect', {class: 'mg', ...miniRect(R(G.card))}));
+      if (P.cols > 1) {
+        // One connector to a bracket that embraces all the columns.
+        const a = R(P.node), boxes = cards.map((G) => R(G.card));
+        const t = Math.min(...boxes.map((b) => b.t)), bt = Math.max(...boxes.map((b) => b.b));
+        const out = S.side === 'r' ? 1 : -1;
+        const x1 = out > 0 ? a.r : a.l;
+        const bx = out > 0 ? Math.min(...boxes.map((b) => b.l)) - 9 : Math.max(...boxes.map((b) => b.r)) + 9;
+        const tip = bx + out * 7, br = Math.min(7, look.radius);
+        const bracket = br
+          ? `M${tip} ${t}H${bx + out * br}Q${bx} ${t} ${bx} ${t + br}V${bt - br}Q${bx} ${bt} ${bx + out * br} ${bt}H${tip}`
+          : `M${tip} ${t}H${bx}V${bt}H${tip}`;
+        const p = svgEl('path', {d: `M${x1} ${a.y}H${bx}${bracket}`});
+        for (const G of cards) edgeOf.set(G, p);
+        paths.push(p);
+      } else {
+        for (const G of cards) link(P.node, G.card, S.side, G);
+      }
+    }
+  }
+  edgesSvg.replaceChildren(...paths);
+  // Minimap: the same boxes at a small scale and the frame of the current view.
+  miniSvg.setAttribute('viewBox', `0 0 ${Math.max(1, w)} ${Math.max(1, hgt)}`);
+  miniSvg.style.aspectRatio = `${Math.max(1, w)} / ${Math.max(1, Math.min(hgt, w * 1.1))}`;
+  miniView = svgEl('rect', {class: 'mv', 'vector-effect': 'non-scaling-stroke'});
+  miniSvg.replaceChildren(...mini, miniView);
+  updateMiniView();
+  markPath();
+  drawLinks(R);
+}
+function updateMiniView() {
+  if (!miniView) return;
+  const b = board.getBoundingClientRect();
+  miniView.setAttribute('x', -view.x / view.s);
+  miniView.setAttribute('y', -view.y / view.s);
+  miniView.setAttribute('width', b.width / view.s);
+  miniView.setAttribute('height', b.height / view.s);
+  miniView.setAttribute('rx', 10 / view.s);
+  const whole = view.x >= 0 && view.y >= 0 && view.x + mind.offsetWidth * view.s <= b.width && view.y + mind.offsetHeight * view.s <= b.height;
+  $('mini').classList.toggle('idle', whole);
+}
+function miniJump(e) {
+  const m = miniSvg.getScreenCTM?.();
+  if (!m) return;
+  const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+  const b = board.getBoundingClientRect();
+  stopAnim();
+  view.x = b.width / 2 - p.x * view.s;
+  view.y = b.height / 2 - p.y * view.s;
+  fitting = false;
+  apply();
+}
+miniSvg.addEventListener('pointerdown', (e) => { try { miniSvg.setPointerCapture(e.pointerId); } catch {} miniJump(e); });
+miniSvg.addEventListener('pointermove', (e) => { if (e.buttons || e.pointerType === 'touch') miniJump(e); });
+
+/** The edges from the root to the selected node are drawn stronger. */
+function markPath() {
+  const sel = state.sel;
+  const F = sel?.fn, P = sel?.pr ?? F?.pr, S = sel?.stack ?? P?.stack;
+  const on = new Set([F?.group, P, S].filter(Boolean));
+  for (const path of edgeOf.values()) path.classList.remove('on');
+  for (const key of on) edgeOf.get(key)?.classList.add('on');
+}
+/** The element that stands for a function now: its row, its dot, or the nearest open node above it. */
+function visibleFace(F) {
+  if (F.stack.li.hidden) return null;
+  if (F.stack.closed || F.pr.li.hidden) return F.stack.node;
+  if (F.pr.closed || F.group.li.hidden) return F.pr.node;
+  if (F.row.hidden) return F.group.card;
+  return F.group.folded ? F.dot : F.row;
+}
+/** Dashed curves from the selected function to the functions similar to it. */
+function drawLinks(R = rectsReader()) {
+  const paths = [];
+  const from = state.fn && visibleFace(state.fn);
+  if (from) {
+    const a = R(from);
+    const done = new Set([from]);
+    for (const other of relatedSet()) {
+      const to = visibleFace(other);
+      if (!to || done.has(to)) continue;
+      done.add(to);
+      const b = R(to);
+      let d;
+      if (b.l > a.r + 40) d = `M${a.r} ${a.y}C${a.r + 90} ${a.y} ${b.l - 90} ${b.y} ${b.l} ${b.y}`;
+      else if (b.r < a.l - 40) d = `M${a.l} ${a.y}C${a.l - 90} ${a.y} ${b.r + 90} ${b.y} ${b.r} ${b.y}`;
+      else {
+        // Same column: the curve bows out to the free side of the branch.
+        const out = state.fn.stack.side === 'r' ? 1 : -1;
+        const ax = out > 0 ? a.r : a.l, bx = out > 0 ? b.r : b.l;
+        const bow = (out > 0 ? Math.max(ax, bx) : Math.min(ax, bx)) + out * Math.min(140, 40 + Math.abs(b.y - a.y) / 4);
+        d = `M${ax} ${a.y}C${bow} ${a.y} ${bow} ${b.y} ${bx} ${b.y}`;
+      }
+      paths.push(withColor(svgEl('path', {d}), state.fn.f.cat));
+    }
+  }
+  linksSvg.replaceChildren(...paths);
+}
+
+/* ---------- Refresh ---------- */
+function syncControls() {
+  const depth = currentDepth();
+  for (const b of $('depth').children) b.setAttribute('aria-pressed', String(Number(b.dataset.depth) === depth));
+  for (const b of $('density').children) b.setAttribute('aria-pressed', String(b.dataset.density === state.density));
+  $('only-key').setAttribute('aria-pressed', String(state.onlyKey));
+  $('filter').setAttribute('aria-pressed', String(state.filter));
+  app.classList.remove('d-s', 'd-m', 'd-l');
+  app.classList.add(`d-${state.density}`);
+}
+/**
+ * Applies the state to the tree and redraws the edges.
+ * `anchor` stays where it is on the screen; without one, a fitted view is fitted again, otherwise the root stays.
+ * `rearrange` lets the columns and the sides of the stacks change: for changes of the whole map, not of one node.
+ */
+function refresh({anchor = null, rearrange = !anchor} = {}) {
+  const keep = anchor ?? (fitting ? null : rootNode);
+  const before = keep?.getBoundingClientRect();
+  syncControls();
+  applyVisibility();
+  if (rearrange) arrange();
+  else applyColumns(columns);
+  if (before) {
+    stopAnim();
+    const after = keep.getBoundingClientRect();
+    view.x += before.left - after.left;
+    view.y += before.top - after.top;
+    apply();
+    if (anchor) fitting = false;
+  } else {
+    fit(false);
+  }
+  drawEdges();
+}
+
+/* ---------- Selection ---------- */
+function paint() {
+  const related = relatedSet();
+  for (const F of fns) {
+    const sel = state.fn === F;
+    const dim = Boolean(state.cat) && F.f.cat !== state.cat && !related.has(F);
+    const sim = Boolean(state.fn) && !sel && related.has(F);
+    for (const e of [F.row, F.dot]) {
+      e.classList.toggle('is-dim', dim);
+      e.classList.toggle('is-sel', sel);
+      e.classList.toggle('is-sim', sim);
+    }
+    F.row.setAttribute('aria-pressed', String(sel));
+  }
+  rootNode.classList.toggle('is-sel', Boolean(state.sel?.root));
+  for (const S of stacks) S.node.classList.toggle('is-sel', state.sel?.stack === S);
+  for (const P of prs) P.node.classList.toggle('is-sel', state.sel?.pr === P);
+  for (const i of mind.querySelectorAll('.mix i')) i.classList.toggle('off', Boolean(state.cat) && i.dataset.cat !== state.cat);
+  for (const b of $('cats').children) b.setAttribute('aria-pressed', String(b.dataset.cat === state.cat));
+  const current = state.sel?.stack ?? state.sel?.pr?.stack ?? state.sel?.fn?.stack;
+  if (current) markStack(current);
+}
+/** `sel` is null or one of {fn}, {cat}, {pr}, {stack}, {root}. A function also selects its color. */
+function select(sel) {
+  state.sel = sel;
+  state.fn = sel?.fn ?? null;
+  state.cat = sel?.fn ? sel.fn.f.cat : sel?.cat ?? null;
+  paint();
+  // A selection changes the layout only while the filter hides the other colors.
+  refresh({rearrange: state.filter});
+  renderInspector();
+}
+/** Opens everything above `target`, drops the filters that hide it, selects it and flies to it. */
+function navigate(sel) {
+  const F = sel.fn, P = sel.pr ?? F?.pr, S = sel.stack ?? P?.stack;
+  if (S) S.closed = false;
+  if (P && (F || sel.pr)) P.closed = false;
+  if (F) {
+    F.group.folded = false;
+    if (!F.f.key) state.onlyKey = false;
+  } else if ((sel.pr ? P.fns : S.fns).every((other) => !other.f.key)) {
+    state.onlyKey = false;
+  }
+  fitting = false;
+  select(sel);
+  flyTo(F ? F.row : P && sel.pr ? P.node : S.node);
+}
+
+/* ---------- Inspector ---------- */
+const insp = $('insp'), inspBody = $('insp-body');
+const chip = (text, cat) => {
+  const c = h('span', 'chip');
+  if (cat) c.append(withColor(h('span', 'dot'), cat));
+  c.append(text);
+  return c;
+};
+function listItem({cat, num, name, code, count, onClick}) {
+  const b = h('button', cat ? 'item' : 'item numbered', cat ? withColor(h('span', 'dot'), cat) : h('span', 'num', num ?? ''),
+    h('span', `nm${code ? ' code' : ''}`, name), h('span', 'ct', count ?? ''));
+  b.title = name;
+  b.addEventListener('click', onClick);
+  return b;
+}
+function catBreakdown(list) {
+  const box = h('div', 'list');
+  for (const c of DATA.cats) {
+    const n = list.filter((F) => F.f.cat === c.id).length;
+    if (n) box.append(listItem({cat: c.id, name: c.name, count: n, onClick: () => select({cat: c.id})}));
+  }
+  return box;
+}
+/** Brings a PR into view without changing the selection. */
+function showPr(P) {
+  if (P.stack.closed) { P.stack.closed = false; refresh({anchor: rootNode}); }
+  markStack(P.stack);
+  flyTo(P.node);
+}
+function renderInspector() {
+  const sel = state.sel;
+  insp.hidden = !sel;
+  insp.style.removeProperty('--c');
+  if (!sel) return;
+  const kids = [];
+  let label = '';
+  if (sel.fn) {
+    const F = sel.fn, {f} = F;
+    label = 'Функция';
+    insp.style.setProperty('--c', cvar(f.cat));
+    const catChip = withColor(h('button', 'chip', h('span', 'dot'), catById[f.cat].name), f.cat);
+    catChip.addEventListener('click', () => select({cat: f.cat}));
+    const where = h('button', 'chip', `#${F.pr.pr.n} · ${F.group.g.name}`);
+    where.title = F.pr.pr.title;
+    where.addEventListener('click', () => navigate({pr: F.pr}));
+    const chips = h('div', 'chips', catChip, where);
+    if (f.key) chips.append(chip('★ ключевая'));
+    chips.append(chip(f.kind === 'u' ? 'уник · своя логика' : 'станд · обычный приём'));
+    kids.push(h('h2', 'code', f.name), h('p', 'lead', f.why), chips);
+    const sims = simsOf(F);
+    if (!sims.length) kids.push(h('p', null, 'Похожих функций нет.'));
+    for (const s of sims) {
+      const list = h('div', 'list');
+      for (const name of s.members) {
+        const other = fnByName.get(name);
+        if (!other || other === F) continue;
+        list.append(listItem({cat: other.f.cat, name, code: true, count: `#${other.pr.pr.n}`, onClick: () => navigate({fn: other})}));
+      }
+      kids.push(h('p', 'sim-label', `≈ ${s.label}`), list);
+    }
+  } else if (sel.cat) {
+    const c = catById[sel.cat];
+    const list = fns.filter((F) => F.f.cat === c.id);
+    label = 'Цвет';
+    insp.style.setProperty('--c', cvar(c.id));
+    const only = h('button', 'chip', 'Скрыть остальные');
+    only.setAttribute('aria-pressed', String(state.filter));
+    only.addEventListener('click', () => { state.filter = !state.filter; refresh(); renderInspector(); });
+    kids.push(h('h2', null, c.name), h('p', 'lead', c.desc),
+      h('div', 'chips', chip(fnWord(list.length)), chip(`★ ${list.filter((F) => F.f.key).length}`), only));
+    const byPr = h('div', 'list');
+    for (const P of prs) {
+      const n = P.fns.filter((F) => F.f.cat === c.id).length;
+      if (n) byPr.append(listItem({num: `#${P.pr.n}`, name: P.pr.title, count: n, onClick: () => showPr(P)}));
+    }
+    kids.push(h('p', 'micro', 'По PR'), byPr);
+  } else if (sel.pr) {
+    const P = sel.pr, {pr} = P;
+    label = `PR #${pr.n}`;
+    const link = h('a', 'chip', 'GitHub', icon('ext'));
+    link.href = pr.url; link.target = '_blank'; link.rel = 'noopener';
+    const std = P.fns.filter((F) => F.f.kind === 's').length;
+    kids.push(h('h2', null, pr.title), h('p', 'lead', pr.essence),
+      h('div', 'chips', link, chip(fnWord(P.fns.length)), chip(`★ ${P.fns.filter((F) => F.f.key).length}`),
+        chip(`станд ${std} · уник ${P.fns.length - std}`)));
+    if (pr.branch) kids.push(h('p', 'branch', pr.branch));
+    kids.push(h('p', 'micro', 'Типы работы'), catBreakdown(P.fns));
+  } else if (sel.stack) {
+    const S = sel.stack;
+    label = `Стек ${S.num}`;
+    const list = h('div', 'list');
+    for (const P of S.prs) list.append(listItem({num: `#${P.pr.n}`, name: P.pr.title, count: P.fns.length, onClick: () => navigate({pr: P})}));
+    kids.push(h('h2', null, S.st.name), h('p', 'lead', S.st.essence),
+      h('div', 'chips', chip(S.st.gh), chip(`${S.prs.length} PR`), chip(fnWord(S.fns.length))), h('p', 'micro', 'PR'), list);
+  } else {
+    label = 'О карте';
+    const list = h('div', 'list');
+    for (const S of stacks) list.append(listItem({num: S.num, name: S.st.name, count: `${S.prs.length} PR`, onClick: () => navigate({stack: S})}));
+    kids.push(h('h2', null, DATA.root.title), h('p', 'lead', DATA.root.essence),
+      h('div', 'chips', chip(`${stacks.length} стеков`), chip(`${prs.length} PR`), chip(fnWord(fns.length))), h('p', 'micro', 'Стеки'), list);
+  }
+  $('insp-label').textContent = label;
+  inspBody.replaceChildren(...kids);
+}
+$('insp-close').addEventListener('click', () => select(null));
+$('insp-fold').addEventListener('click', () => insp.classList.toggle('folded'));
+$('about').addEventListener('click', () => select(state.sel?.root ? null : {root: true}));
+
+/* ---------- Legend, index, search ---------- */
+for (const c of DATA.cats) {
+  const b = withColor(h('button', 'cat up tip-start', h('span', 'dot'), h('span', 'nm', c.name),
+    h('span', 'ct', String(fns.filter((F) => F.f.cat === c.id).length))), c.id);
+  b.dataset.cat = c.id;
+  b.dataset.tip = c.name;
+  b.setAttribute('aria-label', c.name);
+  b.setAttribute('aria-pressed', 'false');
+  b.addEventListener('click', () => select(state.cat === c.id && !state.fn ? null : {cat: c.id}));
+  $('cats').append(b);
+}
+function setLegendOpen(open) {
+  $('legend').classList.toggle('open', open);
+  $('legend-fold').setAttribute('aria-expanded', String(open));
+  savePrefs({legend: open});
+}
+$('legend-fold').addEventListener('click', () => setLegendOpen(!$('legend').classList.contains('open')));
+
+const stackLinks = new Map();
+for (const S of stacks) {
+  const b = h('button', 'ix-stack', h('span', 'num', S.num), h('span', 'nm', S.st.name), h('span', 'ct', String(S.prs.length)));
+  b.title = `${S.st.name}: ${S.prs.length} PR`;
+  b.setAttribute('aria-current', 'false');
+  b.addEventListener('click', () => { markStack(S); flyTo(S.node); });
+  const list = h('div', 'ix-prs');
+  for (const P of S.prs) {
+    const item = h('button', 'ix-pr', h('b', null, `#${P.pr.n}`), h('span', null, P.pr.title));
+    item.title = P.pr.title;
+    item.addEventListener('click', () => navigate({pr: P}));
+    list.append(item);
+  }
+  $('index-list').append(b, list);
+  stackLinks.set(S, b);
+}
+function markStack(S) {
+  for (const [stack, b] of stackLinks) b.setAttribute('aria-current', String(stack === S));
+}
+function setIndexRail(rail) {
+  $('index').classList.toggle('rail', rail);
+  savePrefs({rail});
+  if (fitting) fit();
+}
+$('index-fold').addEventListener('click', () => setIndexRail(!$('index').classList.contains('rail')));
+
+const search = $('search'), results = $('results');
+const searchItems = [
+  ...stacks.map((S) => ({text: `${S.num} ${S.st.name}`, label: S.st.name, detail: `Стек ${S.num} · ${S.prs.length} PR`, go: () => navigate({stack: S})})),
+  ...prs.map((P) => ({text: `#${P.pr.n} ${P.pr.title} ${P.pr.branch ?? ''}`, label: `#${P.pr.n} ${P.pr.title}`, detail: P.pr.branch ?? P.stack.st.name, go: () => navigate({pr: P})})),
+  ...fns.map((F) => ({text: `${F.f.name} ${F.f.why}`, label: F.f.name, detail: `#${F.pr.pr.n} · ${F.f.why}`, cat: F.f.cat, go: () => navigate({fn: F})})),
+].map((item) => ({...item, text: item.text.toLocaleLowerCase()}));
+function closeSearch() { results.hidden = true; search.setAttribute('aria-expanded', 'false'); }
+function runSearch() {
+  const q = search.value.trim().toLocaleLowerCase();
+  results.replaceChildren();
+  if (!q) { closeSearch(); return; }
+  const found = searchItems.filter((item) => item.text.includes(q))
+    .sort((a, b) => Number(b.label.toLocaleLowerCase().startsWith(q)) - Number(a.label.toLocaleLowerCase().startsWith(q)));
+  if (!found.length) results.append(h('p', 'res-empty', 'Ничего не найдено. Попробуйте имя функции или номер PR.'));
+  for (const item of found.slice(0, 24)) {
+    const b = h('button', 'res', item.cat ? withColor(h('span', 'dot'), item.cat) : h('span'), h('b', null, item.label), h('small', null, item.detail));
+    b.addEventListener('click', () => { closeSearch(); search.value = ''; item.go(); });
+    results.append(b);
+  }
+  if (found.length > 24) results.append(h('p', 'res-empty', `Ещё ${found.length - 24}: уточните запрос.`));
+  results.hidden = false;
+  search.setAttribute('aria-expanded', 'true');
+}
+search.addEventListener('input', runSearch);
+search.addEventListener('focus', runSearch);
+search.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowDown') { e.preventDefault(); results.querySelector('button')?.focus(); }
+  if (e.key === 'Enter') { e.preventDefault(); results.querySelector('button')?.click(); }
+});
+results.addEventListener('keydown', (e) => {
+  const items = [...results.querySelectorAll('button')], i = items.indexOf(document.activeElement);
+  if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length]?.focus(); }
+  if (e.key === 'ArrowUp') { e.preventDefault(); (i <= 0 ? search : items[i - 1]).focus(); }
+});
+document.addEventListener('pointerdown', (e) => {
+  if (!e.target.closest('#search-box')) closeSearch();
+  if (!e.target.closest('#help-pop, #help')) setHelp(false);
+  if (!e.target.closest('#skin-pop, #skin')) setSkinMenu(false);
+});
+
+/* ---------- Controls ---------- */
+function setHelp(open) {
+  $('help-pop').hidden = !open;
+  $('help').setAttribute('aria-expanded', String(open));
+  if (open) setSkinMenu(false);
+}
+/** A skin changes the look only: colors of both themes, type, shapes and connectors. The first one is the default. */
+const SKINS = [
+  {id: 'studio', name: 'Студия', note: 'стекло, акцидентный шрифт'},
+  {id: 'strict', name: 'Строгий', note: 'чёрно-белый, прямые углы'},
+  {id: 'mac', name: 'macOS', note: 'системный шрифт, синий акцент'},
+  {id: 'blueprint', name: 'Чертёж', note: 'моноширинный, сетка в клетку'},
+];
+for (const skin of SKINS) {
+  const sw = h('span', 'sw', h('i'), h('i'), h('i'), h('i'));
+  sw.dataset.skin = skin.id;
+  const b = h('button', 'skin-item', sw, h('span', null, h('b', null, skin.name), h('small', null, skin.note)), icon('check'));
+  b.dataset.skin = skin.id;
+  b.setAttribute('role', 'menuitemradio');
+  b.addEventListener('click', () => setSkin(skin.id));
+  $('skin-list').append(b);
+}
+function applySkin(id) {
+  state.skin = SKINS.some((skin) => skin.id === id) ? id : SKINS[0].id;
+  document.documentElement.dataset.skin = state.skin;
+  for (const b of $('skin-list').children) b.setAttribute('aria-checked', String(b.dataset.skin === state.skin));
+}
+function setSkin(id) {
+  applySkin(id);
+  savePrefs({skin: state.skin});
+  // Type and paddings differ between skins, so the map is measured again.
+  refresh();
+}
+function setSkinMenu(open) {
+  $('skin-pop').hidden = !open;
+  $('skin').setAttribute('aria-expanded', String(open));
+  if (open) setHelp(false);
+}
+$('skin').addEventListener('click', () => setSkinMenu($('skin-pop').hidden));
+$('skin-list').addEventListener('keydown', (e) => {
+  const items = [...$('skin-list').children], i = items.indexOf(document.activeElement);
+  if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); items[(i + 1) % items.length].focus(); }
+  if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); items[(i - 1 + items.length) % items.length].focus(); }
+});
+function setZen(zen) {
+  app.classList.toggle('zen', zen);
+  $('reveal').hidden = !zen;
+  if (fitting) fit();
+}
+function setMini(shown) {
+  $('mini').hidden = !shown;
+  $('mini-toggle').setAttribute('aria-pressed', String(shown));
+  savePrefs({mini: shown});
+}
+function toggleTheme() {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === 'dark' : Boolean(window.matchMedia?.('(prefers-color-scheme: dark)').matches);
+  root.dataset.theme = dark ? 'light' : 'dark';
+}
+function setDensity(density) { state.density = density; savePrefs({density}); refresh(); }
+function setLayout(layout) { state.layout = layout; savePrefs({layout}); refresh(); }
+function stepDepth(delta) {
+  const now = currentDepth() ?? prefs.depth ?? 3;
+  setDepth(Math.min(4, Math.max(1, now + delta)));
+  refresh();
+}
+$('only-key').addEventListener('click', () => { state.onlyKey = !state.onlyKey; refresh(); });
+$('filter').addEventListener('click', () => { state.filter = !state.filter; refresh(); renderInspector(); });
+$('depth').addEventListener('click', (e) => { const b = e.target.closest('[data-depth]'); if (b) { setDepth(Number(b.dataset.depth)); refresh(); } });
+$('density').addEventListener('click', (e) => { const b = e.target.closest('[data-density]'); if (b) setDensity(b.dataset.density); });
+$('layout').addEventListener('click', () => setLayout(state.layout === 'both' ? 'right' : 'both'));
+$('theme').addEventListener('click', toggleTheme);
+$('help').addEventListener('click', () => setHelp($('help-pop').hidden));
+$('zen').addEventListener('click', () => setZen(true));
+$('reveal').addEventListener('click', () => setZen(false));
+$('zoom-in').addEventListener('click', () => zoomBy(1.25));
+$('zoom-out').addEventListener('click', () => zoomBy(0.8));
+$('zoom-reset').addEventListener('click', () => { const c = center(); zoomTo(1, c.x, c.y); });
+$('zoom-fit').addEventListener('click', () => fit());
+$('mini-toggle').addEventListener('click', () => setMini($('mini').hidden));
+
+let tabbing = false;
+document.addEventListener('pointerdown', () => { tabbing = false; }, true);
+document.addEventListener('keydown', (e) => {
+  tabbing = e.key === 'Tab';
+  if (e.key === 'Escape') {
+    if (!results.hidden || !$('help-pop').hidden || !$('skin-pop').hidden) { closeSearch(); setHelp(false); setSkinMenu(false); search.blur(); return; }
+    if (app.classList.contains('zen')) { setZen(false); return; }
+    select(null);
+    return;
+  }
+  if (e.target.closest?.('input, textarea, select, [contenteditable="true"]')) return;
+  // The browser keeps its own shortcuts with Cmd, Ctrl and Alt.
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const arrows = {ArrowLeft: [1, 0], ArrowRight: [-1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1]};
+  if (arrows[e.key] && !e.target.closest?.('.results, .index, .insp, .legend, .pop')) {
+    e.preventDefault();
+    const step = e.shiftKey ? 240 : 80;
+    panBy(arrows[e.key][0] * step, arrows[e.key][1] * step);
+    return;
+  }
+  const actions = {
+    Slash: () => search.focus(),
+    Equal: () => zoomBy(1.25), NumpadAdd: () => zoomBy(1.25), Minus: () => zoomBy(0.8), NumpadSubtract: () => zoomBy(0.8),
+    Digit0: () => fit(), Digit1: () => { const c = center(); zoomTo(1, c.x, c.y); },
+    KeyK: () => $('only-key').click(), KeyF: () => $('filter').click(),
+    KeyD: () => setDensity({s: 'm', m: 'l', l: 's'}[state.density]),
+    KeyL: () => $('layout').click(), KeyM: () => $('mini-toggle').click(), KeyT: toggleTheme,
+    KeyS: () => setSkin(SKINS[(SKINS.findIndex((skin) => skin.id === state.skin) + 1) % SKINS.length].id),
+    KeyH: () => setZen(!app.classList.contains('zen')),
+    BracketLeft: () => stepDepth(-1), BracketRight: () => stepDepth(1),
+  };
+  // `?` is Shift + Slash on the US layout.
+  if (e.code === 'Slash' && e.shiftKey) { e.preventDefault(); setHelp($('help-pop').hidden); return; }
+  const action = actions[e.code];
+  if (action) { e.preventDefault(); action(); }
+});
+// A node focused with Tab comes into view.
+mind.addEventListener('focusin', (e) => {
+  if (!tabbing) return;
+  const r = e.target.getBoundingClientRect(), b = board.getBoundingClientRect(), a = safeArea();
+  if (r.left < b.left + a.x || r.right > b.left + a.x + a.w || r.top < b.top + a.y || r.bottom > b.top + a.y + a.h) flyTo(e.target, view.s < 0.6 ? 0.9 : view.s);
+});
+
+/* ---------- Start ---------- */
+$('counts').textContent = `${prs.length} PR · ${fns.length} fn`;
+$('counts').title = `${plural(stacks.length, 'стек', 'стека', 'стеков')}, ${prs.length} PR, ${fnWord(fns.length)}`;
+applySkin(prefs.skin);
+if (['s', 'm', 'l'].includes(prefs.density)) state.density = prefs.density;
+if (['both', 'right'].includes(prefs.layout)) state.layout = prefs.layout;
+// A narrow screen has no room for two sides.
+else if (board.clientWidth && board.clientWidth < 760) state.layout = 'right';
+setDepth([1, 2, 3, 4].includes(prefs.depth) ? prefs.depth : 3);
+if (prefs.rail !== false) $('index').classList.add('rail');
+if (prefs.legend) setLegendOpen(true);
+if (prefs.mini === false) setMini(false);
+markStack(stacks[0]);
+apply();
+refresh();
+renderInspector();
+if ('ResizeObserver' in window) {
+  // The map stays fitted while the window or the fonts change its size, until the user moves it.
+  let size = {w: board.clientWidth, h: board.clientHeight};
+  new ResizeObserver(() => {
+    const w = board.clientWidth, hh = board.clientHeight;
+    if (fitting) refresh();
+    else { view.x += (w - size.w) / 2; view.y += (hh - size.h) / 2; apply(); }
+    size = {w, h: hh};
+  }).observe(board);
+  new ResizeObserver(() => { if (fitting) fit(false); drawEdges(); }).observe(mind);
+}
+(document.fonts?.ready ?? Promise.resolve()).then(() => { if (fitting) refresh(); else drawEdges(); });
+</script>

@@ -1,0 +1,95 @@
+#!/usr/bin/env python3
+"""prmap: mind maps of GitHub pull requests.
+
+  prmap new <PR URL>... [--no-chain] [--out DIR] [--no-open]   a draft map straight from the diffs, no model needed
+  prmap extract <PR URL>... [--no-chain] [--out raw.json]      PR metadata, the stack chain and the names in the diffs
+  prmap draft raw.json [--out data.json]                       a mechanical data.json from raw.json
+  prmap build data.json [--html ...] [--md ...] [--open]       the page and the Markdown list from data.json
+  prmap example [--out DIR] [--no-open]                        the example map (15 PRs, 166 functions)
+  prmap dev                                                    template.html with the example data, for editing the template
+
+`new` is extract + draft + build. A draft knows the structure but not the meaning: edit data.json by hand, or let
+the pr-mindmap skill write it (in Claude Code: /pr-mindmap <PR URL>), and run `prmap build` again.
+"""
+import argparse
+import json
+import sys
+import webbrowser
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+
+import build as builder  # noqa: E402
+import draft as drafter  # noqa: E402
+import extract as extractor  # noqa: E402
+
+EXAMPLE = HERE / 'example' / 'banner.json'
+
+
+def show(path, wanted):
+    if wanted:
+        webbrowser.open(Path(path).resolve().as_uri())
+
+
+def new(args):
+    raw = extractor.collect(args.urls, with_chain=not args.no_chain)
+    first = raw['prs'][0]['n']
+    out = Path(args.out or f'prmap-out/{raw["repo"].replace("/", "-")}-{first}')
+    out.mkdir(parents=True, exist_ok=True)
+    (out / 'raw.json').write_text(json.dumps(raw, ensure_ascii=False, indent=1), encoding='utf-8')
+    (out / 'data.json').write_text(json.dumps(drafter.draft(raw), ensure_ascii=False, indent=1), encoding='utf-8')
+    show(builder.build(out / 'data.json'), not args.no_open)
+    print(f'draft: edit {out / "data.json"} and run: prmap build {out / "data.json"} --open')
+
+
+def example(args):
+    out = Path(args.out or 'prmap-out/example')
+    out.mkdir(parents=True, exist_ok=True)
+    show(builder.build(EXAMPLE, out / 'map.html', out / 'map.artifact.html', out / 'map.md'), not args.no_open)
+
+
+def dev(args):
+    builder.build(EXAMPLE, data_js=HERE / 'map-data.js')
+    show(HERE / 'template.html', not args.no_open)
+    print('template.html now reads map-data.js: edit the template and reload the page')
+
+
+def main():
+    ap = argparse.ArgumentParser(prog='prmap', description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = ap.add_subparsers(dest='command', required=True, metavar='command')
+
+    p = sub.add_parser('new', help='a draft map straight from the diffs')
+    p.add_argument('urls', nargs='+')
+    p.add_argument('--no-chain', action='store_true', help='only the given PRs, without the rest of their stack')
+    p.add_argument('--out', help='folder for raw.json, data.json and the map (default: prmap-out/<repo>-<PR>)')
+    p.add_argument('--no-open', action='store_true')
+    p.set_defaults(run=new)
+
+    p = sub.add_parser('extract', help='PR metadata and the names in the diffs → raw.json')
+    p.add_argument('rest', nargs=argparse.REMAINDER)
+    p.set_defaults(run=lambda a: extractor.main(a.rest))
+
+    p = sub.add_parser('draft', help='raw.json → a mechanical data.json')
+    p.add_argument('rest', nargs=argparse.REMAINDER)
+    p.set_defaults(run=lambda a: drafter.main(a.rest))
+
+    p = sub.add_parser('build', help='data.json → the page and the Markdown list')
+    p.add_argument('rest', nargs=argparse.REMAINDER)
+    p.set_defaults(run=lambda a: builder.main(a.rest))
+
+    p = sub.add_parser('example', help='build and open the example map')
+    p.add_argument('--out')
+    p.add_argument('--no-open', action='store_true')
+    p.set_defaults(run=example)
+
+    p = sub.add_parser('dev', help='open template.html with the example data')
+    p.add_argument('--no-open', action='store_true')
+    p.set_defaults(run=dev)
+
+    args = ap.parse_args()
+    args.run(args)
+
+
+if __name__ == '__main__':
+    main()

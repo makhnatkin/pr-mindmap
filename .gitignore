@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.DS_Store
+# Built maps and the data file that `prmap dev` puts next to the template.
+prmap-out/
+map-data.js
