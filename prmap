@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """prmap: mind maps of GitHub pull requests.
 
-  prmap new <PR URL>... [--no-chain] [--out DIR] [--no-open]   a draft map straight from the diffs, no model needed
-  prmap extract <PR URL>... [--no-chain] [--out raw.json]      PR metadata, the stack chain and the names in the diffs
+  prmap new <PR or stack URL>... [--no-chain] [--out DIR] [--no-open]   a draft map straight from the diffs, no model needed
+  prmap extract <PR or stack URL>... [--no-chain] [--out raw.json]      PR metadata, the stack chain and the names in the diffs
   prmap draft raw.json [--out data.json]                       a mechanical data.json from raw.json
   prmap build data.json [--html ...] [--md ...] [--open]       the page and the Markdown list from data.json
   prmap example [--out DIR] [--no-open]                        the example map (15 PRs, 166 functions)

@@ -20,9 +20,10 @@ data.json:
   "lang": "ru",                               # optional, the language of the page
   "root": {"title": "...", "essence": "..."},  # essence <= 150 chars
   "stacks": [{
-    "name": "...", "gh": "stack 1491 | без stack", "essence": "...",   # essence <= 150
+    "name": "...", "gh": "stack 1491 | без stack", "essence": "...",   # essence <= 150; "stack N" links the GitHub stack
     "prs": [{
       "n": 1475, "url": "https://github.com/o/r/pull/1475", "branch": "feat/x",
+      "state": "open | draft | merged | closed",                         # optional, the icon of the PR
       "title": "...", "essence": "...",                                   # essence <= 200
       "groups": [{"name": "...", "fns": [
         {"name": "uniqueName", "why": "<= 50 chars", "key": true, "kind": "s|u", "cat": "<cat id>"}
@@ -46,7 +47,10 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 LIMITS = {'root': 150, 'stack': 150, 'pr': 200, 'why': 50}
+PR_STATES = ('open', 'draft', 'merged', 'closed')
 CAT_ID = re.compile(r'^[a-z][a-z0-9-]*$')
+STACK_GH = re.compile(r'\bstack\s+#?(\d+)', re.I)
+PR_URL = re.compile(r'^(https://github\.com/[^/]+/[^/]+)/pull/\d+')
 # Light and dark values of the category colors, in legend order.
 PALETTE = [
     ('#6d4fe0', '#ab98ff'), ('#0b8276', '#3ccfbf'), ('#2563d9', '#7aa7ff'), ('#cc4a12', '#ff8a4c'),
@@ -104,6 +108,8 @@ def _check(data):
         for pr in st['prs']:
             if len(pr['essence']) > LIMITS['pr']:
                 errors.append(f'#{pr["n"]}: essence {len(pr["essence"])} > {LIMITS["pr"]}')
+            if pr.get('state', 'open') not in PR_STATES:
+                errors.append(f'#{pr["n"]}: state {pr["state"]!r}, expected one of {PR_STATES}')
             if not str(pr['url']).startswith('http'):
                 errors.append(f'#{pr["n"]}: url {pr["url"]!r} is not a link')
             if not pr['groups']:
@@ -141,13 +147,24 @@ def warnings(data):
     return [f'cat {c["id"]!r} has no functions' for c in data['cats'] if c['id'] not in used]
 
 
+def ref_of(st):
+    """The GitHub page of a stack card: the stack that `gh` names, else the only PR of the card, else None."""
+    first = st['prs'][0]
+    m, repo = STACK_GH.search(st['gh']), PR_URL.match(first['url'])
+    if m and repo:
+        return {'kind': 'stack', 'n': int(m.group(1)), 'url': f'{repo.group(1)}/stack/{m.group(1)}'}
+    if len({pr['n'] for pr in st['prs']}) == 1:
+        return {'kind': 'pr', 'n': first['n'], 'url': first['url']}
+    return None
+
+
 def with_sims(data):
-    """A copy of the data in which each function names the similarity groups it belongs to."""
+    """A copy of the data in which each function names its similarity groups and each stack its GitHub page."""
     of = {}
     for s in data.get('sims', []):
         for member in s['members']:
             of.setdefault(member, []).append(s['id'])
-    return {**data, 'sims': data.get('sims', []), 'stacks': [{**st, 'prs': [{**pr, 'groups': [
+    return {**data, 'sims': data.get('sims', []), 'stacks': [{**st, 'ref': ref_of(st), 'prs': [{**pr, 'groups': [
         {**g, 'fns': [{**f, 'sims': of.get(f['name'], [])} for f in g['fns']]} for g in pr['groups']]}
         for pr in st['prs']]} for st in data['stacks']]}
 
@@ -163,7 +180,9 @@ def markdown(data):
         out += ['', '## Похожие функции', '']
         out += [f'- ≈ {s["label"]}: ' + ', '.join(f'`{m}`' for m in s['members']) for s in data['sims']]
     for st in data['stacks']:
-        out += ['', f'## {st["name"]} ({st["gh"]})', '', f'**Суть стека:** {st["essence"]}']
+        ref = ref_of(st)
+        gh = f'[{st["gh"]}]({ref["url"]})' if ref and ref['kind'] == 'stack' else st['gh']
+        out += ['', f'## {st["name"]} ({gh})', '', f'**Суть стека:** {st["essence"]}']
         for pr in st['prs']:
             fns = [f for g in pr['groups'] for f in g['fns']]
             std = sum(1 for f in fns if f['kind'] == 's')

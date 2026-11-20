@@ -6,7 +6,39 @@
 <style>
 /* Layout: a full-bleed board with a tree that grows to both sides of the root; all chrome floats over it in one grid and folds away. */
 /* Skins: each gives a light (-l) and a dark (-d) value of every color, and its own shapes, type and connectors. */
-:root, [data-skin="studio"] {
+/* GitHub: the tokens and component rules of the github.com CSS (light and dark themes, Primer). */
+:root, [data-skin="github"] {
+  --bg-l: #ffffff; --bg-d: #0d1117;
+  --grid-l: #ffffff; --grid-d: #0d1117;
+  --surface-l: #ffffff; --surface-d: #0d1117;
+  --glass-l: #ffffff; --glass-d: #010409;
+  --ink-l: #1f2328; --ink-d: #f0f6fc;
+  --invert-l: #ffffff; --invert-d: #0d1117;
+  --muted-l: #59636e; --muted-d: #9198a1;
+  --faint-l: #818b98; --faint-d: #656c76;
+  --line-l: #d1d9e0b3; --line-d: #3d444db3;
+  --frame-l: #d1d9e0; --frame-d: #3d444d;
+  --edge-l: #818b98; --edge-d: #656c76;
+  --soft-l: #818b981a; --soft-d: #656c7633;
+  --focus-l: #0969da; --focus-d: #1f6feb;
+  --accent-l: #0969da; --accent-d: #1f6feb;
+  --on-accent-l: #ffffff; --on-accent-d: #ffffff;
+  --root-bg-l: #1f883d; --root-bg-d: #238636;
+  --root-fg-l: #ffffff; --root-fg-d: #ffffff;
+  --seg-on-l: #ffffff; --seg-on-d: #262c36;
+  --seg-fg-l: #1f2328; --seg-fg-d: #f0f6fc;
+  --shadow-l: 0 0 0 1px #d1d9e040, 0 6px 12px -3px #25292e0a, 0 6px 18px 0 #25292e1f; --shadow-d: 0 0 0 1px #3d444d, 0 6px 12px -3px #01040966, 0 6px 18px 0 #01040966;
+  --node-shadow-l: 0 1px 1px 0 #1f23280a, 0 1px 2px 0 #1f232808; --node-shadow-d: 0 1px 1px 0 #01040999, 0 1px 3px 0 #01040999;
+  --font-display: "Mona Sans VF", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-ui: "Mona Sans VF", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-code: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --r-panel: 12px; --r-ctl: 6px; --r-node: 6px; --r-root: 6px; --r-card: 6px; --r-pill: 2em; --r-row: 6px; --r-tg: 2em; --r-dot: 50%;
+  --blur: none; --edge-w: 1px; --edge-r: 6; --edge-style: elbow; --sel-ring: 1px; --card-border: solid;
+  --grid-image: none;
+  --press-bg: var(--gh-selected); --press-fg: var(--ink); --sel: var(--accent); --sel-halo: var(--accent);
+  --card-frame: var(--frame); --card-fill: var(--surface);
+}
+[data-skin="studio"] {
   --bg-l: #e9ebee; --bg-d: #0a0b0d;
   --grid-l: #c6cad2; --grid-d: #262a31;
   --surface-l: #ffffff; --surface-d: #15171b;
@@ -179,6 +211,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 button:disabled { opacity: .35; cursor: default; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .ic { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.oct { display: none; width: 16px; height: 16px; flex: none; fill: currentColor; color: var(--muted); }
 .dot { width: 8px; height: 8px; border-radius: var(--r-dot); background: var(--c); flex: none; }
 .micro { font: 500 10px/1.2 var(--font-code); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .grow { flex: 1 1 0; }
@@ -262,9 +295,9 @@ kbd { font: 500 10px/1.4 var(--font-code); color: var(--muted); border: 1px soli
 /* ---------- Index, inspector, legend, dock, minimap ---------- */
 .ph { display: flex; align-items: center; gap: 4px; min-height: 26px; padding-left: 8px; }
 .index { grid-area: index; align-self: start; width: 212px; max-height: 100%; overflow: auto; padding: 5px; }
-.ix-stack { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; column-gap: 6px; align-items: baseline; width: 100%; padding: 6px 8px; border: 0; border-radius: var(--r-ctl); background: transparent; text-align: left; }
+.ix-stack { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 6px; align-items: baseline; width: 100%; padding: 6px 8px; border: 0; border-radius: var(--r-ctl); background: transparent; text-align: left; }
 .ix-stack:hover { background: var(--soft); }
-.ix-stack .num { font: 500 9.5px var(--font-display); color: var(--faint); }
+.ix-stack .num { font: 500 10.5px var(--font-code); color: var(--muted); }
 .ix-stack .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ix-stack .ct { font: 500 10.5px var(--font-code); color: var(--muted); }
 .ix-stack[aria-current="true"] { background: var(--accent); color: var(--on-accent); }
@@ -280,7 +313,21 @@ kbd { font: 500 10px/1.4 var(--font-code); color: var(--muted); border: 1px soli
 .index.rail .ph { padding-left: 0; justify-content: center; }
 .index.rail .ix-stack { grid-template-columns: auto; justify-items: center; padding: 7px 6px; }
 
-.insp { grid-area: insp; align-self: start; width: 296px; max-height: 100%; overflow: auto; padding: 5px 5px 10px; border-left: 3px solid var(--c, var(--line)); }
+/* The panel of the selection: docked in the corner, or floating where the reader dragged it; its width follows the reader. */
+.insp {
+  grid-area: insp; align-self: start; display: flex; flex-direction: column; position: relative;
+  width: var(--insp-w, 296px); max-height: 100%; overflow: hidden; padding: 5px 5px 10px;
+}
+.insp.floating { position: absolute; grid-area: auto; z-index: 2; left: var(--insp-x); top: var(--insp-y); max-height: calc(100% - var(--insp-y) - 10px); }
+.insp > .ph { cursor: grab; touch-action: none; }
+.insp.dragging, .insp.dragging > .ph { cursor: grabbing; user-select: none; }
+.insp.resizing { cursor: ew-resize; user-select: none; }
+.insp:not(.floating) #insp-dock { display: none; }
+.insp-grip { position: absolute; top: 0; bottom: 0; z-index: 1; width: 6px; cursor: ew-resize; touch-action: none; }
+.insp-grip.l { left: 0; }
+.insp-grip.r { right: 0; }
+.insp:not(.floating) .insp-grip.r { display: none; }
+.insp-body { overflow: auto; min-height: 0; }
 .insp.folded { padding-bottom: 5px; }
 .insp.folded .insp-body { display: none; }
 .insp.folded #insp-fold .ic { transform: rotate(-90deg); }
@@ -292,6 +339,7 @@ kbd { font: 500 10px/1.4 var(--font-code); color: var(--muted); border: 1px soli
 .insp-body p.lead { color: var(--ink); }
 .insp-body p.branch { font: 500 11px/1.4 var(--font-code); overflow-wrap: anywhere; }
 .insp-body p.sim-label { margin-top: 2px; font-weight: 600; color: var(--ink); }
+.insp-body h2 .dot { display: inline-block; margin-right: 8px; vertical-align: 1px; }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; }
 .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; padding: 2px 8px; border: 1px solid var(--line); border-radius: var(--r-pill); background: transparent; font-size: 11.5px; text-decoration: none; color: var(--ink); }
 button.chip:hover, a.chip:hover { border-color: var(--ink); }
@@ -318,6 +366,8 @@ button.chip:hover, a.chip:hover { border-color: var(--ink); }
 .legend.open #legend-fold .ic { transform: rotate(90deg); }
 #legend-fold .ic { transform: rotate(-90deg); }
 .legend.open .cat::after { display: none; }
+.cat.all { --c: var(--edge); }
+.legend:not(.open) .cat.all .nm { display: none; }
 
 .dock { grid-area: foot; align-self: end; justify-self: center; display: flex; align-items: center; gap: 2px; padding: 4px; }
 .pct { min-width: 52px; height: 26px; padding: 0 6px; border: 0; border-radius: var(--r-ctl); background: transparent; font: 500 11px var(--font-code); font-variant-numeric: tabular-nums; }
@@ -363,14 +413,14 @@ li.closed > ul { display: none; }
 .root .meta { margin-top: 7px; color: inherit; opacity: .7; }
 .root .ess { color: inherit; opacity: .8; }
 .root.is-sel { border-color: var(--root-bg); box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--sel); }
-.stack { width: 172px; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; align-items: center; }
-.stack .num { grid-row: span 2; font: 500 17px/1 var(--font-display); color: var(--faint); }
+.stack { width: 184px; }
 .stack .nm { font: 600 14px/1.2 var(--font-ui); }
-.stack .ess, .stack .mix { grid-column: 1 / -1; }
+.stack .meta { margin-top: 5px; }
 .pr { width: 236px; }
-.pr .head { display: flex; align-items: baseline; gap: 8px; }
-.pr .n { font: 500 11px var(--font-code); color: var(--muted); text-decoration: none; flex: none; }
-.pr .n:hover { color: var(--ink); text-decoration: underline; }
+.pr .head, .stack .head { display: flex; align-items: flex-start; gap: 8px; }
+.head .oct { margin-top: 1px; }
+.node .n { font: 500 11px var(--font-code); color: var(--muted); text-decoration: none; flex: none; white-space: nowrap; }
+.node .n:hover { color: var(--ink); text-decoration: underline; }
 .pr .t { font: 600 13px/1.3 var(--font-ui); }
 .pr .meta { margin-top: 5px; }
 .pr .meta .hit { color: var(--ink); }
@@ -378,11 +428,14 @@ li.closed > ul { display: none; }
 .mix i { background: var(--c); flex: 1 1 0; transition: background-color .15s; }
 .mix i.off { background: color-mix(in srgb, var(--c) 15%, transparent); }
 .tg {
-  position: absolute; top: 50%; right: -11px; z-index: 1; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center;
-  min-width: 22px; height: 22px; padding: 0 5px; border: 1px solid var(--edge); border-radius: var(--r-tg); background: var(--surface); color: var(--ink);
-  font: 700 10.5px/1 var(--font-code);
+  position: absolute; top: 50%; right: -14px; z-index: 1; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center;
+  min-width: 28px; height: 28px; padding: 0 7px; border: 1px solid var(--edge); border-radius: var(--r-tg); background: var(--surface); color: var(--ink);
+  font: 700 12px/1 var(--font-code);
 }
-.branch.l .tg { right: auto; left: -11px; }
+.branch.l .tg { right: auto; left: -14px; }
+/* Half of the toggle lies on the card: the card keeps that side free for it. */
+.branch.r > li > .stack, .branch.r .pr { padding-right: 18px; }
+.branch.l > li > .stack, .branch.l .pr { padding-left: 18px; }
 .tg:hover { border-color: var(--ink); }
 li.closed > .node > .tg { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
 
@@ -448,9 +501,104 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
 .sw i:nth-child(4) { left: 18px; top: 14px; width: 6px; height: 1px; background: var(--edge); }
 
 /* ---------- Skins: what the tokens cannot say ---------- */
+/* Primer tokens without a shared counterpart, light and dark. */
+[data-skin="github"] {
+  --gh-link: #0969da; --gh-inset: #f6f8fa; --gh-muted: #f6f8fa; --gh-selected: #818b9826; --gh-counter: #818b981f;
+  --gh-track: #e6eaef; --gh-knob: #ffffff; --gh-tip: #25292e; --gh-neutral: #59636e;
+  --gh-open: #1a7f37; --gh-draft: #59636e; --gh-done: #8250df; --gh-closed: #d1242f;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-skin="github"]:not([data-theme="light"]) { --gh-link: #4493f8; --gh-inset: #010409; --gh-muted: #151b23; --gh-selected: #656c7633; --gh-counter: #656c7633; --gh-track: #010409; --gh-knob: #262c36; --gh-tip: #3d444d; --gh-neutral: #656c76; --gh-open: #3fb950; --gh-draft: #9198a1; --gh-done: #ab7df8; --gh-closed: #f85149; }
+}
+:root[data-skin="github"][data-theme="dark"] { --gh-link: #4493f8; --gh-inset: #010409; --gh-muted: #151b23; --gh-selected: #656c7633; --gh-counter: #656c7633; --gh-track: #010409; --gh-knob: #262c36; --gh-tip: #3d444d; --gh-neutral: #656c76; --gh-open: #3fb950; --gh-draft: #9198a1; --gh-done: #ab7df8; --gh-closed: #f85149; }
+[data-skin="github"] body { font: 400 13px/1.5 var(--font-ui); }
+[data-skin="github"] { --gap: 32px; --gap-stack: 16px; --gap-pr: 8px; --gap-group: 4px; --pad: 24px; --cardw: 280px; }
+[data-skin="github"] .ib { width: 28px; height: 28px; }
+[data-skin="github"] .ib.sm { width: 24px; height: 24px; }
+[data-skin="github"] .oct { display: inline-block; }
+[data-skin="github"] .micro { font: 600 12px/1.5 var(--font-ui); letter-spacing: 0; text-transform: none; color: var(--muted); }
+/* AppHeader: a full-width bar on the inset background with a bottom border. */
+[data-skin="github"] .bar {
+  margin: -10px calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+  padding: 8px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px)); gap: 8px;
+  border: 0; border-radius: 0; background: var(--gh-inset); box-shadow: inset 0 -1px 0 var(--frame);
+}
+[data-skin="github"] .mark { margin: 0; font: 600 14px/1.5 var(--font-ui); letter-spacing: 0; text-transform: none; }
+[data-skin="github"] .mark button { padding: 0 8px; }
+[data-skin="github"] .counts, [data-skin="github"] .stat, [data-skin="github"] .pct { font: 400 12px var(--font-ui); font-variant-numeric: tabular-nums; }
+/* Overlay */
+[data-skin="github"] .glass:not(.bar), [data-skin="github"] .pop, [data-skin="github"] .results { border-color: var(--line); }
+/* TextInput */
+[data-skin="github"] .search { height: 28px; padding: 0 6px 0 10px; border: 1px solid var(--frame); background: var(--surface); box-shadow: inset 0 1px 0 0 #1f23280a; color: var(--muted); }
+[data-skin="github"] .search:focus-within { border-color: var(--accent); outline: 2px solid var(--accent); outline-offset: -1px; box-shadow: none; }
+[data-skin="github"] .search input { font-size: 13px; }
+[data-skin="github"] kbd { padding: 3px 5px; border: 1px solid var(--line); border-radius: 6px; background: var(--gh-muted); box-shadow: inset 0 -1px 0 var(--line); color: var(--ink); font: 11px/10px var(--font-code); vertical-align: middle; }
+/* IconButton, invisible variant */
+[data-skin="github"] .ib:not([aria-pressed="true"]) { color: var(--muted); }
+[data-skin="github"] .ib:hover:not(:disabled) { color: var(--ink); }
+/* SegmentedControl */
+[data-skin="github"] .seg { height: 28px; gap: 0; padding: 0; border: 1px solid var(--frame); border-radius: 6px; background: var(--gh-track); }
+[data-skin="github"] .seg button { height: 100%; padding: 0 10px; border-radius: 6px; color: var(--ink); font: 400 12px var(--font-ui); }
+[data-skin="github"] .seg button[aria-pressed="true"] { background: var(--gh-knob); box-shadow: 0 0 0 1px var(--frame); font-weight: 600; }
+/* TooltipV2 */
+[data-skin="github"] [data-tip]:hover::after, [data-skin="github"] [data-tip]:focus-visible::after { padding: 4px 8px; border-radius: 6px; background: var(--gh-tip); color: #ffffff; font: 400 12px/1.625 var(--font-ui); }
+/* NavList: the current item is the selected background and a semibold label. */
+[data-skin="github"] .ix-stack, [data-skin="github"] .ix-pr, [data-skin="github"] .item, [data-skin="github"] .cat { color: var(--ink); }
+[data-skin="github"] .ix-stack { padding: 4px 8px; font-size: 13px; }
+[data-skin="github"] .ix-stack .num { font: 400 12px var(--font-ui); color: var(--muted); }
+[data-skin="github"] .ix-stack[aria-current="true"], [data-skin="github"] .cat[aria-pressed="true"] { background: var(--gh-selected); color: var(--ink); box-shadow: none; }
+[data-skin="github"] .ix-stack[aria-current="true"] .nm, [data-skin="github"] .cat[aria-pressed="true"] .nm { font-weight: 600; }
+[data-skin="github"] .ix-stack[aria-current="true"] .num, [data-skin="github"] .ix-stack[aria-current="true"] .ct { opacity: 1; }
+[data-skin="github"] .ix-pr b, [data-skin="github"] .item .num { font: 400 12px var(--font-ui); color: var(--muted); }
+/* Counter */
+[data-skin="github"] .gh .ct, [data-skin="github"] .ix-stack .ct, [data-skin="github"] .cat .ct, [data-skin="github"] .item .ct {
+  min-width: 20px; padding: 0 6px; border-radius: 2em; background: var(--gh-counter); color: var(--ink); font: 500 12px/18px var(--font-ui); text-align: center;
+}
+[data-skin="github"] .tg { border-color: var(--frame); box-shadow: var(--node-shadow); font: 600 12px/1 var(--font-ui); }
+[data-skin="github"] li.closed > .node > .tg { border-color: var(--gh-neutral); background: var(--gh-neutral); color: #ffffff; }
+/* Label; the accent one marks the logic of the PR itself. */
+[data-skin="github"] .chip, [data-skin="github"] .fn .kind { padding: 0 7px; min-height: 0; border: 1px solid var(--frame); border-radius: 2em; color: var(--muted); font: 500 12px/18px var(--font-ui); letter-spacing: 0; text-transform: none; }
+[data-skin="github"] .fn .kind.u { border-color: var(--accent); color: var(--gh-link); }
+[data-skin="github"] .fn.is-dim .kind { border-color: currentColor; color: inherit; }
+[data-skin="github"] button.chip:hover { border-color: var(--muted); }
+[data-skin="github"] .chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: #ffffff; }
+/* A link to GitHub is a plain link, as in the sidebar of a PR. */
+[data-skin="github"] a.chip { padding: 0 6px 0 0; border-color: transparent; color: var(--gh-link); font-size: 13px; }
+[data-skin="github"] a.chip:hover { border-color: transparent; text-decoration: underline; }
+[data-skin="github"] a.chip .ic { width: 14px; height: 14px; }
+/* The panel of the selection reads as the sidebar of a PR: a heading per section and a rule between sections. */
+[data-skin="github"] .insp-body { gap: 6px; padding: 0 8px; }
+[data-skin="github"] .insp-body h2 { font: 600 14px/1.4 var(--font-ui); }
+[data-skin="github"] .insp-body h2.code { font: 600 13px/1.4 var(--font-code); }
+[data-skin="github"] .insp-body p { font-size: 13px; line-height: 1.5; }
+[data-skin="github"] .insp-body p.branch { font: 400 12px/1.5 var(--font-code); }
+[data-skin="github"] .insp-body p.micro { margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--line); }
+/* Tree: Boxes; a PR card is a row of the pull request list, with the state icon before the title. */
+[data-skin="github"] .node { padding: 6px 10px; }
+[data-skin="github"] .node:hover { border-color: var(--frame); box-shadow: 0 0 0 1px var(--frame), var(--node-shadow); }
+[data-skin="github"] .node.is-sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--node-shadow); }
+[data-skin="github"] .branch.l .node { text-align: left; }
+[data-skin="github"] .root b { font: 600 16px/1.5 var(--font-display); }
+[data-skin="github"] .stack .nm, [data-skin="github"] .pr .t { font: 600 13px/1.4 var(--font-ui); }
+[data-skin="github"] .node .meta { margin-top: 1px; font: 400 12px/1.4 var(--font-ui); color: var(--muted); }
+[data-skin="github"] .root .meta { color: inherit; opacity: .85; }
+/* Progress, small: the language bar of a repository. */
+[data-skin="github"] .mix { gap: 2px; height: 5px; border-radius: 6px; }
+[data-skin="github"] .node .n { font: 400 12px/1.5 var(--font-ui); color: var(--muted); }
+[data-skin="github"] .node .n:hover { color: var(--gh-link); text-decoration: none; }
+[data-skin="github"] .oct.s-open { color: var(--gh-open); }
+[data-skin="github"] .oct.s-draft { color: var(--gh-draft); }
+[data-skin="github"] .oct.s-merged { color: var(--gh-done); }
+[data-skin="github"] .oct.s-closed { color: var(--gh-closed); }
+[data-skin="github"] .fn .name { font-weight: 400; }
+/* An open group is a Box with a Box-header. */
+[data-skin="github"] .gcard:not(.folded) { padding: 0; }
+[data-skin="github"] .gcard:not(.folded) > .gh { height: 28px; padding: 0 8px; border-bottom: 1px solid var(--frame); border-radius: calc(var(--r-card) - 1px) calc(var(--r-card) - 1px) 0 0; background: var(--gh-muted); }
+[data-skin="github"] .gcard:not(.folded) > .rows { padding: 4px; }
+[data-skin="github"] .gh .nm { font: 600 13px/1.4 var(--font-ui); }
+
 [data-skin="strict"] .mark { font: 700 12px/1 var(--font-display); letter-spacing: .14em; }
 [data-skin="strict"] .root b { font: 700 14px/1.25 var(--font-display); letter-spacing: -.01em; }
-[data-skin="strict"] .stack .num { font: 500 13px/1 var(--font-code); color: var(--muted); }
 [data-skin="strict"] .ix-stack .num { font: 500 10.5px var(--font-code); }
 /* A square toggle takes its whole box, so the text of the node steps back from it. */
 [data-skin="strict"] .branch.l .node, [data-skin="blueprint"] .branch.l .node { padding-left: 18px; }
@@ -463,7 +611,6 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
 [data-skin="mac"] .mark { font: 600 13px/1 var(--font-display); letter-spacing: 0; text-transform: none; }
 [data-skin="mac"] .micro { font: 600 11px/1.2 var(--font-ui); letter-spacing: 0; text-transform: none; }
 [data-skin="mac"] .root b { font: 600 14px/1.25 var(--font-display); }
-[data-skin="mac"] .stack .num { font: 600 15px/1 var(--font-display); }
 [data-skin="mac"] .ix-stack .num { font: 500 10.5px var(--font-ui); }
 [data-skin="mac"] .counts, [data-skin="mac"] .stat, [data-skin="mac"] .pct, [data-skin="mac"] .node .meta, [data-skin="mac"] .ix-stack .ct { font-family: var(--font-ui); font-variant-numeric: tabular-nums; }
 [data-skin="mac"] .seg button[aria-pressed="true"] { box-shadow: 0 0 0 .5px rgb(0 0 0 / 8%), 0 1px 2.5px rgb(0 0 0 / 18%); }
@@ -475,7 +622,6 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
 [data-skin="blueprint"] .root.is-sel { border-color: var(--frame); box-shadow: 0 0 0 3px var(--bg), 0 0 0 6px var(--frame); }
 [data-skin="blueprint"] .root b { font: 700 12.5px/1.35 var(--font-display); letter-spacing: .05em; text-transform: uppercase; }
 [data-skin="blueprint"] .stack .nm { font: 700 12px/1.25 var(--font-ui); letter-spacing: .07em; text-transform: uppercase; }
-[data-skin="blueprint"] .stack .num { font: 500 15px/1 var(--font-display); }
 [data-skin="blueprint"] .pr .t { font: 600 12px/1.35 var(--font-ui); }
 [data-skin="blueprint"] .gh .nm { font: 600 10.5px/1.2 var(--font-ui); letter-spacing: .06em; text-transform: uppercase; }
 [data-skin="blueprint"] .fn .why, [data-skin="blueprint"] .insp-body p { font-size: 11px; }
@@ -485,7 +631,9 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
   .chrome { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto; grid-template-areas: "bar" "mid" "legend" "foot"; gap: 8px; }
   .legend { grid-area: legend; }
   .index, .mini, .counts, .bar .grow { display: none; }
-  .insp { grid-area: mid; align-self: end; width: auto; max-height: 46%; }
+  .insp, .insp.floating { position: relative; inset: auto; grid-area: mid; align-self: end; width: auto; max-height: 46%; }
+  .insp > .ph { cursor: auto; }
+  .insp-grip, #insp-dock { display: none; }
   .search { flex: 1 1 140px; }
   .tools { order: 5; flex: 1 1 100%; min-width: 0; overflow-x: auto; }
   .mark { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
@@ -516,7 +664,16 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
 <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5.5 12h13"/></symbol>
 <symbol id="i-close" viewBox="0 0 24 24"><path d="m6.5 6.5 11 11m0-11-11 11"/></symbol>
 <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4.5h5.5V10M19.5 4.5 11 13M10 6.5H5.5v12h12V14"/></symbol>
+<symbol id="i-expand" viewBox="0 0 24 24"><path d="M12 3v6M8.5 5.5 12 2l3.5 3.5M12 21v-6m-3.5 3.5L12 22l3.5-3.5M5 12h14"/></symbol>
+<symbol id="i-collapse" viewBox="0 0 24 24"><path d="M12 2v6M8.5 4.5 12 8l3.5-3.5M12 22v-6m-3.5 3.5L12 16l3.5 3.5M5 12h14"/></symbol>
+<symbol id="i-dock" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><rect x="13" y="7.5" width="5" height="6" rx="1"/></symbol>
 <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M9.5 4.5v15"/></symbol>
+<!-- Octicons of the GitHub skin (primer/octicons, MIT). -->
+<symbol id="o-stack" viewBox="0 0 16 16"><path d="M7.122.392a1.75 1.75 0 0 1 1.756 0l5.003 2.902c.83.481.83 1.68 0 2.162L8.878 8.358a1.75 1.75 0 0 1-1.756 0L2.119 5.456a1.251 1.251 0 0 1 0-2.162ZM8.125 1.69a.248.248 0 0 0-.25 0l-4.63 2.685 4.63 2.685a.248.248 0 0 0 .25 0l4.63-2.685ZM1.601 7.789a.75.75 0 0 1 1.025-.273l5.249 3.044a.248.248 0 0 0 .25 0l5.249-3.044a.75.75 0 0 1 .752 1.298l-5.248 3.044a1.75 1.75 0 0 1-1.756 0L1.874 8.814A.75.75 0 0 1 1.6 7.789Zm0 3.5a.75.75 0 0 1 1.025-.273l5.249 3.044a.248.248 0 0 0 .25 0l5.249-3.044a.75.75 0 0 1 .752 1.298l-5.248 3.044a1.75 1.75 0 0 1-1.756 0l-5.248-3.044a.75.75 0 0 1-.273-1.025Z"/></symbol>
+<symbol id="o-pr" viewBox="0 0 16 16"><path d="M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354ZM3.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm0 9.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm8.25.75a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Z"/></symbol>
+<symbol id="o-pr-draft" viewBox="0 0 16 16"><path d="M3.25 1A2.25 2.25 0 0 1 4 5.372v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.251 2.251 0 0 1 3.25 1Zm9.5 14a2.25 2.25 0 1 1 0-4.5 2.25 2.25 0 0 1 0 4.5ZM2.5 3.25a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0ZM3.25 12a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm9.5 0a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5ZM14 7.5a1.25 1.25 0 1 1-2.5 0 1.25 1.25 0 0 1 2.5 0Zm0-4.25a1.25 1.25 0 1 1-2.5 0 1.25 1.25 0 0 1 2.5 0Z"/></symbol>
+<symbol id="o-pr-closed" viewBox="0 0 16 16"><path d="M3.25 1A2.25 2.25 0 0 1 4 5.372v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.251 2.251 0 0 1 3.25 1Zm9.5 5.5a.75.75 0 0 1 .75.75v3.378a2.251 2.251 0 1 1-1.5 0V7.25a.75.75 0 0 1 .75-.75Zm-2.03-5.273a.75.75 0 0 1 1.06 0l.97.97.97-.97a.748.748 0 0 1 1.265.332.75.75 0 0 1-.205.729l-.97.97.97.97a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018l-.97-.97-.97.97a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l.97-.97-.97-.97a.75.75 0 0 1 0-1.06ZM2.5 3.25a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0ZM3.25 12a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm9.5 0a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Z"/></symbol>
+<symbol id="o-merge" viewBox="0 0 16 16"><path d="M5.45 5.154A4.25 4.25 0 0 0 9.25 7.5h1.378a2.251 2.251 0 1 1 0 1.5H9.25A5.734 5.734 0 0 1 5 7.123v3.505a2.25 2.25 0 1 1-1.5 0V5.372a2.25 2.25 0 1 1 1.95-.218ZM4.25 13.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm8.5-4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM5 3.25a.75.75 0 1 0 0 .005V3.25Z"/></symbol>
 </defs></svg>
 
 <div class="app d-m" id="app">
@@ -542,6 +699,7 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
         <button class="ib" id="only-key" aria-pressed="false" aria-label="Только ключевые" data-tip="Только ключевые ★ · K"><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg></button>
         <button class="ib" id="filter" aria-pressed="false" aria-label="Скрыть остальные цвета" data-tip="Скрыть остальные цвета · F"><svg class="ic" aria-hidden="true"><use href="#i-filter"/></svg></button>
         <span class="sep"></span>
+        <button class="ib" id="expand-all" aria-label="Развернуть всё" data-tip="Развернуть всё · E"><svg class="ic" aria-hidden="true"><use id="expand-icon" href="#i-expand"/></svg></button>
         <div class="seg" id="depth" role="group" aria-label="Глубина дерева">
           <button data-depth="1" data-tip="Только стеки · [ ]">Стеки</button>
           <button data-depth="2" data-tip="До PR · [ ]">PR</button>
@@ -575,12 +733,14 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
           <dt>pinch · ⌘ + колесо</dt><dd>масштаб</dd>
           <dt>два пальца · тянуть</dt><dd>сдвиг</dd>
           <dt>двойной клик</dt><dd>приблизить, с Shift — отдалить</dd>
+          <dt>заголовок панели</dt><dd>перетащить панель; двойной клик — в угол</dd>
+          <dt>край панели</dt><dd>ширина панели</dd>
         </dl>
         <h2 class="micro">Клавиши</h2>
         <dl>
           <dt>/</dt><dd>поиск</dd>
           <dt>K · F</dt><dd>только ключевые · скрыть остальные цвета</dd>
-          <dt>[ · ]</dt><dd>глубина дерева</dd>
+          <dt>E · [ · ]</dt><dd>развернуть или свернуть всё · глубина дерева</dd>
           <dt>D · L</dt><dd>плотность · раскладка</dd>
           <dt>0 · 1 · + · −</dt><dd>вся карта · 100% · масштаб</dd>
           <dt>M · H</dt><dd>мини-карта · интерфейс</dd>
@@ -595,10 +755,12 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
     </nav>
     <aside class="insp glass" id="insp" hidden aria-live="polite">
       <div class="ph"><span class="micro" id="insp-label"></span><span class="grow"></span>
+        <button class="ib sm" id="insp-dock" aria-label="Вернуть панель в угол" data-tip="Вернуть в угол"><svg class="ic" aria-hidden="true"><use href="#i-dock"/></svg></button>
         <button class="ib sm" id="insp-fold" aria-label="Свернуть панель" data-tip="Свернуть"><svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></button>
         <button class="ib sm tip-end" id="insp-close" aria-label="Сбросить выбор" data-tip="Сбросить · Esc"><svg class="ic" aria-hidden="true"><use href="#i-close"/></svg></button>
       </div>
       <div class="insp-body" id="insp-body"></div>
+      <div class="insp-grip l" aria-hidden="true"></div><div class="insp-grip r" aria-hidden="true"></div>
     </aside>
     <div class="legend glass" id="legend">
       <div class="cats" id="cats" role="group" aria-label="Цвета: тип работы функции"></div>
@@ -659,6 +821,13 @@ const icon = (name) => {
   s.append(svgEl('use', {href: `#i-${name}`}));
   return s;
 };
+/** An octicon of the GitHub skin; the other skins hide it. */
+const oct = (name, cls) => {
+  const s = svgEl('svg', {class: cls ? `oct ${cls}` : 'oct', 'aria-hidden': 'true'});
+  s.append(svgEl('use', {href: `#o-${name}`}));
+  return s;
+};
+const PR_ICON = {open: 'pr', draft: 'pr-draft', merged: 'merge', closed: 'pr-closed'};
 const cvar = (cat) => `var(--c-${cat})`;
 const withColor = (e, cat) => { e.style.setProperty('--c', cvar(cat)); return e; };
 const plural = (n, one, few, many) => {
@@ -666,6 +835,15 @@ const plural = (n, one, few, many) => {
   return `${n} ${d === 1 && t !== 11 ? one : d >= 2 && d <= 4 && (t < 12 || t > 14) ? few : many}`;
 };
 const fnWord = (n) => plural(n, 'функция', 'функции', 'функций');
+/** `ref` is the GitHub page of a stack or a PR: {kind: 'stack' | 'pr', n, url}. */
+const refText = (ref) => `${ref.kind === 'stack' ? 'Стек' : 'PR'} #${ref.n}`;
+function refLink(ref, cls, ...kids) {
+  const a = h('a', cls, refText(ref), ...kids);
+  a.href = ref.url; a.target = '_blank'; a.rel = 'noopener';
+  a.title = ref.kind === 'stack' ? 'Открыть стек на GitHub' : 'Открыть PR на GitHub';
+  return a;
+}
+const prRef = (pr) => ({kind: 'pr', n: pr.n, url: pr.url});
 
 /* ---------- Model ---------- */
 const catById = Object.fromEntries(DATA.cats.map((c) => [c.id, c]));
@@ -673,7 +851,7 @@ const simById = Object.fromEntries((DATA.sims ?? []).map((s) => [s.id, s]));
 const stacks = [], prs = [], groups = [], fns = [];
 const fnByName = new Map();
 DATA.stacks.forEach((st, i) => {
-  const S = {st, num: String(i + 1).padStart(2, '0'), closed: false, prs: [], fns: [], side: 'r'};
+  const S = {st, ref: st.ref ?? null, tag: st.ref ? `#${st.ref.n}` : String(i + 1), closed: false, prs: [], fns: [], side: 'r'};
   stacks.push(S);
   for (const pr of st.prs) {
     const P = {pr, stack: S, closed: false, groups: [], fns: []};
@@ -691,8 +869,8 @@ DATA.stacks.forEach((st, i) => {
 const simsOf = (F) => (F.f.sims ?? []).map((id) => simById[id]).filter(Boolean);
 
 /** `onlyKey` hides functions without ★; `filter` hides functions of other colors instead of graying them. */
-const state = {sel: null, cat: null, fn: null, onlyKey: false, filter: false, density: 'm', layout: 'both', skin: 'studio'};
-const PREFS = 'pr-mindmap:v3';
+const state = {sel: null, cat: null, fn: null, onlyKey: false, filter: false, density: 'm', layout: 'both', skin: 'github'};
+const PREFS = 'pr-mindmap:v4';
 const prefs = (() => { try { return JSON.parse(localStorage.getItem(PREFS)) ?? {}; } catch { return {}; } })();
 const savePrefs = (patch) => { Object.assign(prefs, patch); try { localStorage.setItem(PREFS, JSON.stringify(prefs)); } catch {} };
 
@@ -743,8 +921,10 @@ mind.append(branchL, rootNode, branchR);
 
 for (const S of stacks) {
   S.node = nodeBox('stack', () => select(state.sel?.stack === S ? null : {stack: S}));
-  S.node.append(h('span', 'num', S.num), h('span', 'nm', S.st.name),
-    h('span', 'meta', `${S.prs.length} PR · ${S.fns.length} fn`), h('span', 'ess', S.st.essence), mixBar(S.fns));
+  const size = S.ref?.kind === 'pr' ? `${S.fns.length} fn` : `${S.prs.length} PR · ${S.fns.length} fn`;
+  S.node.append(h('span', 'head', oct('stack'), h('span', 'nm', S.st.name)),
+    h('span', 'meta', S.ref ? refLink(S.ref, 'n') : h('span', null, S.st.gh), h('span', null, size)),
+    h('span', 'ess', S.st.essence), mixBar(S.fns));
   S.tg = toggleButton(S);
   S.node.append(S.tg);
   S.ul = h('ul');
@@ -752,11 +932,10 @@ for (const S of stacks) {
   for (const P of S.prs) {
     const {pr} = P;
     P.node = nodeBox('pr', () => select(state.sel?.pr === P ? null : {pr: P}));
-    const a = h('a', 'n', `#${pr.n}`);
-    a.href = pr.url; a.target = '_blank'; a.rel = 'noopener'; a.title = 'Открыть PR на GitHub';
     P.hit = h('span', 'hit');
-    P.node.append(h('span', 'head', a, h('span', 't', pr.title)), h('span', 'ess', pr.essence), mixBar(P.fns),
-      h('span', 'meta', h('span', null, `${P.fns.length} fn · ★ ${P.fns.filter((F) => F.f.key).length}`), P.hit));
+    const stateIcon = PR_ICON[pr.state] ? oct(PR_ICON[pr.state], `s-${pr.state}`) : oct('pr');
+    P.node.append(h('span', 'head', stateIcon, h('span', 't', pr.title)), h('span', 'ess', pr.essence), mixBar(P.fns),
+      h('span', 'meta', refLink(prRef(pr), 'n'), h('span', null, `${P.fns.length} fn · ★ ${P.fns.filter((F) => F.f.key).length}`), P.hit));
     P.tg = toggleButton(P);
     P.node.append(P.tg);
     P.ul = h('ul');
@@ -1328,6 +1507,10 @@ function syncControls() {
   const depth = currentDepth();
   for (const b of $('depth').children) b.setAttribute('aria-pressed', String(Number(b.dataset.depth) === depth));
   for (const b of $('density').children) b.setAttribute('aria-pressed', String(b.dataset.density === state.density));
+  const expand = depth !== 4;
+  $('expand-icon').setAttribute('href', expand ? '#i-expand' : '#i-collapse');
+  $('expand-all').setAttribute('aria-label', expand ? 'Развернуть всё' : 'Свернуть всё');
+  $('expand-all').dataset.tip = expand ? 'Развернуть всё · E' : 'Свернуть всё · E';
   $('only-key').setAttribute('aria-pressed', String(state.onlyKey));
   $('filter').setAttribute('aria-pressed', String(state.filter));
   app.classList.remove('d-s', 'd-m', 'd-l');
@@ -1376,7 +1559,7 @@ function paint() {
   for (const S of stacks) S.node.classList.toggle('is-sel', state.sel?.stack === S);
   for (const P of prs) P.node.classList.toggle('is-sel', state.sel?.pr === P);
   for (const i of mind.querySelectorAll('.mix i')) i.classList.toggle('off', Boolean(state.cat) && i.dataset.cat !== state.cat);
-  for (const b of $('cats').children) b.setAttribute('aria-pressed', String(b.dataset.cat === state.cat));
+  for (const b of $('cats').children) b.setAttribute('aria-pressed', String((b.dataset.cat || null) === state.cat));
   const current = state.sel?.stack ?? state.sel?.pr?.stack ?? state.sel?.fn?.stack;
   if (current) markStack(current);
 }
@@ -1438,14 +1621,13 @@ function showPr(P) {
 function renderInspector() {
   const sel = state.sel;
   insp.hidden = !sel;
-  insp.style.removeProperty('--c');
   if (!sel) return;
+  fitPane();
   const kids = [];
   let label = '';
   if (sel.fn) {
     const F = sel.fn, {f} = F;
     label = 'Функция';
-    insp.style.setProperty('--c', cvar(f.cat));
     const catChip = withColor(h('button', 'chip', h('span', 'dot'), catById[f.cat].name), f.cat);
     catChip.addEventListener('click', () => select({cat: f.cat}));
     const where = h('button', 'chip', `#${F.pr.pr.n} · ${F.group.g.name}`);
@@ -1470,11 +1652,10 @@ function renderInspector() {
     const c = catById[sel.cat];
     const list = fns.filter((F) => F.f.cat === c.id);
     label = 'Цвет';
-    insp.style.setProperty('--c', cvar(c.id));
     const only = h('button', 'chip', 'Скрыть остальные');
     only.setAttribute('aria-pressed', String(state.filter));
     only.addEventListener('click', () => { state.filter = !state.filter; refresh(); renderInspector(); });
-    kids.push(h('h2', null, c.name), h('p', 'lead', c.desc),
+    kids.push(h('h2', null, withColor(h('span', 'dot'), c.id), c.name), h('p', 'lead', c.desc),
       h('div', 'chips', chip(fnWord(list.length)), chip(`★ ${list.filter((F) => F.f.key).length}`), only));
     const byPr = h('div', 'list');
     for (const P of prs) {
@@ -1484,26 +1665,27 @@ function renderInspector() {
     kids.push(h('p', 'micro', 'По PR'), byPr);
   } else if (sel.pr) {
     const P = sel.pr, {pr} = P;
-    label = `PR #${pr.n}`;
-    const link = h('a', 'chip', 'GitHub', icon('ext'));
-    link.href = pr.url; link.target = '_blank'; link.rel = 'noopener';
+    label = refText(prRef(pr));
+    const links = [refLink(prRef(pr), 'chip', icon('ext'))];
+    if (P.stack.ref?.kind === 'stack') links.push(refLink(P.stack.ref, 'chip', icon('ext')));
     const std = P.fns.filter((F) => F.f.kind === 's').length;
     kids.push(h('h2', null, pr.title), h('p', 'lead', pr.essence),
-      h('div', 'chips', link, chip(fnWord(P.fns.length)), chip(`★ ${P.fns.filter((F) => F.f.key).length}`),
+      h('div', 'chips', ...links, chip(fnWord(P.fns.length)), chip(`★ ${P.fns.filter((F) => F.f.key).length}`),
         chip(`станд ${std} · уник ${P.fns.length - std}`)));
     if (pr.branch) kids.push(h('p', 'branch', pr.branch));
     kids.push(h('p', 'micro', 'Типы работы'), catBreakdown(P.fns));
   } else if (sel.stack) {
     const S = sel.stack;
-    label = `Стек ${S.num}`;
+    label = S.ref?.kind === 'stack' ? refText(S.ref) : 'Стек';
     const list = h('div', 'list');
     for (const P of S.prs) list.append(listItem({num: `#${P.pr.n}`, name: P.pr.title, count: P.fns.length, onClick: () => navigate({pr: P})}));
     kids.push(h('h2', null, S.st.name), h('p', 'lead', S.st.essence),
-      h('div', 'chips', chip(S.st.gh), chip(`${S.prs.length} PR`), chip(fnWord(S.fns.length))), h('p', 'micro', 'PR'), list);
+      h('div', 'chips', S.ref ? refLink(S.ref, 'chip', icon('ext')) : chip(S.st.gh), chip(`${S.prs.length} PR`), chip(fnWord(S.fns.length))),
+      h('p', 'micro', 'PR'), list);
   } else {
     label = 'О карте';
     const list = h('div', 'list');
-    for (const S of stacks) list.append(listItem({num: S.num, name: S.st.name, count: `${S.prs.length} PR`, onClick: () => navigate({stack: S})}));
+    for (const S of stacks) list.append(listItem({num: S.tag, name: S.st.name, count: `${S.prs.length} PR`, onClick: () => navigate({stack: S})}));
     kids.push(h('h2', null, DATA.root.title), h('p', 'lead', DATA.root.essence),
       h('div', 'chips', chip(`${stacks.length} стеков`), chip(`${prs.length} PR`), chip(fnWord(fns.length))), h('p', 'micro', 'Стеки'), list);
   }
@@ -1512,9 +1694,100 @@ function renderInspector() {
 }
 $('insp-close').addEventListener('click', () => select(null));
 $('insp-fold').addEventListener('click', () => insp.classList.toggle('folded'));
+
+/* ---------- Panel of the selection: place and width ---------- */
+const PANE = {min: 240, max: 720, margin: 8, header: 48};
+const chromeBox = $('chrome');
+/** `floating` puts the panel at x, y of the chrome; `w` is null until the reader changes the width. */
+const pane = {floating: false, x: 0, y: 0, w: null, ...prefs.pane};
+const narrow = () => Boolean(window.matchMedia?.('(max-width: 760px)').matches);
+const within = (v, lo, hi) => Math.min(Math.max(v, lo), Math.max(lo, hi));
+function applyPane() {
+  insp.classList.toggle('floating', pane.floating);
+  if (pane.w) insp.style.setProperty('--insp-w', `${pane.w}px`);
+  else insp.style.removeProperty('--insp-w');
+  insp.style.setProperty('--insp-x', `${pane.x}px`);
+  insp.style.setProperty('--insp-y', `${pane.y}px`);
+}
+/** Keeps the panel inside the window, so its header stays within reach. */
+function fitPane() {
+  if (insp.hidden || narrow()) return;
+  const c = chromeBox.getBoundingClientRect();
+  if (pane.w) pane.w = within(pane.w, PANE.min, Math.min(PANE.max, c.width - 2 * PANE.margin));
+  if (pane.floating) {
+    pane.x = within(pane.x, PANE.margin, c.width - (pane.w ?? insp.offsetWidth) - PANE.margin);
+    pane.y = within(pane.y, PANE.margin, c.height - PANE.header);
+  }
+  applyPane();
+}
+/** Follows a pointer from `e` until it is released; `move` gets the offset, the start box of the panel and the chrome box. */
+function trackPane(e, mode, move) {
+  e.preventDefault();
+  const handle = e.currentTarget, c = chromeBox.getBoundingClientRect(), r = insp.getBoundingClientRect();
+  const start = {px: e.clientX, py: e.clientY, x: r.left - c.left, y: r.top - c.top, w: r.width};
+  handle.setPointerCapture(e.pointerId);
+  insp.classList.add(mode);
+  const onMove = (ev) => move(ev.clientX - start.px, ev.clientY - start.py, start, c);
+  const onUp = () => {
+    handle.removeEventListener('pointermove', onMove);
+    handle.removeEventListener('pointerup', onUp);
+    handle.removeEventListener('pointercancel', onUp);
+    insp.classList.remove(mode);
+    fitPane();
+    savePrefs({pane: {...pane}});
+  };
+  handle.addEventListener('pointermove', onMove);
+  handle.addEventListener('pointerup', onUp);
+  handle.addEventListener('pointercancel', onUp);
+}
+const paneHead = insp.querySelector('.ph');
+paneHead.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0 || narrow() || e.target.closest('button')) return;
+  trackPane(e, 'dragging', (dx, dy, start, c) => {
+    // A click on the header without a move leaves a docked panel in its corner.
+    if (!pane.floating && Math.hypot(dx, dy) < 4) return;
+    pane.floating = true;
+    pane.w ??= start.w;
+    pane.x = within(start.x + dx, PANE.margin, c.width - start.w - PANE.margin);
+    pane.y = within(start.y + dy, PANE.margin, c.height - PANE.header);
+    applyPane();
+  });
+});
+for (const grip of insp.querySelectorAll('.insp-grip')) {
+  grip.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || narrow()) return;
+    const left = grip.classList.contains('l');
+    trackPane(e, 'resizing', (dx, _dy, start, c) => {
+      pane.w = within(start.w + (left ? -dx : dx), PANE.min, Math.min(PANE.max, c.width - 2 * PANE.margin));
+      // A docked panel grows from its corner; a floating one keeps the edge across from the grip in place.
+      if (pane.floating && left) pane.x = start.x + start.w - pane.w;
+      applyPane();
+    });
+  });
+}
+function dockPane() {
+  pane.floating = false;
+  applyPane();
+  savePrefs({pane: {...pane}});
+}
+$('insp-dock').addEventListener('click', dockPane);
+paneHead.addEventListener('dblclick', (e) => { if (pane.floating && !e.target.closest('button')) dockPane(); });
+window.addEventListener('resize', fitPane);
+applyPane();
 $('about').addEventListener('click', () => select(state.sel?.root ? null : {root: true}));
 
 /* ---------- Legend, index, search ---------- */
+{
+  const dot = h('span', 'dot');
+  const arc = 360 / DATA.cats.length;
+  dot.style.background = `conic-gradient(${DATA.cats.map((c, i) => `${cvar(c.id)} ${i * arc}deg ${(i + 1) * arc}deg`).join(', ')})`;
+  const b = h('button', 'cat all up tip-start', dot, h('span', 'nm', 'Все цвета'), h('span', 'ct', String(fns.length)));
+  b.dataset.tip = 'Все цвета';
+  b.setAttribute('aria-label', 'Все цвета');
+  b.setAttribute('aria-pressed', 'true');
+  b.addEventListener('click', () => { if (state.cat) select(null); });
+  $('cats').append(b);
+}
 for (const c of DATA.cats) {
   const b = withColor(h('button', 'cat up tip-start', h('span', 'dot'), h('span', 'nm', c.name),
     h('span', 'ct', String(fns.filter((F) => F.f.cat === c.id).length))), c.id);
@@ -1534,8 +1807,8 @@ $('legend-fold').addEventListener('click', () => setLegendOpen(!$('legend').clas
 
 const stackLinks = new Map();
 for (const S of stacks) {
-  const b = h('button', 'ix-stack', h('span', 'num', S.num), h('span', 'nm', S.st.name), h('span', 'ct', String(S.prs.length)));
-  b.title = `${S.st.name}: ${S.prs.length} PR`;
+  const b = h('button', 'ix-stack', h('span', 'num', S.tag), h('span', 'nm', S.st.name), h('span', 'ct', String(S.prs.length)));
+  b.title = `${S.ref ? refText(S.ref) : S.st.gh} · ${S.st.name}: ${S.prs.length} PR`;
   b.setAttribute('aria-current', 'false');
   b.addEventListener('click', () => { markStack(S); flyTo(S.node); });
   const list = h('div', 'ix-prs');
@@ -1560,7 +1833,7 @@ $('index-fold').addEventListener('click', () => setIndexRail(!$('index').classLi
 
 const search = $('search'), results = $('results');
 const searchItems = [
-  ...stacks.map((S) => ({text: `${S.num} ${S.st.name}`, label: S.st.name, detail: `Стек ${S.num} · ${S.prs.length} PR`, go: () => navigate({stack: S})})),
+  ...stacks.map((S) => ({text: `${S.tag} ${S.st.name} ${S.st.gh}`, label: S.st.name, detail: `${S.ref ? refText(S.ref) : S.st.gh} · ${S.prs.length} PR`, go: () => navigate({stack: S})})),
   ...prs.map((P) => ({text: `#${P.pr.n} ${P.pr.title} ${P.pr.branch ?? ''}`, label: `#${P.pr.n} ${P.pr.title}`, detail: P.pr.branch ?? P.stack.st.name, go: () => navigate({pr: P})})),
   ...fns.map((F) => ({text: `${F.f.name} ${F.f.why}`, label: F.f.name, detail: `#${F.pr.pr.n} · ${F.f.why}`, cat: F.f.cat, go: () => navigate({fn: F})})),
 ].map((item) => ({...item, text: item.text.toLocaleLowerCase()}));
@@ -1606,6 +1879,7 @@ function setHelp(open) {
 }
 /** A skin changes the look only: colors of both themes, type, shapes and connectors. The first one is the default. */
 const SKINS = [
+  {id: 'github', name: 'GitHub', note: 'цвета Primer, шрифты github.com'},
   {id: 'studio', name: 'Студия', note: 'стекло, акцидентный шрифт'},
   {id: 'strict', name: 'Строгий', note: 'чёрно-белый, прямые углы'},
   {id: 'mac', name: 'macOS', note: 'системный шрифт, синий акцент'},
@@ -1666,6 +1940,9 @@ function stepDepth(delta) {
 }
 $('only-key').addEventListener('click', () => { state.onlyKey = !state.onlyKey; refresh(); });
 $('filter').addEventListener('click', () => { state.filter = !state.filter; refresh(); renderInspector(); });
+/** Every branch open down to the functions, or only the stacks. */
+function toggleAll() { setDepth(currentDepth() === 4 ? 1 : 4); refresh(); }
+$('expand-all').addEventListener('click', toggleAll);
 $('depth').addEventListener('click', (e) => { const b = e.target.closest('[data-depth]'); if (b) { setDepth(Number(b.dataset.depth)); refresh(); } });
 $('density').addEventListener('click', (e) => { const b = e.target.closest('[data-density]'); if (b) setDensity(b.dataset.density); });
 $('layout').addEventListener('click', () => setLayout(state.layout === 'both' ? 'right' : 'both'));
@@ -1708,7 +1985,7 @@ document.addEventListener('keydown', (e) => {
     KeyL: () => $('layout').click(), KeyM: () => $('mini-toggle').click(), KeyT: toggleTheme,
     KeyS: () => setSkin(SKINS[(SKINS.findIndex((skin) => skin.id === state.skin) + 1) % SKINS.length].id),
     KeyH: () => setZen(!app.classList.contains('zen')),
-    BracketLeft: () => stepDepth(-1), BracketRight: () => stepDepth(1),
+    BracketLeft: () => stepDepth(-1), BracketRight: () => stepDepth(1), KeyE: toggleAll,
   };
   // `?` is Shift + Slash on the US layout.
   if (e.code === 'Slash' && e.shiftKey) { e.preventDefault(); setHelp($('help-pop').hidden); return; }

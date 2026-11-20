@@ -3,7 +3,7 @@
 
 Usage: python3 draft.py raw.json [--out data.json]
 
-The draft takes its structure from the diffs alone: stacks from the branch names of the chain, groups from folders,
+The draft takes its structure from the diffs alone: stacks from the GitHub stacks or the branch names of the chain, groups from folders,
 colors from packages, "similar" from shared name endings, the purpose of a function from its file. It is a starting
 point: the meaning (what each PR and function is for, which functions are key, colors by kind of work) is written
 by a person or by the skill on top of it.
@@ -38,6 +38,12 @@ def tail(text, limit):
 def title_of(pr):
     title = CONVENTIONAL.sub('', pr['title']).strip() or pr['title']
     return title[0].upper() + title[1:]
+
+
+def state_of(pr):
+    if pr.get('draft'):
+        return 'draft'
+    return {'MERGED': 'merged', 'CLOSED': 'closed'}.get(pr.get('state'), 'open')
 
 
 def essence_of(pr):
@@ -174,23 +180,25 @@ def draft(raw):
             groups = card(pr, files)
             if groups:
                 stacks.append({'name': area, 'gh': f'#{pr["n"]}', 'essence': cut(f'Изменения PR в {area}.', 150), 'prs': [{
-                    'n': pr['n'], 'url': pr['url'], 'branch': pr['head'], 'title': cut(f'{title_of(pr)}: {area}', 90),
+                    'n': pr['n'], 'url': pr['url'], 'branch': pr['head'], 'state': state_of(pr),
+                    'title': cut(f'{title_of(pr)}: {area}', 90),
                     'essence': essence_of(pr), 'groups': groups}]})
     else:
         runs = []
         for pr in prs:
-            key = stack_key(pr)
+            key = pr.get('stack') or stack_key(pr)
             if runs and runs[-1][0] == key:
                 runs[-1][1].append(pr)
             else:
                 runs.append((key, [pr]))
         for key, members in runs:
-            cards = [{'n': pr['n'], 'url': pr['url'], 'branch': pr['head'], 'title': cut(title_of(pr), 90),
+            cards = [{'n': pr['n'], 'url': pr['url'], 'branch': pr['head'], 'state': state_of(pr), 'title': cut(title_of(pr), 90),
                       'essence': essence_of(pr), 'groups': card(pr, pr['files'])} for pr in members]
             cards = [c for c in cards if c['groups']]
             if cards:
                 numbers = f'#{cards[0]["n"]}' if len(cards) == 1 else f'#{cards[0]["n"]}–#{cards[-1]["n"]}'
-                stacks.append({'name': key.rsplit('/', 1)[-1], 'gh': numbers,
+                stacks.append({'name': stack_key(members[0]).rsplit('/', 1)[-1],
+                               'gh': f'stack {key}' if isinstance(key, int) else numbers,
                                'essence': cut('; '.join(c['title'] for c in cards), 150), 'prs': cards})
     if not stacks:
         raise SystemExit('no functions found in the diffs: nothing to draw')

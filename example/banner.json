@@ -257,6 +257,7 @@
      "n": 1475,
      "url": "https://github.com/gravity-ui/markdown-editor/pull/1475",
      "branch": "feat/hdr-common-settings",
+     "state": "draft",
      "title": "Общие окна настроек и копирование баннера как Markdown",
      "essence": "Диалог, строка и переключатель настроек становятся общими для всех окон; поповеры закрываются по Tab и не реагируют на свой якорь; Copy копирует Markdown баннера.",
      "groups": [
@@ -358,6 +359,7 @@
      "n": 1476,
      "url": "https://github.com/gravity-ui/markdown-editor/pull/1476",
      "branch": "feat/hdr-common-parts",
+     "state": "draft",
      "title": "Общие команды для частей баннера",
      "essence": "Части баннера (картинка, заголовок, описание) объявляются через headerPart в схеме; общие команды вставляют, удаляют и восстанавливают их; общие хелперы директив и выделения.",
      "groups": [
@@ -567,6 +569,7 @@
      "n": 1477,
      "url": "https://github.com/gravity-ui/markdown-editor/pull/1477",
      "branch": "feat/hdr-common-upload",
+     "state": "draft",
      "title": "Общая форма источника картинки и загрузчик",
      "essence": "ImageSource задаёт картинку ссылкой или файлом с проверкой типа и размера; загрузчик следит за позицией узла и отбрасывает устаревший результат.",
      "groups": [
@@ -682,6 +685,7 @@
      "n": 1478,
      "url": "https://github.com/gravity-ui/markdown-editor/pull/1478",
      "branch": "feat/hdr-bg-render",
+     "state": "draft",
      "title": "Рендер фона баннера",
      "essence": "headerAttrs рендерит заливку, картинку в style, тему и размытие; NodeView пишут в DOM только изменения; команды не создают транзакцию при тех же значениях.",
      "groups": [
@@ -811,6 +815,7 @@
      "n": 1479,
      "url": "https://github.com/gravity-ui/markdown-editor/pull/1479",
      "branch": "feat/hdr-bg-settings",
+     "state": "draft",
      "title": "Настройки фона баннера",
      "essence": "Окно фона: палитра, картинка ссылкой или загрузкой, тема, размытие и превью в двух темах; каждое изменение — один шаг undo, новый источник отменяет загрузку.",
      "groups": [
@@ -940,6 +945,7 @@
      "n": 1480,
      "url": "https://github.com/gravity-ui/markdown-editor/pull/1480",
      "branch": "feat/hdr-title-markdown",
+     "state": "draft",
      "title": "markdown-it плагин заголовка",
      "essence": "::header-title[Текст]{size color} рендерит заголовок; размер 1–6 как h1–h6, цвет из палитры; второй заголовок в баннере остаётся абзацем.",
      "groups": [
@@ -1008,6 +1014,7 @@
      "n": 1481,
      "url": "https://github.com/gravity-ui/markdown-editor/pull/1481",
      "branch": "feat/hdr-title-node",
+     "state": "draft",
      "title": "Заголовок в визуальном редакторе",
      "essence": "Узел заголовка: простой текст без марок, одна строка при вводе и вставке, Enter не делит, края не склеиваются; второй заголовок в баннере отклоняется.",
      "groups": [
@@ -1205,6 +1212,7 @@
      "n": 1482,
      "url": "https://github.com/gravity-ui/markdown-editor/pull/1482",
      "branch": "feat/hdr-title-toolbar",
+     "state": "draft",
      "title": "Тулбар заголовка",
      "essence": "Курсор в заголовке открывает тулбар с меню размера и цвета; работает мышью и с клавиатуры (Tab, стрелки, Enter, Escape); каждое изменение — один шаг undo.",
      "groups": [
@@ -1294,6 +1302,7 @@
      "n": 1483,
      "url": "https://github.com/gravity-ui/markdown-editor/pull/1483",
      "branch": "feat/hdr-content-markdown",
+     "state": "draft",
      "title": "markdown-it плагин описания",
      "essence": ":::header-content рендерит описание с форматированием; пустое не занимает места; второе описание в баннере разворачивается в свои блоки.",
      "groups": [
@@ -1343,6 +1352,7 @@
      "n": 1484,
      "url": "https://github.com/gravity-ui/markdown-editor/pull/1484",
      "branch": "feat/hdr-content-edit",
+     "state": "draft",
      "title": "Описание в визуальном редакторе",
      "essence": "Описание редактируется на месте как rich text; Enter, Backspace и Delete не выводят текст наружу; описание вне баннера или второе — разворачивается.",
      "groups": [
@@ -1444,6 +1454,7 @@
      "n": 1485,
      "url": "https://github.com/gravity-ui/markdown-editor/pull/1485",
      "branch": "feat/hdr-content-toggle",
+     "state": "draft",
      "title": "Переключатель описания в настройках",
      "essence": "Переключатель Description показывает наличие описания, добавляет его с примером или из единственного абзаца и возвращает удалённое; один шаг undo.",
      "groups": [
@@ -1479,6 +1490,7 @@
      "n": 1486,
      "url": "https://github.com/gravity-ui/markdown-editor/pull/1486",
      "branch": "feat/hdr-image-markdown",
+     "state": "draft",
      "title": "markdown-it плагин картинки",
      "essence": "::header-image{src alt title} рендерит картинку в потоке баннера; небезопасный адрес не рендерится; вторая картинка остаётся текстом; галерея файлов её пропускает.",
      "groups": [
@@ -1547,6 +1559,7 @@
      "n": 1487,
      "url": "https://github.com/gravity-ui/markdown-editor/pull/1487",
      "branch": "feat/hdr-image-node",
+     "state": "draft",
      "title": "Узел картинки и её переключатель",
      "essence": "Картинка — атом-блок в потоке баннера, без адреса это плейсхолдер; клик, стрелки, Backspace и Delete выделяют её; переключатель Image вставляет и возвращает.",
      "groups": [
@@ -1648,6 +1661,7 @@
      "n": 1488,
      "url": "https://github.com/gravity-ui/markdown-editor/pull/1488",
      "branch": "feat/hdr-image-upload",
+     "state": "draft",
      "title": "Картинка по адресу или загрузкой",
      "essence": "Клик или Enter открывает окно картинки с формой редактора; ссылка проходит проверку, файл — лимиты; загруженный адрес следует за картинкой; Reset возвращает плейсхолдер.",
      "groups": [
@@ -1723,13 +1737,14 @@
   },
   {
    "name": "Раскладка",
-   "gh": "без stack",
+   "gh": "stack 1510",
    "essence": "Раскладка баннера: выравнивание текста и вертикальная позиция, одна CSS-сетка и узкий режим через container query.",
    "prs": [
     {
      "n": 1369,
      "url": "https://github.com/gravity-ui/markdown-editor/pull/1369",
      "branch": "feat/header-flat",
+     "state": "draft",
      "title": "Раскладка с выравниванием и узким режимом",
      "essence": "align и vertical проходят через Markdown, узел и панель; одна CSS-сетка: текст и картинка на всю высоту; уже 600 px картинка над текстом.",
      "groups": [

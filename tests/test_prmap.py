@@ -82,6 +82,7 @@ class Check(unittest.TestCase):
         self.assertIn('why 60 > 50', self.broken(lambda d: fn(d).update(why='x' * 60)))
         self.assertIn('essence 201 > 200', self.broken(lambda d: d['stacks'][0]['prs'][0].update(essence='x' * 201)))
         self.assertIn('essence 151 > 150', self.broken(lambda d: d['stacks'][0].update(essence='x' * 151)))
+        self.assertIn("state 'wip'", self.broken(lambda d: d['stacks'][0]['prs'][0].update(state='wip')))
         self.assertIn('root essence', self.broken(lambda d: d['root'].update(essence='x' * 151)))
 
     def test_references(self):
@@ -155,6 +156,13 @@ class Build(unittest.TestCase):
         build.markdown(data)
         self.assertEqual(data, before)
 
+    def test_stack_links(self):
+        st = lambda gh, *ns: {'gh': gh, 'prs': [{'n': n, 'url': f'https://github.com/o/r/pull/{n}'} for n in ns]}
+        self.assertEqual(build.ref_of(st('stack 1491', 1, 2)), {'kind': 'stack', 'n': 1491, 'url': 'https://github.com/o/r/stack/1491'})
+        self.assertEqual(build.ref_of(st('без stack', 7)), {'kind': 'pr', 'n': 7, 'url': 'https://github.com/o/r/pull/7'})
+        self.assertIsNone(build.ref_of(st('#1–#2', 1, 2)))
+        self.assertIn('(https://github.com/o/r/stack/', build.markdown(example()))
+
     def test_script_cannot_be_closed_by_the_data(self):
         data = example()
         data['root']['essence'] = '</script><b>x'
@@ -207,6 +215,7 @@ class Names(unittest.TestCase):
 
     def test_url(self):
         self.assertEqual(extract.URL.search('https://github.com/o/r/pull/12/files').groups(), ('o/r', '12'))
+        self.assertEqual(extract.STACK_URL.search('https://github.com/o/r/stack/1491').groups(), ('o/r', '1491'))
 
 
 class Draft(unittest.TestCase):

@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """Collects the raw material of a PR mind map with the gh CLI.
 
-Usage: python3 extract.py <PR URL> [<PR URL> ...] [--no-chain] [--out raw.json]
+Usage: python3 extract.py <PR or stack URL> [...] [--no-chain] [--out raw.json]
 
 For each PR: number, URL, title, body, base and head branches, state, commits and changed files; for each file,
 the functions, classes, methods and React components that its diff defines (`added`), which of them are exported
 (`exported`), the existing ones whose body it changes (`touched`), and the types and interfaces it declares (`types`).
 Test, snapshot and asset files are skipped.
 
-Without --no-chain, a stacked PR brings its whole chain: the PRs below it (whose head is its base, down to the
-default branch) and the open PRs above it (whose base is its head), in merge order.
+A stack link (github.com/o/r/stack/1491) brings the PRs of that GitHub stack, bottom to top. Without --no-chain,
+a PR link brings its whole chain: the PRs below it (whose head is its base, down to the default branch) and the open
+PRs above it (whose base is its head), in merge order. `stack` of a PR is the number of its GitHub stack or null.
 
-raw.json: {repo, default, prs: [{n, url, title, body, base, head, state, draft, commits, additions, deletions,
+raw.json: {repo, default, prs: [{n, url, title, body, base, head, stack, state, draft, commits, additions, deletions,
            files: [{path, additions, deletions, added, exported, touched, types}]}]}
 """
 import argparse
@@ -22,6 +23,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 
 URL = re.compile(r'github\.com/([^/\s]+/[^/\s]+)/pull/(\d+)')
+STACK_URL = re.compile(r'github\.com/([^/\s]+/[^/\s]+)/stacks?/(\d+)')
 FIELDS = 'number,url,title,body,baseRefName,headRefName,state,isDraft,commits,files,additions,deletions'
 SKIPPED = re.compile(
     r'(\.test\.|\.spec\.|_test\.|/tests?/|/__tests__/|__snapshots__|\.stories\.|/fixtures?/|'
@@ -52,6 +54,13 @@ def gh(*args):
     if res.returncode:
         sys.exit(f'gh {" ".join(args)}: {res.stderr.strip() or "failed"}')
     return res.stdout
+
+
+def stack_of(repo, n):
+    """The number of the GitHub stack of PR `n`, or None: a host without stacks answers with an error."""
+    res = subprocess.run(['gh', 'api', f'repos/{repo}/pulls/{n}', '--jq', '.stack.number // empty'],
+                         capture_output=True, text=True)
+    return int(res.stdout) if res.returncode == 0 and res.stdout.strip().isdigit() else None
 
 
 def definition(code):
@@ -129,11 +138,11 @@ def chain(repo, start, default, view):
 def collect(urls, with_chain=True, log=lambda message: print(message, file=sys.stderr)):
     targets = []
     for url in urls:
-        m = URL.search(url)
+        m = URL.search(url) or STACK_URL.search(url)
         if not m:
-            sys.exit(f'not a GitHub PR link: {url}')
-        targets.append((m.group(1), int(m.group(2))))
-    repos = {repo for repo, _ in targets}
+            sys.exit(f'not a GitHub PR or stack link: {url}')
+        targets.append((m.group(1), int(m.group(2)), m.re is STACK_URL))
+    repos = {repo for repo, _, _ in targets}
     if len(repos) != 1:
         sys.exit(f'all PRs must be in one repository, got {sorted(repos)}')
     repo = repos.pop()
@@ -145,23 +154,30 @@ def collect(urls, with_chain=True, log=lambda message: print(message, file=sys.s
             views[n] = json.loads(gh('pr', 'view', str(n), '-R', repo, '--json', FIELDS))
         return views[n]
 
+    def members(n, is_stack):
+        if is_stack:
+            return [int(m) for m in gh('api', f'repos/{repo}/stacks/{n}', '--jq', '.pull_requests[].number').split()]
+        return chain(repo, n, default, view) if with_chain else [n]
+
     order = []
-    for _, n in targets:
-        for m in ([n] if not with_chain else chain(repo, n, default, view)):
+    for _, n, is_stack in targets:
+        for m in members(n, is_stack):
             if m not in order:
                 order.append(m)
-    # Every PR needs its metadata and its diff: independent requests, so they run side by side.
+    # Every PR needs its metadata, its diff and its stack: independent requests, so they run side by side.
     with ThreadPoolExecutor(max_workers=8) as pool:
         metas = list(pool.map(view, order))
         diffs = list(pool.map(lambda n: gh('pr', 'diff', str(n), '-R', repo, '--color=never'), order))
+        stacks = list(pool.map(lambda n: stack_of(repo, n), order))
     prs = []
-    for pr, diff in zip(metas, diffs):
+    for pr, diff, stack in zip(metas, diffs, stacks):
         found = names(diff)
         files = [{'path': f['path'], 'additions': f['additions'], 'deletions': f['deletions'],
                   **found.get(f['path'], EMPTY)} for f in pr['files']]
         prs.append({
             'n': pr['number'], 'url': pr['url'], 'title': pr['title'], 'body': (pr['body'] or '')[:3000],
-            'base': pr['baseRefName'], 'head': pr['headRefName'], 'state': pr['state'], 'draft': pr['isDraft'],
+            'base': pr['baseRefName'], 'head': pr['headRefName'], 'stack': stack,
+            'state': pr['state'], 'draft': pr['isDraft'],
             'commits': [c['messageHeadline'] for c in pr['commits']],
             'additions': pr['additions'], 'deletions': pr['deletions'], 'files': files,
         })
