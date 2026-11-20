@@ -96,7 +96,7 @@ def group_files(files):
         ranked = sorted(groups, key=lambda g: -sum(len(f['added']) + len(f['touched']) for f in groups[g]))
         keep = set(ranked[:MAX_GROUPS - 1])
         merged = OrderedDict((g, fs) for g, fs in groups.items() if g in keep)
-        merged['другое'] = [f for g, fs in groups.items() if g not in keep for f in fs]
+        merged['other'] = [f for g, fs in groups.items() if g not in keep for f in fs]
         groups = merged
     return groups
 
@@ -125,7 +125,7 @@ def similar(fns):
         if any(set(names) <= other or other <= set(names) for other in used):
             continue
         used.append(set(names))
-        found.append({'id': slug(ending, {s['id'] for s in found}), 'label': f'Одинаковое окончание имени: …{ending}', 'members': names})
+        found.append({'id': slug(ending, {s['id'] for s in found}), 'label': f'Same name ending: …{ending}', 'members': names})
         if len(found) == MAX_SIMS:
             break
     return found
@@ -138,9 +138,9 @@ def draft(raw):
     top = [area for area, _ in counts.most_common(MAX_CATS if len(counts) <= MAX_CATS else MAX_CATS - 1)]
     taken = set()
     cat_id = {area: slug(area, taken) for area in top}
-    cats = [{'id': cat_id[area], 'name': area, 'desc': f'Функции из {area}: цвет в черновике показывает пакет или папку.'} for area in top]
+    cats = [{'id': cat_id[area], 'name': area, 'desc': f'Functions from {area}: in the draft a color stands for a package or a folder.'} for area in top]
     if len(counts) > len(top):
-        cats.append({'id': slug('other', taken), 'name': 'Другое', 'desc': 'Функции из остальных пакетов и папок.'})
+        cats.append({'id': slug('other', taken), 'name': 'Other', 'desc': 'Functions from the other packages and folders.'})
     other = cats[-1]['id']
 
     seen, all_fns = set(), []
@@ -159,7 +159,7 @@ def draft(raw):
                     seen.add(unique)
                     file = PurePosixPath(f['path']).name
                     fns.append({
-                        'name': unique, 'why': tail(f'изменена · {file}' if changed else file, 50),
+                        'name': unique, 'why': tail(f'changed · {file}' if changed else file, 50),
                         # Key: a new exported name that the description of the PR talks about.
                         'key': not changed and name in f['exported'] and mentioned(name, text),
                         'kind': 's', 'cat': cat_id.get(area_of(f['path']), other),
@@ -179,7 +179,7 @@ def draft(raw):
         for area, files in by_area.items():
             groups = card(pr, files)
             if groups:
-                stacks.append({'name': area, 'gh': f'#{pr["n"]}', 'essence': cut(f'Изменения PR в {area}.', 150), 'prs': [{
+                stacks.append({'name': area, 'gh': f'#{pr["n"]}', 'essence': cut(f'Changes of the PR in {area}.', 150), 'prs': [{
                     'n': pr['n'], 'url': pr['url'], 'branch': pr['head'], 'state': state_of(pr),
                     'title': cut(f'{title_of(pr)}: {area}', 90),
                     'essence': essence_of(pr), 'groups': groups}]})
@@ -205,10 +205,10 @@ def draft(raw):
     used = {f['cat'] for st in stacks for pr in st['prs'] for g in pr['groups'] for f in g['fns']}
     numbers = f'#{prs[0]["n"]}' if len(prs) == 1 else f'#{prs[0]["n"]}–#{prs[-1]["n"]}'
     return {
-        'title': f'Карта {repo} {numbers}',
-        'lang': 'ru',
+        'title': f'{repo} {numbers} map',
+        'lang': 'en',
         'root': {'title': f'{repo} {numbers}',
-                 'essence': 'Черновик по диффам: группы — папки, цвета — пакеты, ключевые — упомянутые в описании PR.'},
+                 'essence': 'A draft from the diffs: groups are folders, colors are packages, key functions are named in the PR description.'},
         'cats': [c for c in cats if c['id'] in used],
         'sims': similar(all_fns),
         'stacks': stacks,

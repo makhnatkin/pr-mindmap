@@ -404,7 +404,8 @@ li.closed > ul { display: none; }
 .node { position: relative; flex: none; padding: 9px 12px; border: 1px solid var(--frame); border-radius: var(--r-node); background: var(--surface); box-shadow: var(--node-shadow); cursor: pointer; transition: border-color .15s, box-shadow .15s; }
 .node:hover { border-color: var(--edge); }
 .node.is-sel { border-color: var(--sel); box-shadow: 0 0 0 var(--sel-ring) var(--sel-halo), var(--node-shadow); }
-.node .meta { display: flex; gap: 8px; font: 500 10.5px/1.3 var(--font-code); color: var(--muted); }
+.node .meta { display: flex; flex-wrap: wrap; gap: 0 8px; font: 500 10.5px/1.3 var(--font-code); color: var(--muted); }
+.node .meta > * { white-space: nowrap; }
 .node .ess { display: none; margin-top: 6px; font-size: 12px; line-height: 1.4; color: var(--muted); }
 .d-l .node .ess { display: block; }
 .root { max-width: 236px; padding: 14px 16px; border-color: var(--root-bg); border-radius: var(--r-root); background: var(--root-bg); color: var(--root-fg); }
@@ -677,7 +678,7 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
 </defs></svg>
 
 <div class="app d-m" id="app">
-  <div class="board" id="board" tabindex="0" aria-label="Холст карты: два пальца или перетаскивание двигают карту, pinch меняет масштаб, стрелки двигают с клавиатуры">
+  <div class="board" id="board" tabindex="0" aria-label="Map canvas: drag or two fingers move the map, pinch zooms, arrow keys move it from the keyboard">
     <div class="canvas" id="canvas">
       <svg class="edges" id="edges" aria-hidden="true"></svg>
       <svg class="links" id="links" aria-hidden="true"></svg>
@@ -686,98 +687,98 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
   </div>
   <div class="chrome" id="chrome">
     <header class="bar glass" id="bar">
-      <h1 class="mark"><button id="about" class="tip-start" data-tip="О карте">/*TITLE*/</button></h1>
+      <h1 class="mark"><button id="about" class="tip-start" data-tip="About the map">/*TITLE*/</button></h1>
       <span class="counts" id="counts"></span>
       <div class="search" id="search-box">
         <svg class="ic" aria-hidden="true"><use href="#i-search"/></svg>
-        <input id="search" type="search" placeholder="Функция или PR" aria-label="Найти функцию или PR" aria-controls="results" aria-expanded="false" autocomplete="off" spellcheck="false">
+        <input id="search" type="search" placeholder="Function or PR" aria-label="Find a function or PR" aria-controls="results" aria-expanded="false" autocomplete="off" spellcheck="false">
         <kbd aria-hidden="true">/</kbd>
         <div class="results glass" id="results" hidden></div>
       </div>
       <span class="grow"></span>
       <div class="tools">
-        <button class="ib" id="only-key" aria-pressed="false" aria-label="Только ключевые" data-tip="Только ключевые ★ · K"><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg></button>
-        <button class="ib" id="filter" aria-pressed="false" aria-label="Скрыть остальные цвета" data-tip="Скрыть остальные цвета · F"><svg class="ic" aria-hidden="true"><use href="#i-filter"/></svg></button>
+        <button class="ib" id="only-key" aria-pressed="false" aria-label="Key functions only" data-tip="Key functions only ★ · K"><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg></button>
+        <button class="ib" id="filter" aria-pressed="false" aria-label="Hide other colors" data-tip="Hide other colors · F"><svg class="ic" aria-hidden="true"><use href="#i-filter"/></svg></button>
         <span class="sep"></span>
-        <button class="ib" id="expand-all" aria-label="Развернуть всё" data-tip="Развернуть всё · E"><svg class="ic" aria-hidden="true"><use id="expand-icon" href="#i-expand"/></svg></button>
-        <div class="seg" id="depth" role="group" aria-label="Глубина дерева">
-          <button data-depth="1" data-tip="Только стеки · [ ]">Стеки</button>
-          <button data-depth="2" data-tip="До PR · [ ]">PR</button>
-          <button data-depth="3" data-tip="Группы, функции точками · [ ]">Группы</button>
-          <button data-depth="4" data-tip="Все функции · [ ]">Функции</button>
+        <button class="ib" id="expand-all" aria-label="Expand all" data-tip="Expand all · E"><svg class="ic" aria-hidden="true"><use id="expand-icon" href="#i-expand"/></svg></button>
+        <div class="seg" id="depth" role="group" aria-label="Tree depth">
+          <button data-depth="1" data-tip="Stacks only · [ ]">Stacks</button>
+          <button data-depth="2" data-tip="Down to PRs · [ ]">PRs</button>
+          <button data-depth="3" data-tip="Groups, functions as dots · [ ]">Groups</button>
+          <button data-depth="4" data-tip="Every function · [ ]">Functions</button>
         </div>
-        <div class="seg" id="density" role="group" aria-label="Плотность">
-          <button data-density="s" data-tip="Только названия · D">S</button>
-          <button data-density="m" data-tip="Функции с пояснением · D">M</button>
-          <button data-density="l" data-tip="Ещё суть стеков и PR · D">L</button>
+        <div class="seg" id="density" role="group" aria-label="Density">
+          <button data-density="s" data-tip="Names only · D">S</button>
+          <button data-density="m" data-tip="Functions with their purpose · D">M</button>
+          <button data-density="l" data-tip="Also the essence of stacks and PRs · D">L</button>
         </div>
-        <button class="ib" id="layout" aria-label="Раскладка дерева" data-tip="В обе стороны / в одну · L"><svg class="ic" aria-hidden="true"><use id="layout-icon" href="#i-both"/></svg></button>
+        <button class="ib" id="layout" aria-label="Tree layout" data-tip="Both sides / one side · L"><svg class="ic" aria-hidden="true"><use id="layout-icon" href="#i-both"/></svg></button>
         <span class="sep"></span>
-        <button class="ib" id="skin" aria-haspopup="menu" aria-expanded="false" aria-controls="skin-pop" aria-label="Скин" data-tip="Скин · S"><svg class="ic" aria-hidden="true"><use href="#i-skin"/></svg></button>
-        <button class="ib" id="theme" aria-label="Светлая или тёмная тема" data-tip="Тема · T"><svg class="ic" aria-hidden="true"><use href="#i-sun"/></svg></button>
-        <button class="ib" id="help" aria-expanded="false" aria-label="Обозначения и клавиши" data-tip="Обозначения и клавиши · ?"><svg class="ic" aria-hidden="true"><use href="#i-help"/></svg></button>
-        <button class="ib tip-end" id="zen" aria-label="Скрыть интерфейс" data-tip="Скрыть интерфейс · H"><svg class="ic" aria-hidden="true"><use href="#i-hide"/></svg></button>
+        <button class="ib" id="skin" aria-haspopup="menu" aria-expanded="false" aria-controls="skin-pop" aria-label="Skin" data-tip="Skin · S"><svg class="ic" aria-hidden="true"><use href="#i-skin"/></svg></button>
+        <button class="ib" id="theme" aria-label="Light or dark theme" data-tip="Theme · T"><svg class="ic" aria-hidden="true"><use href="#i-sun"/></svg></button>
+        <button class="ib" id="help" aria-expanded="false" aria-label="Legend and keys" data-tip="Legend and keys · ?"><svg class="ic" aria-hidden="true"><use href="#i-help"/></svg></button>
+        <button class="ib tip-end" id="zen" aria-label="Hide the interface" data-tip="Hide the interface · H"><svg class="ic" aria-hidden="true"><use href="#i-hide"/></svg></button>
       </div>
-      <div class="pop glass skins" id="skin-pop" role="menu" aria-label="Скин" hidden><span class="micro">Скин</span><div id="skin-list"></div></div>
+      <div class="pop glass skins" id="skin-pop" role="menu" aria-label="Skin" hidden><span class="micro">Skin</span><div id="skin-list"></div></div>
       <div class="pop glass" id="help-pop" hidden>
-        <h2 class="micro">Обозначения</h2>
+        <h2 class="micro">Legend</h2>
         <dl>
-          <dt>★</dt><dd>ключевая функция; у точки — кольцо</dd>
-          <dt>УНИК</dt><dd>своя логика проекта</dd>
-          <dt>СТАНД</dt><dd>обычный приём фреймворка</dd>
-          <dt>≈</dt><dd>похожа на выбранную функцию</dd>
-          <dt>− / +N</dt><dd>на рёбрах: свернуть и развернуть ветку</dd>
+          <dt>★</dt><dd>key function; its dot has a ring</dd>
+          <dt>UNIQ</dt><dd>logic of the project itself</dd>
+          <dt>STD</dt><dd>a usual pattern of the framework</dd>
+          <dt>≈</dt><dd>similar to the selected function</dd>
+          <dt>− / +N</dt><dd>on the edges: fold and unfold a branch</dd>
         </dl>
-        <h2 class="micro">Холст</h2>
+        <h2 class="micro">Canvas</h2>
         <dl>
-          <dt>pinch · ⌘ + колесо</dt><dd>масштаб</dd>
-          <dt>два пальца · тянуть</dt><dd>сдвиг</dd>
-          <dt>двойной клик</dt><dd>приблизить, с Shift — отдалить</dd>
-          <dt>заголовок панели</dt><dd>перетащить панель; двойной клик — в угол</dd>
-          <dt>край панели</dt><dd>ширина панели</dd>
+          <dt>pinch · ⌘ + wheel</dt><dd>zoom</dd>
+          <dt>two fingers · drag</dt><dd>move</dd>
+          <dt>double click</dt><dd>zoom in, with Shift zoom out</dd>
+          <dt>panel header</dt><dd>drag the panel; double click docks it</dd>
+          <dt>panel edge</dt><dd>panel width</dd>
         </dl>
-        <h2 class="micro">Клавиши</h2>
+        <h2 class="micro">Keys</h2>
         <dl>
-          <dt>/</dt><dd>поиск</dd>
-          <dt>K · F</dt><dd>только ключевые · скрыть остальные цвета</dd>
-          <dt>E · [ · ]</dt><dd>развернуть или свернуть всё · глубина дерева</dd>
-          <dt>D · L</dt><dd>плотность · раскладка</dd>
-          <dt>0 · 1 · + · −</dt><dd>вся карта · 100% · масштаб</dd>
-          <dt>M · H</dt><dd>мини-карта · интерфейс</dd>
-          <dt>T · S</dt><dd>тема · скин</dd>
-          <dt>Esc</dt><dd>сбросить выбор</dd>
+          <dt>/</dt><dd>search</dd>
+          <dt>K · F</dt><dd>key only · hide other colors</dd>
+          <dt>E · [ · ]</dt><dd>expand or collapse all · tree depth</dd>
+          <dt>D · L</dt><dd>density · layout</dd>
+          <dt>0 · 1 · + · −</dt><dd>whole map · 100% · zoom</dd>
+          <dt>M · H</dt><dd>minimap · interface</dd>
+          <dt>T · S</dt><dd>theme · skin</dd>
+          <dt>Esc</dt><dd>clear the selection</dd>
         </dl>
       </div>
     </header>
-    <nav class="index glass" id="index" aria-label="Стеки и PR">
-      <div class="ph"><span class="micro">Стеки</span><span class="grow"></span><button class="ib sm tip-start" id="index-fold" aria-label="Свернуть список стеков" data-tip="Свернуть или развернуть список"><svg class="ic" aria-hidden="true"><use href="#i-panel"/></svg></button></div>
+    <nav class="index glass" id="index" aria-label="Stacks and PRs">
+      <div class="ph"><span class="micro">Stacks</span><span class="grow"></span><button class="ib sm tip-start" id="index-fold" aria-label="Fold the list of stacks" data-tip="Fold or unfold the list"><svg class="ic" aria-hidden="true"><use href="#i-panel"/></svg></button></div>
       <div id="index-list"></div>
     </nav>
     <aside class="insp glass" id="insp" hidden aria-live="polite">
       <div class="ph"><span class="micro" id="insp-label"></span><span class="grow"></span>
-        <button class="ib sm" id="insp-dock" aria-label="Вернуть панель в угол" data-tip="Вернуть в угол"><svg class="ic" aria-hidden="true"><use href="#i-dock"/></svg></button>
-        <button class="ib sm" id="insp-fold" aria-label="Свернуть панель" data-tip="Свернуть"><svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></button>
-        <button class="ib sm tip-end" id="insp-close" aria-label="Сбросить выбор" data-tip="Сбросить · Esc"><svg class="ic" aria-hidden="true"><use href="#i-close"/></svg></button>
+        <button class="ib sm" id="insp-dock" aria-label="Dock the panel in the corner" data-tip="Back to the corner"><svg class="ic" aria-hidden="true"><use href="#i-dock"/></svg></button>
+        <button class="ib sm" id="insp-fold" aria-label="Fold the panel" data-tip="Fold"><svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></button>
+        <button class="ib sm tip-end" id="insp-close" aria-label="Clear the selection" data-tip="Clear · Esc"><svg class="ic" aria-hidden="true"><use href="#i-close"/></svg></button>
       </div>
       <div class="insp-body" id="insp-body"></div>
       <div class="insp-grip l" aria-hidden="true"></div><div class="insp-grip r" aria-hidden="true"></div>
     </aside>
     <div class="legend glass" id="legend">
-      <div class="cats" id="cats" role="group" aria-label="Цвета: тип работы функции"></div>
-      <button class="ib sm up tip-start" id="legend-fold" aria-expanded="false" aria-label="Названия цветов" data-tip="Названия цветов"><svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></button>
+      <div class="cats" id="cats" role="group" aria-label="Colors: the kind of work of a function"></div>
+      <button class="ib sm up tip-start" id="legend-fold" aria-expanded="false" aria-label="Color names" data-tip="Color names"><svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></button>
     </div>
-    <div class="dock glass" id="dock" role="toolbar" aria-label="Масштаб карты">
-      <button class="ib sm up" id="zoom-out" aria-label="Отдалить" data-tip="Отдалить · −"><svg class="ic" aria-hidden="true"><use href="#i-minus"/></svg></button>
-      <button class="pct up" id="zoom-reset" aria-label="Масштаб 100%" data-tip="100% · 1">100%</button>
-      <button class="ib sm up" id="zoom-in" aria-label="Приблизить" data-tip="Приблизить · +"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
+    <div class="dock glass" id="dock" role="toolbar" aria-label="Map zoom">
+      <button class="ib sm up" id="zoom-out" aria-label="Zoom out" data-tip="Zoom out · −"><svg class="ic" aria-hidden="true"><use href="#i-minus"/></svg></button>
+      <button class="pct up" id="zoom-reset" aria-label="Zoom 100%" data-tip="100% · 1">100%</button>
+      <button class="ib sm up" id="zoom-in" aria-label="Zoom in" data-tip="Zoom in · +"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
       <span class="sep"></span>
-      <button class="ib sm up" id="zoom-fit" aria-label="Вся карта" data-tip="Вся карта · 0"><svg class="ic" aria-hidden="true"><use href="#i-fit"/></svg></button>
-      <button class="ib sm up" id="mini-toggle" aria-pressed="true" aria-label="Мини-карта" data-tip="Мини-карта, когда карта не помещается · M"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg></button>
+      <button class="ib sm up" id="zoom-fit" aria-label="Whole map" data-tip="Whole map · 0"><svg class="ic" aria-hidden="true"><use href="#i-fit"/></svg></button>
+      <button class="ib sm up" id="mini-toggle" aria-pressed="true" aria-label="Minimap" data-tip="Minimap when the map does not fit · M"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg></button>
       <span class="sep"></span>
       <span class="stat" id="stat"></span>
     </div>
-    <div class="mini glass" id="mini"><svg id="minimap" role="img" aria-label="Мини-карта: нажмите или тяните, чтобы перейти к участку"></svg></div>
-    <button class="reveal glass" id="reveal" hidden>Показать интерфейс <kbd>H</kbd></button>
+    <div class="mini glass" id="mini"><svg id="minimap" role="img" aria-label="Minimap: click or drag to go to a part of the map"></svg></div>
+    <button class="reveal glass" id="reveal" hidden>Show the interface <kbd>H</kbd></button>
   </div>
 </div>
 
@@ -790,11 +791,114 @@ if (!DATA) {
   note.className = 'nodata';
   const code = document.createElement('code');
   code.textContent = 'python3 build.py data.json --html map.html';
-  note.append('Это шаблон карты, данных рядом с ним нет. Откройте готовую карту (map.html или prmap.html) или соберите её: ', code);
+  note.append('This is the map template, with no data next to it. Open a built map (map.html or prmap.html) or build one: ', code);
   document.getElementById('app').replaceChildren(note);
   throw new Error('template.html has no data: no inlined data and no map-data.js next to it');
 }
 const $ = (id) => document.getElementById(id);
+
+/* ---------- Language ---------- */
+/** The page speaks the language of the map: English, or Russian for `lang: "ru"`. */
+const RU = DATA.lang === 'ru';
+const say = (en, ru) => (RU ? ru : en);
+/** Russian for the English text of the markup. */
+const MARKUP_RU = {
+  "Map canvas: drag or two fingers move the map, pinch zooms, arrow keys move it from the keyboard": "Холст карты: два пальца или перетаскивание двигают карту, pinch меняет масштаб, стрелки двигают с клавиатуры",
+  "About the map": "О карте",
+  "Function or PR": "Функция или PR",
+  "Find a function or PR": "Найти функцию или PR",
+  "Key functions only": "Только ключевые",
+  "Key functions only ★ · K": "Только ключевые ★ · K",
+  "Hide other colors": "Скрыть остальные цвета",
+  "Hide other colors · F": "Скрыть остальные цвета · F",
+  "Tree depth": "Глубина дерева",
+  "Stacks only · [ ]": "Только стеки · [ ]",
+  "Stacks": "Стеки",
+  "Down to PRs · [ ]": "До PR · [ ]",
+  "PRs": "PR",
+  "Groups, functions as dots · [ ]": "Группы, функции точками · [ ]",
+  "Groups": "Группы",
+  "Every function · [ ]": "Все функции · [ ]",
+  "Functions": "Функции",
+  "Density": "Плотность",
+  "Names only · D": "Только названия · D",
+  "Functions with their purpose · D": "Функции с пояснением · D",
+  "Also the essence of stacks and PRs · D": "Ещё суть стеков и PR · D",
+  "Tree layout": "Раскладка дерева",
+  "Both sides / one side · L": "В обе стороны / в одну · L",
+  "Skin": "Скин",
+  "Skin · S": "Скин · S",
+  "Light or dark theme": "Светлая или тёмная тема",
+  "Theme · T": "Тема · T",
+  "Legend and keys": "Обозначения и клавиши",
+  "Legend and keys · ?": "Обозначения и клавиши · ?",
+  "Hide the interface": "Скрыть интерфейс",
+  "Hide the interface · H": "Скрыть интерфейс · H",
+  "Legend": "Обозначения",
+  "key function; its dot has a ring": "ключевая функция; у точки — кольцо",
+  "UNIQ": "УНИК",
+  "logic of the project itself": "своя логика проекта",
+  "STD": "СТАНД",
+  "a usual pattern of the framework": "обычный приём фреймворка",
+  "similar to the selected function": "похожа на выбранную функцию",
+  "on the edges: fold and unfold a branch": "на рёбрах: свернуть и развернуть ветку",
+  "Canvas": "Холст",
+  "pinch · ⌘ + wheel": "pinch · ⌘ + колесо",
+  "zoom": "масштаб",
+  "two fingers · drag": "два пальца · тянуть",
+  "move": "сдвиг",
+  "double click": "двойной клик",
+  "zoom in, with Shift zoom out": "приблизить, с Shift — отдалить",
+  "panel header": "заголовок панели",
+  "drag the panel; double click docks it": "перетащить панель; двойной клик — в угол",
+  "panel edge": "край панели",
+  "panel width": "ширина панели",
+  "Keys": "Клавиши",
+  "search": "поиск",
+  "key only · hide other colors": "только ключевые · скрыть остальные цвета",
+  "expand or collapse all · tree depth": "развернуть или свернуть всё · глубина дерева",
+  "density · layout": "плотность · раскладка",
+  "whole map · 100% · zoom": "вся карта · 100% · масштаб",
+  "minimap · interface": "мини-карта · интерфейс",
+  "theme · skin": "тема · скин",
+  "clear the selection": "сбросить выбор",
+  "Stacks and PRs": "Стеки и PR",
+  "Fold the list of stacks": "Свернуть список стеков",
+  "Fold or unfold the list": "Свернуть или развернуть список",
+  "Dock the panel in the corner": "Вернуть панель в угол",
+  "Back to the corner": "Вернуть в угол",
+  "Fold the panel": "Свернуть панель",
+  "Fold": "Свернуть",
+  "Clear the selection": "Сбросить выбор",
+  "Clear · Esc": "Сбросить · Esc",
+  "Colors: the kind of work of a function": "Цвета: тип работы функции",
+  "Color names": "Названия цветов",
+  "Map zoom": "Масштаб карты",
+  "Zoom out": "Отдалить",
+  "Zoom out · −": "Отдалить · −",
+  "Zoom 100%": "Масштаб 100%",
+  "Zoom in": "Приблизить",
+  "Zoom in · +": "Приблизить · +",
+  "Whole map": "Вся карта",
+  "Whole map · 0": "Вся карта · 0",
+  "Minimap": "Мини-карта",
+  "Minimap when the map does not fit · M": "Мини-карта, когда карта не помещается · M",
+  "Minimap: click or drag to go to a part of the map": "Мини-карта: нажмите или тяните, чтобы перейти к участку",
+  "Show the interface": "Показать интерфейс",
+};
+if (RU) {
+  for (const e of document.querySelectorAll('#app [data-tip], #app [aria-label], #app [placeholder]')) {
+    for (const attr of ['data-tip', 'aria-label', 'placeholder']) {
+      const ru = MARKUP_RU[e.getAttribute(attr)];
+      if (ru) e.setAttribute(attr, ru);
+    }
+  }
+  const walker = document.createTreeWalker($('app'), NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const text = node.nodeValue.trim(), ru = MARKUP_RU[text];
+    if (ru) node.nodeValue = node.nodeValue.replace(text, ru);
+  }
+}
 document.title = DATA.title;
 $('about').textContent = DATA.title;
 if (DATA.palette && !getComputedStyle(document.documentElement).getPropertyValue(`--c-${DATA.cats[0].id}`).trim()) {
@@ -834,13 +938,17 @@ const plural = (n, one, few, many) => {
   const d = n % 10, t = n % 100;
   return `${n} ${d === 1 && t !== 11 ? one : d >= 2 && d <= 4 && (t < 12 || t > 14) ? few : many}`;
 };
-const fnWord = (n) => plural(n, 'функция', 'функции', 'функций');
+/** `n` with its noun: `en` is [one, many], `ru` is [one, few, many]. */
+const count = (n, en, ru) => (RU ? plural(n, ...ru) : `${n} ${n === 1 ? en[0] : en[1]}`);
+const fnWord = (n) => count(n, ['function', 'functions'], ['функция', 'функции', 'функций']);
+const prWord = (n) => count(n, ['PR', 'PRs'], ['PR', 'PR', 'PR']);
+const stackWord = (n) => count(n, ['stack', 'stacks'], ['стек', 'стека', 'стеков']);
 /** `ref` is the GitHub page of a stack or a PR: {kind: 'stack' | 'pr', n, url}. */
-const refText = (ref) => `${ref.kind === 'stack' ? 'Стек' : 'PR'} #${ref.n}`;
+const refText = (ref) => `${ref.kind === 'stack' ? say('Stack', 'Стек') : 'PR'} #${ref.n}`;
 function refLink(ref, cls, ...kids) {
   const a = h('a', cls, refText(ref), ...kids);
   a.href = ref.url; a.target = '_blank'; a.rel = 'noopener';
-  a.title = ref.kind === 'stack' ? 'Открыть стек на GitHub' : 'Открыть PR на GitHub';
+  a.title = ref.kind === 'stack' ? say('Open the stack on GitHub', 'Открыть стек на GitHub') : say('Open the PR on GitHub', 'Открыть PR на GitHub');
   return a;
 }
 const prRef = (pr) => ({kind: 'pr', n: pr.n, url: pr.url});
@@ -915,13 +1023,13 @@ const pickFn = (F) => select(state.fn === F ? {cat: F.f.cat} : {fn: F});
 
 const rootNode = nodeBox('root', () => select(state.sel?.root ? null : {root: true}));
 rootNode.append(h('b', null, DATA.root.title),
-  h('span', 'meta', `${prs.length} PR · ${fnWord(fns.length)}`), h('span', 'ess', DATA.root.essence));
+  h('span', 'meta', `${prWord(prs.length)} · ${fnWord(fns.length)}`), h('span', 'ess', DATA.root.essence));
 const branchL = h('ul', 'branch l'), branchR = h('ul', 'branch r');
 mind.append(branchL, rootNode, branchR);
 
 for (const S of stacks) {
   S.node = nodeBox('stack', () => select(state.sel?.stack === S ? null : {stack: S}));
-  const size = S.ref?.kind === 'pr' ? `${S.fns.length} fn` : `${S.prs.length} PR · ${S.fns.length} fn`;
+  const size = S.ref?.kind === 'pr' ? `${S.fns.length} fn` : `${prWord(S.prs.length)} · ${S.fns.length} fn`;
   S.node.append(h('span', 'head', oct('stack'), h('span', 'nm', S.st.name)),
     h('span', 'meta', S.ref ? refLink(S.ref, 'n') : h('span', null, S.st.gh), h('span', null, size)),
     h('span', 'ess', S.st.essence), mixBar(S.fns));
@@ -955,9 +1063,9 @@ for (const S of stacks) {
         const name = h('span', 'name', f.name);
         if (f.key) name.append(h('span', 'star', '★'));
         const sim = h('span', 'sim', '≈');
-        sim.title = 'Похожа на выбранную функцию';
+        sim.title = say('Similar to the selected function', 'Похожа на выбранную функцию');
         F.row = withColor(h('button', 'fn', h('span', 'dot'), name,
-          h('span', 'tags', sim, h('span', `kind ${f.kind}`, f.kind === 'u' ? 'уник' : 'станд')), h('span', 'why', f.why)), f.cat);
+          h('span', 'tags', sim, h('span', `kind ${f.kind}`, f.kind === 'u' ? say('uniq', 'уник') : say('std', 'станд'))), h('span', 'why', f.why)), f.cat);
         F.row.title = f.why;
         F.row.setAttribute('aria-pressed', 'false');
         F.row.addEventListener('click', () => pickFn(F));
@@ -1115,14 +1223,14 @@ function applyVisibility() {
         G.ct.textContent = inGroup;
         G.card.classList.toggle('folded', G.folded);
         G.head.setAttribute('aria-expanded', String(!G.folded));
-        G.head.title = G.folded ? `Показать: ${fnWord(inGroup)}` : 'Свернуть в точки';
+        G.head.title = G.folded ? say(`Show ${fnWord(inGroup)}`, `Показать: ${fnWord(inGroup)}`) : say('Fold into dots', 'Свернуть в точки');
         inPr += inGroup;
       }
       P.li.hidden = strict && inPr === 0;
       P.li.classList.toggle('closed', P.closed);
       P.tg.hidden = inPr === 0;
       P.tg.textContent = P.closed ? `+${inPr}` : '−';
-      P.tg.title = P.closed ? `Показать группы #${P.pr.n}` : `Скрыть группы #${P.pr.n}`;
+      P.tg.title = P.closed ? say(`Show the groups of #${P.pr.n}`, `Показать группы #${P.pr.n}`) : say(`Hide the groups of #${P.pr.n}`, `Скрыть группы #${P.pr.n}`);
       P.tg.setAttribute('aria-expanded', String(!P.closed));
       const hit = state.cat ? P.fns.filter((F) => F.f.cat === state.cat).length : 0;
       P.hit.textContent = state.cat ? `${catById[state.cat].name}: ${hit}` : '';
@@ -1132,7 +1240,7 @@ function applyVisibility() {
     S.li.hidden = strict && inStack === 0;
     S.li.classList.toggle('closed', S.closed);
     S.tg.textContent = S.closed ? `+${prCount}` : '−';
-    S.tg.title = S.closed ? 'Показать PR стека' : 'Скрыть PR стека';
+    S.tg.title = S.closed ? say('Show the PRs of the stack', 'Показать PR стека') : say('Hide the PRs of the stack', 'Скрыть PR стека');
     S.tg.setAttribute('aria-expanded', String(!S.closed));
     shownFns += inStack;
   }
@@ -1509,8 +1617,9 @@ function syncControls() {
   for (const b of $('density').children) b.setAttribute('aria-pressed', String(b.dataset.density === state.density));
   const expand = depth !== 4;
   $('expand-icon').setAttribute('href', expand ? '#i-expand' : '#i-collapse');
-  $('expand-all').setAttribute('aria-label', expand ? 'Развернуть всё' : 'Свернуть всё');
-  $('expand-all').dataset.tip = expand ? 'Развернуть всё · E' : 'Свернуть всё · E';
+  const expandLabel = expand ? say('Expand all', 'Развернуть всё') : say('Collapse all', 'Свернуть всё');
+  $('expand-all').setAttribute('aria-label', expandLabel);
+  $('expand-all').dataset.tip = `${expandLabel} · E`;
   $('only-key').setAttribute('aria-pressed', String(state.onlyKey));
   $('filter').setAttribute('aria-pressed', String(state.filter));
   app.classList.remove('d-s', 'd-m', 'd-l');
@@ -1627,18 +1736,18 @@ function renderInspector() {
   let label = '';
   if (sel.fn) {
     const F = sel.fn, {f} = F;
-    label = 'Функция';
+    label = say('Function', 'Функция');
     const catChip = withColor(h('button', 'chip', h('span', 'dot'), catById[f.cat].name), f.cat);
     catChip.addEventListener('click', () => select({cat: f.cat}));
     const where = h('button', 'chip', `#${F.pr.pr.n} · ${F.group.g.name}`);
     where.title = F.pr.pr.title;
     where.addEventListener('click', () => navigate({pr: F.pr}));
     const chips = h('div', 'chips', catChip, where);
-    if (f.key) chips.append(chip('★ ключевая'));
-    chips.append(chip(f.kind === 'u' ? 'уник · своя логика' : 'станд · обычный приём'));
+    if (f.key) chips.append(chip(say('★ key', '★ ключевая')));
+    chips.append(chip(f.kind === 'u' ? say('uniq · own logic', 'уник · своя логика') : say('std · usual pattern', 'станд · обычный приём')));
     kids.push(h('h2', 'code', f.name), h('p', 'lead', f.why), chips);
     const sims = simsOf(F);
-    if (!sims.length) kids.push(h('p', null, 'Похожих функций нет.'));
+    if (!sims.length) kids.push(h('p', null, say('No similar functions.', 'Похожих функций нет.')));
     for (const s of sims) {
       const list = h('div', 'list');
       for (const name of s.members) {
@@ -1651,8 +1760,8 @@ function renderInspector() {
   } else if (sel.cat) {
     const c = catById[sel.cat];
     const list = fns.filter((F) => F.f.cat === c.id);
-    label = 'Цвет';
-    const only = h('button', 'chip', 'Скрыть остальные');
+    label = say('Color', 'Цвет');
+    const only = h('button', 'chip', say('Hide the others', 'Скрыть остальные'));
     only.setAttribute('aria-pressed', String(state.filter));
     only.addEventListener('click', () => { state.filter = !state.filter; refresh(); renderInspector(); });
     kids.push(h('h2', null, withColor(h('span', 'dot'), c.id), c.name), h('p', 'lead', c.desc),
@@ -1662,7 +1771,7 @@ function renderInspector() {
       const n = P.fns.filter((F) => F.f.cat === c.id).length;
       if (n) byPr.append(listItem({num: `#${P.pr.n}`, name: P.pr.title, count: n, onClick: () => showPr(P)}));
     }
-    kids.push(h('p', 'micro', 'По PR'), byPr);
+    kids.push(h('p', 'micro', say('By PR', 'По PR')), byPr);
   } else if (sel.pr) {
     const P = sel.pr, {pr} = P;
     label = refText(prRef(pr));
@@ -1671,23 +1780,23 @@ function renderInspector() {
     const std = P.fns.filter((F) => F.f.kind === 's').length;
     kids.push(h('h2', null, pr.title), h('p', 'lead', pr.essence),
       h('div', 'chips', ...links, chip(fnWord(P.fns.length)), chip(`★ ${P.fns.filter((F) => F.f.key).length}`),
-        chip(`станд ${std} · уник ${P.fns.length - std}`)));
+        chip(say(`std ${std} · uniq ${P.fns.length - std}`, `станд ${std} · уник ${P.fns.length - std}`))));
     if (pr.branch) kids.push(h('p', 'branch', pr.branch));
-    kids.push(h('p', 'micro', 'Типы работы'), catBreakdown(P.fns));
+    kids.push(h('p', 'micro', say('Kinds of work', 'Типы работы')), catBreakdown(P.fns));
   } else if (sel.stack) {
     const S = sel.stack;
-    label = S.ref?.kind === 'stack' ? refText(S.ref) : 'Стек';
+    label = S.ref?.kind === 'stack' ? refText(S.ref) : say('Stack', 'Стек');
     const list = h('div', 'list');
     for (const P of S.prs) list.append(listItem({num: `#${P.pr.n}`, name: P.pr.title, count: P.fns.length, onClick: () => navigate({pr: P})}));
     kids.push(h('h2', null, S.st.name), h('p', 'lead', S.st.essence),
-      h('div', 'chips', S.ref ? refLink(S.ref, 'chip', icon('ext')) : chip(S.st.gh), chip(`${S.prs.length} PR`), chip(fnWord(S.fns.length))),
+      h('div', 'chips', S.ref ? refLink(S.ref, 'chip', icon('ext')) : chip(S.st.gh), chip(prWord(S.prs.length)), chip(fnWord(S.fns.length))),
       h('p', 'micro', 'PR'), list);
   } else {
-    label = 'О карте';
+    label = say('About the map', 'О карте');
     const list = h('div', 'list');
-    for (const S of stacks) list.append(listItem({num: S.tag, name: S.st.name, count: `${S.prs.length} PR`, onClick: () => navigate({stack: S})}));
+    for (const S of stacks) list.append(listItem({num: S.tag, name: S.st.name, count: prWord(S.prs.length), onClick: () => navigate({stack: S})}));
     kids.push(h('h2', null, DATA.root.title), h('p', 'lead', DATA.root.essence),
-      h('div', 'chips', chip(`${stacks.length} стеков`), chip(`${prs.length} PR`), chip(fnWord(fns.length))), h('p', 'micro', 'Стеки'), list);
+      h('div', 'chips', chip(stackWord(stacks.length)), chip(prWord(prs.length)), chip(fnWord(fns.length))), h('p', 'micro', say('Stacks', 'Стеки')), list);
   }
   $('insp-label').textContent = label;
   inspBody.replaceChildren(...kids);
@@ -1781,9 +1890,10 @@ $('about').addEventListener('click', () => select(state.sel?.root ? null : {root
   const dot = h('span', 'dot');
   const arc = 360 / DATA.cats.length;
   dot.style.background = `conic-gradient(${DATA.cats.map((c, i) => `${cvar(c.id)} ${i * arc}deg ${(i + 1) * arc}deg`).join(', ')})`;
-  const b = h('button', 'cat all up tip-start', dot, h('span', 'nm', 'Все цвета'), h('span', 'ct', String(fns.length)));
-  b.dataset.tip = 'Все цвета';
-  b.setAttribute('aria-label', 'Все цвета');
+  const all = say('All colors', 'Все цвета');
+  const b = h('button', 'cat all up tip-start', dot, h('span', 'nm', all), h('span', 'ct', String(fns.length)));
+  b.dataset.tip = all;
+  b.setAttribute('aria-label', all);
   b.setAttribute('aria-pressed', 'true');
   b.addEventListener('click', () => { if (state.cat) select(null); });
   $('cats').append(b);
@@ -1808,7 +1918,7 @@ $('legend-fold').addEventListener('click', () => setLegendOpen(!$('legend').clas
 const stackLinks = new Map();
 for (const S of stacks) {
   const b = h('button', 'ix-stack', h('span', 'num', S.tag), h('span', 'nm', S.st.name), h('span', 'ct', String(S.prs.length)));
-  b.title = `${S.ref ? refText(S.ref) : S.st.gh} · ${S.st.name}: ${S.prs.length} PR`;
+  b.title = `${S.ref ? refText(S.ref) : S.st.gh} · ${S.st.name}: ${prWord(S.prs.length)}`;
   b.setAttribute('aria-current', 'false');
   b.addEventListener('click', () => { markStack(S); flyTo(S.node); });
   const list = h('div', 'ix-prs');
@@ -1833,7 +1943,7 @@ $('index-fold').addEventListener('click', () => setIndexRail(!$('index').classLi
 
 const search = $('search'), results = $('results');
 const searchItems = [
-  ...stacks.map((S) => ({text: `${S.tag} ${S.st.name} ${S.st.gh}`, label: S.st.name, detail: `${S.ref ? refText(S.ref) : S.st.gh} · ${S.prs.length} PR`, go: () => navigate({stack: S})})),
+  ...stacks.map((S) => ({text: `${S.tag} ${S.st.name} ${S.st.gh}`, label: S.st.name, detail: `${S.ref ? refText(S.ref) : S.st.gh} · ${prWord(S.prs.length)}`, go: () => navigate({stack: S})})),
   ...prs.map((P) => ({text: `#${P.pr.n} ${P.pr.title} ${P.pr.branch ?? ''}`, label: `#${P.pr.n} ${P.pr.title}`, detail: P.pr.branch ?? P.stack.st.name, go: () => navigate({pr: P})})),
   ...fns.map((F) => ({text: `${F.f.name} ${F.f.why}`, label: F.f.name, detail: `#${F.pr.pr.n} · ${F.f.why}`, cat: F.f.cat, go: () => navigate({fn: F})})),
 ].map((item) => ({...item, text: item.text.toLocaleLowerCase()}));
@@ -1844,13 +1954,13 @@ function runSearch() {
   if (!q) { closeSearch(); return; }
   const found = searchItems.filter((item) => item.text.includes(q))
     .sort((a, b) => Number(b.label.toLocaleLowerCase().startsWith(q)) - Number(a.label.toLocaleLowerCase().startsWith(q)));
-  if (!found.length) results.append(h('p', 'res-empty', 'Ничего не найдено. Попробуйте имя функции или номер PR.'));
+  if (!found.length) results.append(h('p', 'res-empty', say('Nothing found. Try a function name or a PR number.', 'Ничего не найдено. Попробуйте имя функции или номер PR.')));
   for (const item of found.slice(0, 24)) {
     const b = h('button', 'res', item.cat ? withColor(h('span', 'dot'), item.cat) : h('span'), h('b', null, item.label), h('small', null, item.detail));
     b.addEventListener('click', () => { closeSearch(); search.value = ''; item.go(); });
     results.append(b);
   }
-  if (found.length > 24) results.append(h('p', 'res-empty', `Ещё ${found.length - 24}: уточните запрос.`));
+  if (found.length > 24) results.append(h('p', 'res-empty', say(`${found.length - 24} more: refine the query.`, `Ещё ${found.length - 24}: уточните запрос.`)));
   results.hidden = false;
   search.setAttribute('aria-expanded', 'true');
 }
@@ -1879,11 +1989,11 @@ function setHelp(open) {
 }
 /** A skin changes the look only: colors of both themes, type, shapes and connectors. The first one is the default. */
 const SKINS = [
-  {id: 'github', name: 'GitHub', note: 'цвета Primer, шрифты github.com'},
-  {id: 'studio', name: 'Студия', note: 'стекло, акцидентный шрифт'},
-  {id: 'strict', name: 'Строгий', note: 'чёрно-белый, прямые углы'},
-  {id: 'mac', name: 'macOS', note: 'системный шрифт, синий акцент'},
-  {id: 'blueprint', name: 'Чертёж', note: 'моноширинный, сетка в клетку'},
+  {id: 'github', name: 'GitHub', note: say('Primer colors, github.com fonts', 'цвета Primer, шрифты github.com')},
+  {id: 'studio', name: say('Studio', 'Студия'), note: say('glass, display typeface', 'стекло, акцидентный шрифт')},
+  {id: 'strict', name: say('Strict', 'Строгий'), note: say('black and white, square corners', 'чёрно-белый, прямые углы')},
+  {id: 'mac', name: 'macOS', note: say('system font, blue accent', 'системный шрифт, синий акцент')},
+  {id: 'blueprint', name: say('Blueprint', 'Чертёж'), note: say('monospace, square grid', 'моноширинный, сетка в клетку')},
 ];
 for (const skin of SKINS) {
   const sw = h('span', 'sw', h('i'), h('i'), h('i'), h('i'));
@@ -2000,8 +2110,8 @@ mind.addEventListener('focusin', (e) => {
 });
 
 /* ---------- Start ---------- */
-$('counts').textContent = `${prs.length} PR · ${fns.length} fn`;
-$('counts').title = `${plural(stacks.length, 'стек', 'стека', 'стеков')}, ${prs.length} PR, ${fnWord(fns.length)}`;
+$('counts').textContent = `${prWord(prs.length)} · ${fns.length} fn`;
+$('counts').title = `${stackWord(stacks.length)}, ${prWord(prs.length)}, ${fnWord(fns.length)}`;
 applySkin(prefs.skin);
 if (['s', 'm', 'l'].includes(prefs.density)) state.density = prefs.density;
 if (['both', 'right'].includes(prefs.layout)) state.layout = prefs.layout;

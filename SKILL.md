@@ -11,7 +11,7 @@ agent: general-purpose
 Build the map for: $ARGUMENTS
 
 Work unattended: never ask questions; take the safe option and say what you chose in the final report.
-Write the map text in the user's language (Russian unless the request is in another language); code names stay as they are.
+Write the map text in the user's language (Russian unless the request is in another language) and set `lang` of the data to it (`"ru"` or `"en"`): the page and the Markdown list speak that language. Code names stay as they are.
 
 The skill folder is `~/.claude/skills/pr-mindmap/`; `prmap` in it runs every step (`prmap --help`):
 - `prmap extract` — PR metadata, the stack chain and the names each diff defines (gh CLI) → `raw.json`;
@@ -50,15 +50,15 @@ found by name endings.
 
 Levels: root → stacks → PRs → groups → functions. Read `example/banner.json` before rewriting the draft.
 
-- **Root**: `title` of the page is a 2–4 word name ("Карта баннер-стека"); `root.essence` ≤150 chars.
+- **Root**: `title` of the page is a 2–4 word name ("Banner stack map"); `root.essence` ≤150 chars.
 - **Stacks**: GitHub stacks or runs of the chain that build one feature (2–4 PRs each); a PR on its own is a stack of one.
-  `essence` ≤150 chars, `gh` names the stack ("stack 1491", or "без stack"); with "stack N" the card links to the
+  `essence` ≤150 chars, `gh` names the stack ("stack 1491", or "no stack"); with "stack N" the card links to the
   GitHub stack, a card of one PR links to the PR.
 - **A lone PR**: make the branches from its areas instead — stacks are areas of the change (packages or features), and
   each area has 1–4 PR-level cards for its parts, all with the same `n` and `url`. A map with one branch shows no structure.
 - **PR**: `title` short and in the map language, `essence` ≤200 chars: what the PR gives the user or the code.
   `state` (open, draft, merged, closed) comes from the draft and sets the PR icon; keep it.
-- **Groups**: 2–5 per PR by meaning ("Команды", "Схема", "Окно настроек"), not by file.
+- **Groups**: 2–5 per PR by meaning ("Commands", "Schema", "Settings dialog"), not by file.
 - **Functions**: every function, component, class or method that matters to a reviewer; skip trivial constants.
   - `why` ≤50 chars, what it is for, not how it works.
   - `key: true` for the ones the PR is built around (entry points, main commands, non-obvious logic): about a quarter.
@@ -67,7 +67,7 @@ Levels: root → stacks → PRs → groups → functions. Read `example/banner.j
   - Names are unique across the map; when two PRs touch the same name, add a short suffix: `SettingsFields (alignment)`.
 - **Colors** (`cats`, 3–10, legend order): kinds of work across the whole map (Markdown, schema, commands, cursor and
   keys, guards, text input, DOM, UI, upload, model…). `desc` explains the color in one sentence:
-  "Функции по работе с …". Every function gets exactly one color.
+  "Functions that work with …". Every function gets exactly one color.
 - **Similar** (`sims`): groups of 2+ functions that do the same job for different parts (the `*Values` of each part,
   the `*ParserSpecs`, the Backspace/Delete selectors…). Label says what they share. Only real look-alikes.
 

@@ -1,128 +1,128 @@
 # pr-mindmap
 
-Интерактивная карта пул-реквеста или стека PR на GitHub: стеки → PR → группы → функции. Одна HTML-страница
-без сервера и зависимостей.
+An interactive map of a GitHub pull request or a stack of PRs: stacks → PRs → groups → functions. One HTML page
+with no server and no dependencies.
 
-![Карта стека из 15 PR](docs/map.png)
+![A map of a stack of 15 PRs](docs/map.png)
 
-На карте видно:
+The map shows:
 
-- суть стека и каждого PR;
-- функции, собранные в группы по смыслу, с короткой фразой «зачем она»;
-- какие функции ключевые (★), где обычный приём, а где своя логика;
-- цвет — тип работы (команды, схема, интерфейс…); клик по цвету или функции оставляет яркими только их;
-- похожие функции из разных PR: значок ≈ и пунктирные связи.
+- the essence of the stack and of each PR;
+- functions grouped by meaning, each with a short phrase on what it is for;
+- which functions are key (★), which follow a usual pattern and which carry the project's own logic;
+- a color for the kind of work (commands, schema, interface…); a click on a color or a function keeps only them bright;
+- similar functions from different PRs: the ≈ mark and dashed links.
 
-![Выбранная функция и похожие на неё](docs/detail.png)
+![A selected function and the ones similar to it](docs/detail.png)
 
-## Установка
+## Install
 
-Нужны Python 3.9+ и [gh](https://cli.github.com) с выполненным `gh auth login`.
+Requires Python 3.9+ and [gh](https://cli.github.com) signed in with `gh auth login`.
 
 ```sh
 git clone https://github.com/makhnatkin/pr-mindmap.git
 cd pr-mindmap
-./install.sh          # скилл для Claude Code и команда prmap в ~/.local/bin
-prmap example         # собрать и открыть пример
+./install.sh          # the Claude Code skill and the prmap command in ~/.local/bin
+prmap example         # build and open the example
 ```
 
-Без установки то же самое делает `./prmap` из папки репозитория.
+Without installing, `./prmap` from the repository folder does the same.
 
-## Как сделать карту
+## Make a map
 
-**С моделью — полная карта.** В Claude Code:
+**With a model: the full map.** In Claude Code:
 
 ```
 /pr-mindmap https://github.com/owner/repo/pull/123
 ```
 
-Скилл сам собирает цепочку стека, читает диффы, пишет суть PR, группирует функции по смыслу, раздаёт цвета и
-находит похожие. Результат — `map.html`, `map.md` и опубликованный артефакт.
+The skill collects the stack, reads the diffs, writes the essence of each PR, groups the functions by meaning, assigns
+colors and finds similar functions. The result is `map.html`, `map.md` and a published artifact.
 
-**Без модели — черновик за несколько секунд.**
+**Without a model: a draft in a few seconds.**
 
 ```sh
 prmap new https://github.com/owner/repo/pull/123
 ```
 
-Черновик строится только по диффам: стеки — по именам веток, группы — по папкам, цвета — по пакетам, ключевые —
-экспортированные функции, которые названы в описании PR, похожие — по одинаковым окончаниям имён. Смысла в нём
-нет: вместо «зачем функция» стоит имя файла. Дальше правьте `data.json` руками или отдайте его скиллу и
-пересоберите:
+The draft comes from the diffs alone: stacks from branch names, groups from folders, colors from packages, key
+functions are exported ones named in the PR description, similar ones share a name ending. It carries no meaning:
+the purpose of a function is its file name. Edit `data.json` by hand or hand it to the skill, then rebuild:
 
 ```sh
 prmap build prmap-out/owner-repo-123/data.json --open
 ```
 
-Ссылка на стек GitHub (`github.com/<owner>/<repo>/stack/<n>`) даёт PR этого стека. Если PR — часть стека, в карту попадает вся цепочка: PR под ним до основной ветки и открытые PR над ним. Карточка стека ссылается на его страницу на GitHub, карточка PR — на PR.
-`--no-chain` оставляет только названные PR.
+A GitHub stack link (`github.com/<owner>/<repo>/stack/<n>`) gives the PRs of that stack. When a PR is part of a stack, the map gets the whole chain: the PRs below it down to the main branch and the open PRs above it. A stack card links to its GitHub page, a PR card links to the PR. `--no-chain` keeps only the named PRs.
 
-## Команды
+## Commands
 
-| Команда | Что делает |
+| Command | What it does |
 | --- | --- |
-| `prmap new <PR or stack URL>…` | extract + draft + build: черновик карты и её открытие |
-| `prmap extract <PR or stack URL>… [--out raw.json]` | метаданные PR, цепочка стека, имена из диффов |
-| `prmap draft raw.json [--out data.json]` | механический `data.json` из `raw.json` |
-| `prmap build data.json [--open]` | `map.html`, `map.artifact.html`, `map.md` рядом с данными |
-| `prmap example` | пример: 15 PR, 166 функций |
-| `prmap dev` | открыть `template.html` с данными примера — для правки шаблона |
+| `prmap new <PR or stack URL>…` | extract + draft + build: a draft map, opened in the browser |
+| `prmap extract <PR or stack URL>… [--out raw.json]` | PR metadata, the stack chain, names from the diffs |
+| `prmap draft raw.json [--out data.json]` | a mechanical `data.json` from `raw.json` |
+| `prmap build data.json [--open]` | `map.html`, `map.artifact.html`, `map.md` next to the data |
+| `prmap example` | the example: 15 PRs, 166 functions |
+| `prmap dev` | `template.html` with the example data, for editing the template |
 
-`map.html` — полный документ, открывается с диска. `map.artifact.html` — та же страница без обёртки документа,
-в таком виде её публикует Claude как артефакт.
+`map.html` is a complete document that opens from disk. `map.artifact.html` is the same page without the document
+skeleton: the form Claude publishes as an artifact.
 
-## Формат data.json
+## data.json
 
-Полная схема — в начале [build.py](build.py), рабочий пример — [example/banner.json](example/banner.json).
+The full schema is at the top of [build.py](build.py), a working example is [example/banner.json](example/banner.json).
 
 ```json
 {
-  "title": "Карта баннер-стека",
-  "root": {"title": "Баннер в markdown-editor", "essence": "≤ 150 символов"},
-  "cats": [{"id": "cmd", "name": "Команды", "desc": "Команды ProseMirror, которые меняют документ."}],
-  "sims": [{"id": "values", "label": "Значения, отличные от дефолтов", "members": ["fnA", "fnB"]}],
+  "title": "Banner stack map",
+  "lang": "en",
+  "root": {"title": "Banner in markdown-editor", "essence": "≤ 150 chars"},
+  "cats": [{"id": "cmd", "name": "Commands", "desc": "ProseMirror commands that change the document."}],
+  "sims": [{"id": "values", "label": "Values that differ from the defaults", "members": ["fnA", "fnB"]}],
   "stacks": [{
-    "name": "Фон", "gh": "stack 1492", "essence": "≤ 150 символов",
+    "name": "Background", "gh": "stack 1492", "essence": "≤ 150 chars",
     "prs": [{
-      "n": 1478, "url": "https://github.com/o/r/pull/1478", "branch": "feat/x",
-      "title": "Рендер фона", "essence": "≤ 200 символов",
-      "groups": [{"name": "Команды", "fns": [
-        {"name": "setHeaderBackground", "why": "≤ 50 символов", "key": true, "kind": "u", "cat": "cmd"}
+      "n": 1478, "url": "https://github.com/o/r/pull/1478", "branch": "feat/x", "state": "draft",
+      "title": "Background rendering", "essence": "≤ 200 chars",
+      "groups": [{"name": "Commands", "fns": [
+        {"name": "setHeaderBackground", "why": "≤ 50 chars", "key": true, "kind": "u", "cat": "cmd"}
       ]}]
     }]
   }]
 }
 ```
 
-`kind`: `s` — стандартный приём, `u` — своя логика. Имена функций уникальны в пределах карты. Цветов — от 1 до 10.
-Сборщик проверяет длины, ссылки на цвета и группы похожих и не пишет файлы, пока есть ошибки.
+`lang` is the language of the page and of the Markdown list: `en` by default, `ru` for Russian. `kind`: `s` is a
+usual pattern, `u` is the project's own logic. Function names are unique across the map. There are 1 to 10 colors.
+The builder checks lengths, color references and similar groups, and writes no files while there are errors.
 
-## Управление картой
+## Controls
 
-- **Холст:** pinch или ⌘ + колесо — масштаб; два пальца или перетаскивание — сдвиг; двойной клик — приблизить.
-- **Глубина:** Стеки / PR / Группы / Функции (`[` и `]`), кнопка «Развернуть всё / Свернуть всё» (`E`); «−» и «+N» на рёбрах сворачивают одну ветку.
-- **Плотность:** S — только названия, M — функции с пояснением, L — ещё суть стеков и PR (`D`).
-- **Фильтры:** только ключевые (`K`), скрыть остальные цвета (`F`).
-- **Поиск:** `/`, стрелки и Enter.
-- **Вид:** раскладка в обе стороны или в одну (`L`), тема (`T`), скин (`S`), мини-карта (`M`), скрыть интерфейс (`H`).
-- **Панель выбора** перетаскивается за заголовок, ширина меняется за край; место и ширина запоминаются, кнопка в заголовке и двойной клик возвращают панель в угол.
-- `0` — вся карта, `1` — 100%, `Esc` — сбросить выбор, `?` — подсказка.
+- **Canvas:** pinch or ⌘ + wheel zooms; two fingers or a drag moves; a double click zooms in.
+- **Depth:** Stacks / PRs / Groups / Functions (`[` and `]`), the Expand all / Collapse all button (`E`); “−” and “+N” on the edges fold one branch.
+- **Density:** S shows names only, M functions with their purpose, L also the essence of stacks and PRs (`D`).
+- **Filters:** key functions only (`K`), hide other colors (`F`).
+- **Search:** `/`, arrows and Enter.
+- **View:** layout to both sides or to one (`L`), theme (`T`), skin (`S`), minimap (`M`), hide the interface (`H`).
+- **The selection panel** moves by its header and changes width by its edge; position and width are remembered, the button in the header and a double click dock it in the corner.
+- `0` fits the whole map, `1` sets 100%, `Esc` clears the selection, `?` shows the hints.
 
-Пять скинов, каждый для светлой и тёмной темы. По умолчанию — GitHub: цвета и тени из токенов Primer,
-шрифты github.com, счётчики, метки и карточки как в интерфейсе GitHub. Остальные четыре:
+Five skins, each with a light and a dark theme. GitHub is the default: colors and shadows from the Primer tokens,
+github.com fonts, counters, labels and cards as in the GitHub interface. The other four:
 
-![Скины: Студия, Строгий, macOS, Чертёж](docs/skins.png)
+![Skins: Studio, Strict, macOS, Blueprint](docs/skins.png)
 
-## Разработка
+## Development
 
 ```sh
-prmap dev                                   # шаблон с данными примера: правьте template.html и обновляйте страницу
-python3 -m unittest discover -s tests -v    # тесты; браузерный идёт при наличии Chrome, синтаксис — при наличии node
+prmap dev                                   # the template with the example data: edit template.html and reload
+python3 -m unittest discover -s tests -v    # tests; the browser one runs when Chrome is present, the syntax one when node is
 ```
 
-- [template.html](template.html) — вся страница: стили, разметка и скрипт. Новый скин — блок цветов `-l`/`-d`
-  и форм рядом с остальными плюс строка в `SKINS`.
-- [extract.py](extract.py), [draft.py](draft.py), [build.py](build.py) — сбор, черновик и сборка; `prmap` их вызывает.
-- [SKILL.md](SKILL.md) — инструкция скилла для Claude Code.
+- [template.html](template.html) is the whole page: styles, markup and script. A new skin is a block of `-l`/`-d`
+  colors and shapes next to the others plus a line in `SKINS`.
+- [extract.py](extract.py), [draft.py](draft.py), [build.py](build.py) collect, draft and build; `prmap` calls them.
+- [SKILL.md](SKILL.md) is the skill for Claude Code.
 
-Шрифты страница берёт с Google Fonts; без сети подставляются системные.
+The page loads its fonts from Google Fonts; offline, system fonts take their place.

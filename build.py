@@ -16,11 +16,11 @@ file when it is not called data.json). With any of them it writes only the ones 
 
 data.json:
 {
-  "title": "Карта ...",                       # page title, a name of 2-4 words
-  "lang": "ru",                               # optional, the language of the page
+  "title": "Banner stack map",               # page title, a name of 2-4 words
+  "lang": "en",                               # optional, the language of the map text: "en" or "ru"
   "root": {"title": "...", "essence": "..."},  # essence <= 150 chars
   "stacks": [{
-    "name": "...", "gh": "stack 1491 | без stack", "essence": "...",   # essence <= 150; "stack N" links the GitHub stack
+    "name": "...", "gh": "stack 1491 | no stack", "essence": "...",   # essence <= 150; "stack N" links the GitHub stack
     "prs": [{
       "n": 1475, "url": "https://github.com/o/r/pull/1475", "branch": "feat/x",
       "state": "open | draft | merged | closed",                         # optional, the icon of the PR
@@ -30,7 +30,7 @@ data.json:
       ]}]
     }]
   }],
-  "cats": [{"id": "cmd", "name": "Команды", "desc": "Функции, которые ..."}],     # 1-10 colors, in legend order
+  "cats": [{"id": "cmd", "name": "Commands", "desc": "Functions that ..."}],     # 1-10 colors, in legend order
   "sims": [{"id": "values", "label": "...", "members": ["fnA", "fnB"]}]          # groups of very similar functions
 }
 Function names must be unique across the map: add a short suffix in parentheses when two PRs touch the same name.
@@ -169,35 +169,44 @@ def with_sims(data):
         for pr in st['prs']]} for st in data['stacks']]}
 
 
+MD_LABELS = {
+    'en': {'essence': 'Essence', 'stack': 'Stack essence', 'pr': 'PR essence', 'key': 'Key', 'split': 'Standard / unique',
+           'legend': 'Legend: ★ key · `std` usual pattern · `uniq` own logic · [color] kind of work · ≈ similar.',
+           'colors': 'Colors', 'sims': 'Similar functions', 's': 'std', 'u': 'uniq'},
+    'ru': {'essence': 'Суть', 'stack': 'Суть стека', 'pr': 'Суть PR', 'key': 'Ключевое', 'split': 'Стандартное / уникальное',
+           'legend': 'Обозначения: ★ ключевая · `станд.` стандартный приём · `уник.` своя логика · [цвет] смысл · ≈ похожие.',
+           'colors': 'Цвета', 'sims': 'Похожие функции', 's': 'станд.', 'u': 'уник.'},
+}
+
+
 def markdown(data):
+    say = MD_LABELS['ru' if data.get('lang') == 'ru' else 'en']
     cat_name = {c['id']: c['name'] for c in data['cats']}
     sim_names = {m for s in data.get('sims', []) for m in s['members']}
-    out = [f'# {data["title"]}', '', f'**Суть стека:** {data["root"]["essence"]}', '',
-           'Обозначения: ★ ключевая · `станд.` стандартный приём · `уник.` своя логика · [цвет] смысл · ≈ похожие.', '',
-           '## Цвета', '']
+    out = [f'# {data["title"]}', '', f'**{say["essence"]}:** {data["root"]["essence"]}', '', say['legend'], '',
+           f'## {say["colors"]}', '']
     out += [f'- **{c["name"]}** — {c["desc"]}' for c in data['cats']]
     if data.get('sims'):
-        out += ['', '## Похожие функции', '']
+        out += ['', f'## {say["sims"]}', '']
         out += [f'- ≈ {s["label"]}: ' + ', '.join(f'`{m}`' for m in s['members']) for s in data['sims']]
     for st in data['stacks']:
         ref = ref_of(st)
         gh = f'[{st["gh"]}]({ref["url"]})' if ref and ref['kind'] == 'stack' else st['gh']
-        out += ['', f'## {st["name"]} ({gh})', '', f'**Суть стека:** {st["essence"]}']
+        out += ['', f'## {st["name"]} ({gh})', '', f'**{say["stack"]}:** {st["essence"]}']
         for pr in st['prs']:
             fns = [f for g in pr['groups'] for f in g['fns']]
             std = sum(1 for f in fns if f['kind'] == 's')
             where = ' · '.join(filter(None, [f'`{pr["branch"]}`' if pr.get('branch') else '', pr['url']]))
             out += ['', f'### #{pr["n"]} {pr["title"]}', '', where, '',
-                    f'**Суть PR:** {pr["essence"]}', '',
-                    '**Ключевое:** ' + (', '.join(f'`{f["name"]}`' for f in fns if f['key']) or '—') + '  ',
-                    f'**Стандартное / уникальное:** {std} / {len(fns) - std}', '']
+                    f'**{say["pr"]}:** {pr["essence"]}', '',
+                    f'**{say["key"]}:** ' + (', '.join(f'`{f["name"]}`' for f in fns if f['key']) or '—') + '  ',
+                    f'**{say["split"]}:** {std} / {len(fns) - std}', '']
             for g in pr['groups']:
                 out.append(f'- **{g["name"]}**')
                 for f in g['fns']:
                     mark = ' ★' if f['key'] else ''
                     sim = ' ≈' if f['name'] in sim_names else ''
-                    kind = 'станд.' if f['kind'] == 's' else 'уник.'
-                    out.append(f'  - `{f["name"]}`{mark} — {f["why"]} · `{kind}` · [{cat_name[f["cat"]]}]{sim}')
+                    out.append(f'  - `{f["name"]}`{mark} — {f["why"]} · `{say[f["kind"]]}` · [{cat_name[f["cat"]]}]{sim}')
     return '\n'.join(out) + '\n'
 
 
@@ -221,7 +230,7 @@ def page(data):
             .replace(DATA_TAG, f'<script>{data_script(data)}</script>'))
 
 
-def standalone(fragment, lang='ru'):
+def standalone(fragment, lang='en'):
     """A complete document: the fragment opens with its title, links and one style block, and they go to the head."""
     cut = fragment.index('</style>') + len('</style>')
     return STANDALONE.format(lang=html.escape(lang), head=fragment[:cut].strip(), body=fragment[cut:].strip())
@@ -239,7 +248,7 @@ def build(data_path, html_path=None, artifact=None, md=None, data_js=None, log=p
         html_path, artifact, md = (data_path.with_name(stem + ext) for ext in ('.html', '.artifact.html', '.md'))
     fragment = page(data)
     written = []
-    for path, text in ((html_path, standalone(fragment, data.get('lang', 'ru'))), (artifact, fragment),
+    for path, text in ((html_path, standalone(fragment, data.get('lang', 'en'))), (artifact, fragment),
                        (md, markdown(data)), (data_js, data_script(data, palette=True) + '\n')):
         if path:
             Path(path).write_text(text, encoding='utf-8')

@@ -159,9 +159,13 @@ class Build(unittest.TestCase):
     def test_stack_links(self):
         st = lambda gh, *ns: {'gh': gh, 'prs': [{'n': n, 'url': f'https://github.com/o/r/pull/{n}'} for n in ns]}
         self.assertEqual(build.ref_of(st('stack 1491', 1, 2)), {'kind': 'stack', 'n': 1491, 'url': 'https://github.com/o/r/stack/1491'})
-        self.assertEqual(build.ref_of(st('без stack', 7)), {'kind': 'pr', 'n': 7, 'url': 'https://github.com/o/r/pull/7'})
+        self.assertEqual(build.ref_of(st('no stack', 7)), {'kind': 'pr', 'n': 7, 'url': 'https://github.com/o/r/pull/7'})
         self.assertIsNone(build.ref_of(st('#1–#2', 1, 2)))
-        self.assertIn('(https://github.com/o/r/stack/', build.markdown(example()))
+        self.assertIn('(https://github.com/gravity-ui/markdown-editor/stack/1491)', build.markdown(example()))
+
+    def test_markdown_speaks_the_language_of_the_map(self):
+        self.assertIn('## Colors', build.markdown(example()))
+        self.assertIn('## Цвета', build.markdown({**example(), 'lang': 'ru'}))
 
     def test_script_cannot_be_closed_by_the_data(self):
         data = example()
@@ -240,7 +244,7 @@ class Draft(unittest.TestCase):
         names = [f['name'] for f in fns]
         self.assertEqual(len(names), len(set(names)))
         self.assertIn('titleNode (#2)', names)
-        self.assertTrue(next(f for f in fns if f['name'] == 'titleNode (#2)')['why'].startswith('изменена'))
+        self.assertTrue(next(f for f in fns if f['name'] == 'titleNode (#2)')['why'].startswith('changed'))
 
     def test_key_is_what_the_description_names(self):
         fns = {f['name']: f for f in build.functions(draft.draft(self.raw()))}
