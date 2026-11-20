@@ -37,7 +37,8 @@ Without installing, `./prmap` from the repository folder does the same.
 ```
 
 The skill collects the stack, reads the diffs, writes the essence of each PR, groups the functions by meaning, assigns
-colors and finds similar functions. The result is `map.html`, `map.md` and a published artifact.
+colors and finds similar functions. The result is `map.html`, `map.md` and a published artifact. The map speaks the
+language of the request: English, or Russian for a request in Russian.
 
 **Without a model: a draft in a few seconds.**
 
@@ -126,3 +127,7 @@ python3 -m unittest discover -s tests -v    # tests; the browser one runs when C
 - [SKILL.md](SKILL.md) is the skill for Claude Code.
 
 The page loads its fonts from Google Fonts; offline, system fonts take their place.
+
+## License
+
+[MIT](LICENSE). The GitHub skin embeds icons from [Octicons](https://github.com/primer/octicons) (MIT).

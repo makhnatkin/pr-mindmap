@@ -11,7 +11,7 @@ agent: general-purpose
 Build the map for: $ARGUMENTS
 
 Work unattended: never ask questions; take the safe option and say what you chose in the final report.
-Write the map text in the user's language (Russian unless the request is in another language) and set `lang` of the data to it (`"ru"` or `"en"`): the page and the Markdown list speak that language. Code names stay as they are.
+Write the map text in the language of the request: Russian for a request in Russian, English otherwise. Set `lang` of the data to it (`"ru"` or `"en"`): the page and the Markdown list speak that language. Code names stay as they are.
 
 The skill folder is `~/.claude/skills/pr-mindmap/`; `prmap` in it runs every step (`prmap --help`):
 - `prmap extract` — PR metadata, the stack chain and the names each diff defines (gh CLI) → `raw.json`;
