@@ -26,18 +26,31 @@ data.json:
       "state": "open | draft | merged | closed",                         # optional, the icon of the PR
       "title": "...", "essence": "...",                                   # essence <= 200
       "groups": [{"name": "...", "fns": [
-        {"name": "uniqueName", "why": "<= 50 chars", "key": true, "kind": "s|u", "cat": "<cat id>"}
+        {"name": "uniqueName", "why": "<= 50 chars", "key": true, "kind": "s|u", "cat": "<cat id>",
+         "type": "logic | guard | util",   # real work, a type guard, or a small utility
+         "about": "<= 400 chars",          # what it is for, in plain words for a reader who does not write code
+         "without": "<= 200 chars",        # a sentence on whether the product can do without it, and the risk
+         "ext": "YfmTabs",                 # <= 40 chars: its plugin or extension, else its package or module
+         "file": "src/a.ts", "line": 12,   # the declaration at the head of the PR (uses.py)
+         "code": "https://github.com/…",   # the declaration in the default branch, when the function exists there
+         "uses": [{"in": "Caller", "pr": 1480, "url": "https://github.com/…"}],   # the places that use it (uses.py);
+                                           # "pr": null for a place the default branch has already
+         "moved": {"from": "src/b.ts", "to": "src/a.ts", "changed": true}}
+                                           # optional: moved from another file; an unchanged move needs nothing else
       ]}]
     }]
   }],
   "cats": [{"id": "cmd", "name": "Commands", "desc": "Functions that ...",
             "colors": ["#cc4a12", "#ff8a4c"]}],   # 1-10 categories, optional light/dark hex colors
-  "sims": [{"id": "values", "label": "...", "members": ["fnA", "fnB"]}]          # groups of very similar functions
+  "sims": [{"id": "values", "label": "...", "members": ["fnA", "fnB"]}],         # groups of very similar functions
+  "default": "main"                           # optional: the default branch of the repository (uses.py)
 }
 Function names must be unique across the map: add a short suffix in parentheses when two PRs touch the same name.
+The fields after `cat` are optional for the builder; the `ok` line counts the functions that have them.
 A category id becomes a part of a CSS name: lowercase Latin letters, digits and hyphens, starting with a letter.
 """
 import argparse
+import hashlib
 import html
 import json
 import re
@@ -47,7 +60,8 @@ from collections import Counter
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-LIMITS = {'root': 150, 'stack': 150, 'pr': 200, 'why': 50}
+LIMITS = {'root': 150, 'stack': 150, 'pr': 200, 'why': 50, 'about': 500, 'without': 200, 'ext': 40}
+TYPES = ('logic', 'guard', 'util')
 PR_STATES = ('open', 'draft', 'merged', 'closed')
 CAT_ID = re.compile(r'^[a-z][a-z0-9-]*$')
 CAT_COLOR = re.compile(r'#[0-9a-fA-F]{6}')
@@ -77,6 +91,54 @@ STANDALONE = """<!doctype html>
 
 def functions(data):
     return [f for st in data['stacks'] for pr in st['prs'] for g in pr['groups'] for f in g['fns']]
+
+
+def unchanged_move(f):
+    return isinstance(f.get('moved'), dict) and not f['moved'].get('changed')
+
+
+def described(f):
+    """An unchanged move, or a function with its type, plugin, places of use, explanation and risk."""
+    return unchanged_move(f) or (all(f.get(field) for field in ('type', 'ext', 'about', 'without')) and 'uses' in f)
+
+
+def is_count(value, low=0):
+    return isinstance(value, int) and not isinstance(value, bool) and value >= low
+
+
+def is_text(value):
+    return isinstance(value, str) and bool(value.strip())
+
+
+def detail_problems(f):
+    why = f.get('why', '')
+    if not why and not unchanged_move(f):
+        yield 'why is empty'
+    elif len(why) > LIMITS['why']:
+        yield f'why {len(why)} > {LIMITS["why"]} «{why}»'
+    for field in ('about', 'without', 'ext'):
+        if field not in f:
+            continue
+        if not is_text(f[field]):
+            yield f'{field} is empty'
+        elif len(f[field]) > LIMITS[field]:
+            yield f'{field} {len(f[field])} > {LIMITS[field]}'
+    if f.get('type', 'logic') not in TYPES:
+        yield f'type {f["type"]!r}, expected one of {TYPES}'
+    if 'file' in f and not is_text(f['file']):
+        yield 'file is empty'
+    if 'line' in f and not is_count(f['line'], 1):
+        yield f'line {f["line"]!r}, expected a whole number from 1'
+    if 'code' in f and not str(f['code']).startswith('http'):
+        yield f'code {f["code"]!r} is not a link'
+    uses = f.get('uses', [])
+    if not (is_count(uses) or isinstance(uses, list) and all(
+            isinstance(u, dict) and is_text(u.get('in')) and (u.get('pr') is None or is_count(u['pr'], 1))
+            and str(u.get('url', '')).startswith('http') for u in uses)):
+        yield 'uses: expected a list of {"in": name, "pr": number or null, "url": link}'
+    if 'moved' in f and not (isinstance(f['moved'], dict) and isinstance(f['moved'].get('changed', False), bool)
+                             and is_text(f['moved'].get('from')) and is_text(f['moved'].get('to'))):
+        yield f'moved {f["moved"]!r}, expected {{"from": path, "to": path, "changed": true | false}}'
 
 
 def check(data):
@@ -126,14 +188,13 @@ def _check(data):
                 if not g['fns']:
                     errors.append(f'#{pr["n"]}: group {g["name"]!r} is empty')
                 for f in g['fns']:
-                    if len(f['why']) > LIMITS['why']:
-                        errors.append(f'{f["name"]}: why {len(f["why"])} > {LIMITS["why"]} «{f["why"]}»')
                     if f['kind'] not in ('s', 'u'):
                         errors.append(f'{f["name"]}: kind {f["kind"]!r}, expected "s" or "u"')
                     if f['cat'] not in cats:
                         errors.append(f'{f["name"]}: unknown cat {f["cat"]!r}')
                     if not isinstance(f['key'], bool):
                         errors.append(f'{f["name"]}: key {f["key"]!r}, expected true or false')
+                    errors += [f'{f["name"]}: {problem}' for problem in detail_problems(f)]
     names = Counter(f['name'] for f in functions(data))
     dup = sorted(name for name, n in names.items() if n > 1)
     if dup:
@@ -166,25 +227,58 @@ def ref_of(st):
     return None
 
 
+def diff_link(pr, f):
+    """The declaration of `f` in the diff of `pr`: GitHub names a file of the diff by the SHA-256 of its path."""
+    if not f.get('file'):
+        return None
+    line = f'R{f["line"]}' if f.get('line') else ''
+    return f'{pr["url"]}/files#diff-{hashlib.sha256(f["file"].encode()).hexdigest()}{line}'
+
+
 def with_sims(data):
-    """A copy of the data in which each function names its similarity groups and each stack its GitHub page."""
+    """A copy of the data in which each function names its similarity groups and its place in the diff of its PR,
+    and each stack its GitHub page."""
     of = {}
     for s in data.get('sims', []):
         for member in s['members']:
             of.setdefault(member, []).append(s['id'])
     return {**data, 'sims': data.get('sims', []), 'stacks': [{**st, 'ref': ref_of(st), 'prs': [{**pr, 'groups': [
-        {**g, 'fns': [{**f, 'sims': of.get(f['name'], [])} for f in g['fns']]} for g in pr['groups']]}
-        for pr in st['prs']]} for st in data['stacks']]}
+        {**g, 'fns': [{**f, 'sims': of.get(f['name'], []), 'diff': diff_link(pr, f)} for f in g['fns']]}
+        for g in pr['groups']]} for pr in st['prs']]} for st in data['stacks']]}
 
 
 MD_LABELS = {
     'en': {'essence': 'Essence', 'stack': 'Stack essence', 'pr': 'PR essence', 'key': 'Key', 'split': 'Standard / unique',
            'legend': 'Legend: ★ key · `std` usual pattern · `uniq` own logic · [color] kind of work · ≈ similar.',
-           'colors': 'Colors', 'sims': 'Similar functions', 's': 'std', 'u': 'uniq'},
+           'colors': 'Colors', 'sims': 'Similar functions', 's': 'std', 'u': 'uniq',
+           'uses': 'Used in', 'moved': 'moved', 'reworked': 'Moved and changed',
+           'logic': 'logic', 'guard': 'type guard', 'util': 'utility'},
     'ru': {'essence': 'Суть', 'stack': 'Суть стека', 'pr': 'Суть PR', 'key': 'Ключевое', 'split': 'Стандартное / уникальное',
            'legend': 'Обозначения: ★ ключевая · `станд.` стандартный приём · `уник.` своя логика · [цвет] смысл · ≈ похожие.',
-           'colors': 'Цвета', 'sims': 'Похожие функции', 's': 'станд.', 'u': 'уник.'},
+           'colors': 'Цвета', 'sims': 'Похожие функции', 's': 'станд.', 'u': 'уник.',
+           'uses': 'Используется', 'moved': 'перенос', 'reworked': 'Перенесена и изменена',
+           'logic': 'логика', 'guard': 'проверка типа', 'util': 'утилита'},
 }
+
+
+def fn_lines(f, say, cat_name, sim_names, default):
+    """A function in the Markdown list: its line, then its explanation, risk and places of use."""
+    if unchanged_move(f):
+        return [f'  - `{f["name"]}` · {say["moved"]}: `{f["moved"]["from"]}` → `{f["moved"]["to"]}`']
+    tags = [f'`{say[f["kind"]]}`', f'[{cat_name[f["cat"]]}]', say[f['type']] if f.get('type') else '', f.get('ext', '')]
+    mark = ' ★' if f['key'] else ''
+    sim = ' ≈' if f['name'] in sim_names else ''
+    out = [f'  - `{f["name"]}`{mark}{sim} — {f["why"]} · ' + ' · '.join(filter(None, tags))]
+    if f.get('moved'):
+        out.append(f'    - {say["reworked"]}: `{f["moved"]["from"]}` → `{f["moved"]["to"]}`')
+    out += [f'    - {f[field]}' for field in ('about', 'without') if f.get(field)]
+    uses = f.get('uses')
+    if isinstance(uses, list) and uses:
+        where = [(u['in'], u['url'], f'#{u["pr"]}' if u['pr'] else default) for u in uses]
+        out.append(f'    - {say["uses"]}: ' + ', '.join(f'[{name}]({url}) ({pr})' for name, url, pr in where))
+    elif uses:
+        out.append(f'    - {say["uses"]}: {uses}')
+    return out
 
 
 def markdown(data):
@@ -212,9 +306,7 @@ def markdown(data):
             for g in pr['groups']:
                 out.append(f'- **{g["name"]}**')
                 for f in g['fns']:
-                    mark = ' ★' if f['key'] else ''
-                    sim = ' ≈' if f['name'] in sim_names else ''
-                    out.append(f'  - `{f["name"]}`{mark} — {f["why"]} · `{say[f["kind"]]}` · [{cat_name[f["cat"]]}]{sim}')
+                    out += fn_lines(f, say, cat_name, sim_names, data.get('default', 'main'))
     return '\n'.join(out) + '\n'
 
 
@@ -271,8 +363,9 @@ def build(data_path, html_path=None, artifact=None, md=None, data_js=None, log=p
     for line in warnings(data):
         log(f'warning: {line}')
     prs = sum(len(st['prs']) for st in data['stacks'])
-    log(f'ok: {prs} PRs, {len(functions(data))} functions, {len(data["cats"])} colors, '
-        f'{len(data.get("sims", []))} similarity groups → {", ".join(written)}')
+    fns = functions(data)
+    log(f'ok: {prs} PRs, {len(fns)} functions, details {sum(map(described, fns))}/{len(fns)}, '
+        f'{len(data["cats"])} colors, {len(data.get("sims", []))} similarity groups → {", ".join(written)}')
     return Path(html_path) if html_path else None
 
 

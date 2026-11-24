@@ -4,6 +4,7 @@
 The browser test needs Google Chrome or Chromium and is skipped without one; the syntax test needs node.
 """
 import copy
+import hashlib
 import json
 import re
 import shutil
@@ -19,6 +20,7 @@ sys.path.insert(0, str(ROOT))
 import build  # noqa: E402
 import draft  # noqa: E402
 import extract  # noqa: E402
+import uses  # noqa: E402
 
 EXAMPLE = ROOT / 'example' / 'banner.json'
 CHROME = next((p for p in (
@@ -305,6 +307,295 @@ class Draft(unittest.TestCase):
         raw['prs'][0]['body'] = 'x ' * 400
         raw['prs'][0]['title'] = 'feat: ' + 'long title ' * 30
         self.assertEqual(build.check(draft.draft(raw)), [])
+
+
+MOVE_DIFF = '''diff --git a/src/old.ts b/src/old.ts
+--- a/src/old.ts
++++ b/src/old.ts
+@@ -1,9 +1,3 @@
+-export function shared(a: number) {
+-    return a + 1;
+-}
+-function reworked(a: number) {
+-    return a;
+-}
+ function stays() {}
+diff --git a/src/new.ts b/src/new.ts
+new file mode 100644
+--- /dev/null
++++ b/src/new.ts
+@@ -0,0 +1,6 @@
++function shared(a: number) {
++    return a + 1;
++}
++export function reworked(a: number) {
++    return a * 2;
++}
+diff --git a/src/reorder.ts b/src/reorder.ts
+--- a/src/reorder.ts
++++ b/src/reorder.ts
+@@ -1,6 +1,6 @@
+-function first() {
+-    return 1;
+-}
+ function second() {}
++function first() {
++    return 1;
++}
+diff --git a/src/ext/Old.tsx b/src/ui/Switch.tsx
+similarity index 60%
+rename from src/ext/Old.tsx
+rename to src/ui/Switch.tsx
+--- a/src/ext/Old.tsx
++++ b/src/ui/Switch.tsx
+@@ -1,3 +1,3 @@
+-export function Switch({label}) {
++export function Switch({label, onUpdate}) {
+     return null;
+ }
+diff --git a/src/gone.ts b/src/gone.ts
+deleted file mode 100644
+--- a/src/gone.ts
++++ /dev/null
+@@ -1,2 +0,0 @@
+-export const removedHelper = () => {
+-};
+'''
+
+
+class Moves(unittest.TestCase):
+    def test_moves_between_files(self):
+        found = extract.names(MOVE_DIFF)
+        self.assertEqual(found['src/new.ts']['moved'], [{'name': 'shared', 'from': 'src/old.ts', 'same': True},
+                                                        {'name': 'reworked', 'from': 'src/old.ts', 'same': False}])
+        self.assertEqual(found['src/old.ts']['removed'], ['shared', 'reworked'])
+
+    def test_renamed_file_with_changes(self):
+        switch = extract.names(MOVE_DIFF)['src/ui/Switch.tsx']
+        self.assertEqual(switch['moved'], [{'name': 'Switch', 'from': 'src/ext/Old.tsx', 'same': False}])
+        self.assertEqual(switch['removed'], [])
+
+    def test_reordering_is_not_a_change(self):
+        reorder = extract.names(MOVE_DIFF)['src/reorder.ts']
+        self.assertEqual((reorder['added'], reorder['removed'], reorder['moved']), ([], [], []))
+
+    def test_deleted_file_keeps_its_path(self):
+        self.assertEqual(extract.names(MOVE_DIFF)['src/gone.ts']['removed'], ['removedHelper'])
+
+    def test_draft_marks_moves(self):
+        found = extract.names(MOVE_DIFF)
+        files = [{'path': path, 'additions': 1, 'deletions': 1, **found[path]} for path in ('src/new.ts', 'src/ui/Switch.tsx')]
+        pr = {**raw_pr(5, 'refactor/move', []), 'files': files}
+        fns = {f['name']: f for f in build.functions(draft.draft({'repo': 'o/r', 'default': 'main', 'prs': [pr]}))}
+        self.assertEqual(fns['shared']['moved'], {'from': 'src/old.ts', 'to': 'src/new.ts'})
+        self.assertEqual(fns['reworked']['moved'], {'from': 'src/old.ts', 'to': 'src/new.ts', 'changed': True})
+        self.assertTrue(fns['shared']['why'].startswith('moved ·'))
+        self.assertFalse(fns['reworked']['key'])
+
+    def test_extension_from_the_path(self):
+        self.assertEqual(draft.ext_of('src/extensions/yfm/YfmTabs/plugin.ts'), 'YfmTabs')
+        self.assertEqual(draft.ext_of('packages/editor/src/extensions/markdown/Bold/index.ts'), 'Bold')
+        self.assertEqual(draft.ext_of('src/core/utils/dom.ts'), 'core')
+        self.assertEqual(draft.ext_of('packages/ui/src/title/node.ts'), 'ui')
+
+
+class Details(unittest.TestCase):
+    def fn(self, data):
+        return data['stacks'][0]['prs'][0]['groups'][0]['fns'][0]
+
+    def problems(self, **fields):
+        data = example()
+        self.fn(data).update(fields)
+        return '\n'.join(build.check(data))
+
+    def test_limits_and_types(self):
+        self.assertIn('about 501 > 500', self.problems(about='x' * 501))
+        self.assertIn('without 201 > 200', self.problems(without='x' * 201))
+        self.assertIn('ext 41 > 40', self.problems(ext='x' * 41))
+        self.assertIn('ext is empty', self.problems(ext=' '))
+        self.assertIn("type 'big'", self.problems(type='big'))
+        self.assertIn('line 0', self.problems(line=0))
+        self.assertIn('is not a link', self.problems(code='src/a.ts'))
+        for wrong in (-1, True, '3', [{'in': 'Caller', 'pr': 0, 'url': 'https://x'}], [{'in': 'Caller', 'pr': None}]):
+            with self.subTest(uses=wrong):
+                self.assertIn('uses: expected a list', self.problems(uses=wrong))
+        for wrong in ({'from': 'a.ts'}, 'a.ts', {'from': 'a.ts', 'to': 'b.ts', 'changed': 'yes'}):
+            with self.subTest(moved=wrong):
+                self.assertIn('moved', self.problems(moved=wrong))
+
+    def test_an_unchanged_move_needs_no_why(self):
+        self.assertEqual(self.problems(why='', moved={'from': 'a.ts', 'to': 'b.ts'}), '')
+        self.assertIn('why is empty', self.problems(why='', moved={'from': 'a.ts', 'to': 'b.ts', 'changed': True}))
+
+    def test_described(self):
+        full = {'type': 'logic', 'ext': 'Banner', 'about': 'a', 'without': 'b', 'uses': []}
+        self.assertTrue(build.described(full))
+        self.assertTrue(build.described({'moved': {'from': 'a', 'to': 'b'}}))
+        self.assertFalse(build.described({'moved': {'from': 'a', 'to': 'b', 'changed': True}}))
+        self.assertFalse(build.described({**full, 'type': None}))
+        self.assertFalse(build.described({k: v for k, v in full.items() if k != 'uses'}))
+
+    def test_diff_link_names_the_file_by_its_hash(self):
+        pr = {'url': 'https://github.com/o/r/pull/7'}
+        digest = hashlib.sha256(b'src/a.ts').hexdigest()
+        self.assertEqual(build.diff_link(pr, {'file': 'src/a.ts', 'line': 12}), f'https://github.com/o/r/pull/7/files#diff-{digest}R12')
+        self.assertIsNone(build.diff_link(pr, {}))
+
+    def test_markdown_carries_the_details(self):
+        listing = build.markdown(example())
+        self.assertIn('— Row with a switch · `std` · [UI] · logic · editor-banner-extension', listing)
+        self.assertIn('    - Moved and changed: `packages/', listing)
+        self.assertIn('    - The settings window that opens next to a banner.', listing)
+        self.assertIn('    - It cannot go: the banner settings window', listing)
+        self.assertRegex(listing, r'    - Used in: \[SettingsFields\]\(https://github\.com/[^)]+\) \(main\)')
+
+    def test_unchanged_move_is_one_line(self):
+        data = example()
+        f = self.fn(data)
+        f.update(why='', moved={'from': 'src/a.ts', 'to': 'src/b.ts'})
+        listing = build.markdown(data)
+        self.assertIn(f'  - `{f["name"]}` · moved: `src/a.ts` → `src/b.ts`\n', listing)
+
+
+class Guards(unittest.TestCase):
+    DIFF = '''diff --git a/src/is.ts b/src/is.ts
+--- /dev/null
++++ b/src/is.ts
+@@ -0,0 +1,12 @@
++export const isNode = (value: unknown): value is Node =>
++    value instanceof Node;
++export function hasTitle(attrs) {
++    return Boolean(attrs.title);
++}
++export const pick = (a, b) => a ?? b;
++export function render(view) {
++    const dom = view.dom;
++    dom.textContent = '';
++    view.update();
++    return dom;
++}
+'''
+
+    def test_type_guards_and_small_helpers(self):
+        found = extract.names(self.DIFF)['src/is.ts']
+        self.assertEqual(found['guards'], ['isNode', 'hasTitle'])
+        self.assertEqual(found['small'], ['pick'])
+
+    def test_draft_takes_the_type_and_the_file(self):
+        found = extract.names(self.DIFF)
+        pr = {**raw_pr(9, 'feat/is', []), 'files': [{'path': 'src/is.ts', 'additions': 12, 'deletions': 0, **found['src/is.ts']}]}
+        fns = {f['name']: f for f in build.functions(draft.draft({'repo': 'o/r', 'default': 'main', 'prs': [pr]}))}
+        self.assertEqual({name: f['type'] for name, f in fns.items()},
+                         {'isNode': 'guard', 'hasTitle': 'guard', 'pick': 'util', 'render': 'logic'})
+        self.assertEqual(fns['render']['file'], 'src/is.ts')
+
+
+BANNER = '''import {
+    SettingsDialog,
+    SettingsRow,
+} from './settings';
+export {SettingsRow} from './settings';
+
+// SettingsDialog of the banner
+export function BannerSettings({
+    block,
+}: Props) {
+    if (block) {
+        log(1);
+    } else {
+        return <SettingsRow label="a" />;
+    }
+    return (
+        <SettingsDialog title="x">
+            <SettingsRow label="b" />
+        </SettingsDialog>
+    );
+}
+
+export const BannerPanel: FC<Props> = ({
+    open,
+}) => {
+    const inner = () => <SettingsRow label="c" />;
+    return list.SettingsRow;
+};
+
+export const headerPart = {
+    create(schema) {
+        return schema.create();
+    },
+    adopt: (node) => headerPart.create(node),
+};
+
+class View {
+    renderAttrs() {
+        this.update();
+    }
+    update() {
+        this.renderAttrs();
+    }
+}
+
+register(SettingsDialog);
+'''
+
+
+class Uses(unittest.TestCase):
+    LINES = BANNER.splitlines()
+
+    def at(self, text):
+        return next(i for i, line in enumerate(self.LINES) if text in line)
+
+    def test_the_function_around_a_line(self):
+        self.assertEqual(uses.around(self.LINES, self.at('<SettingsDialog title')), 'BannerSettings')
+        self.assertEqual(uses.around(self.LINES, self.at('label="a"')), 'BannerSettings')
+        self.assertEqual(uses.around(self.LINES, self.at('label="c"')), 'BannerPanel')
+        self.assertEqual(uses.around(self.LINES, self.at('return schema.create')), 'headerPart.create')
+        self.assertEqual(uses.around(self.LINES, self.at('this.renderAttrs')), 'View.update')
+        self.assertIsNone(uses.around(self.LINES, self.at('register(')))
+
+    def test_declarations(self):
+        self.assertTrue(uses.declares('export const BannerPanel: FC<Props> = ({', 'BannerPanel'))
+        self.assertTrue(uses.declares('    adopt: (node) => headerPart.create(node),', 'adopt'))
+        self.assertTrue(uses.declares('    renderAttrs() {', 'renderAttrs'))
+        self.assertFalse(uses.declares('        log(1);', 'log'))
+
+    def test_imports_and_comments_are_skipped(self):
+        skip = uses.skipped(self.LINES)
+        for text in ('import {', '    SettingsDialog,', "} from './settings';", 'export {SettingsRow}', '// SettingsDialog'):
+            self.assertIn(self.at(text), skip)
+        self.assertNotIn(self.at('<SettingsDialog title'), skip)
+
+    def repo(self, files):
+        root = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, root)
+        for path, text in files.items():
+            (root / path).parent.mkdir(parents=True, exist_ok=True)
+            (root / path).write_text(text)
+        git = ['git', '-C', str(root), '-c', 'user.name=t', '-c', 'user.email=t@t', '-c', 'commit.gpgsign=false',
+               '-c', 'core.hooksPath=/dev/null']
+        for args in (['init', '-q'], ['add', '.'], ['commit', '-q', '-m', 'x'], ['update-ref', 'refs/prmap/1', 'HEAD']):
+            subprocess.run([*git, *args], check=True, capture_output=True)
+        return uses.Tree(root / '.git', 'refs/prmap/1')
+
+    def test_places_and_declaration_in_a_tree(self):
+        tree = self.repo({'src/Banner.tsx': BANNER, 'src/Banner.test.tsx': 'SettingsRow();\n', 'README.md': 'SettingsRow\n',
+                          'src/settings.tsx': 'export function SettingsRow() {\n    return null;\n}\n'})
+        found = uses.places(tree, 'SettingsRow (rows)', {'BannerSettings': 'BannerSettings (#2)'})
+        self.assertEqual(sorted(found), [('src/Banner.tsx', 'BannerPanel'), ('src/Banner.tsx', 'BannerSettings (#2)')])
+        self.assertEqual(found[('src/Banner.tsx', 'BannerSettings (#2)')], self.at('label="a"') + 1)
+        self.assertEqual(uses.places(tree, 'headerPart.create', {}), {('src/Banner.tsx', 'headerPart.adopt'): self.at('adopt:') + 1})
+        self.assertEqual(uses.places(tree, 'renderAttrs', {}, only='src/Banner.tsx'), {('src/Banner.tsx', 'View.update'): self.at('this.renderAttrs') + 1})
+        self.assertEqual(uses.declaration(tree, 'SettingsRow', ['src/settings.tsx']), {'file': 'src/settings.tsx', 'line': 1})
+        self.assertEqual(uses.declaration(tree, 'View.renderAttrs'), {'file': 'src/Banner.tsx', 'line': self.at('    renderAttrs() {') + 1})
+        self.assertTrue(tree.has('src/settings.tsx', 'return null;'))
+        self.assertIsNone(tree.lines('src/missing.ts'))
+
+    def test_chains_follow_the_bases(self):
+        prs = {1: {'base': 'main', 'head': 'a'}, 2: {'base': 'a', 'head': 'b'}, 3: {'base': 'b', 'head': 'c'},
+               9: {'base': 'main', 'head': 'z'}}
+        chains = uses.chains(prs)
+        self.assertEqual(chains[2], [1, 2, 3])
+        self.assertEqual(chains[9], [9])
 
 
 class Cli(unittest.TestCase):

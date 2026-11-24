@@ -5,15 +5,19 @@ Usage: python3 extract.py <PR or stack URL> [...] [--no-chain] [--out raw.json]
 
 For each PR: number, URL, title, body, base and head branches, state, commits and changed files; for each file,
 the functions, classes, methods and React components that its diff defines (`added`), which of them are exported
-(`exported`), the existing ones whose body it changes (`touched`), and the types and interfaces it declares (`types`).
-Test, snapshot and asset files are skipped.
+(`exported`), the existing ones whose body it changes (`touched`), the types and interfaces it declares (`types`),
+the definitions it deletes (`removed`) and the added ones that come from another file of the PR or from the old
+path of a renamed file (`moved`, with `same: true` when the body is the same line by line). Of the added ones,
+`guards` are type guards (a `x is T` return type or an `is…`/`has…` name) and `small` have a body of three lines at
+most. A file renamed without changes shows no names. Test, snapshot and asset files are skipped.
 
 A stack link (github.com/o/r/stack/1491) brings the PRs of that GitHub stack, bottom to top. Without --no-chain,
 a PR link brings its whole chain: the PRs below it (whose head is its base, down to the default branch) and the open
 PRs above it (whose base is its head), in merge order. `stack` of a PR is the number of its GitHub stack or null.
 
 raw.json: {repo, default, prs: [{n, url, title, body, base, head, stack, state, draft, commits, additions, deletions,
-           files: [{path, additions, deletions, added, exported, touched, types}]}]}
+           files: [{path, additions, deletions, added, exported, touched, types, removed, guards, small,
+                    moved: [{name, from, same}]}]}]}
 """
 import argparse
 import json
@@ -72,37 +76,96 @@ def definition(code):
     return None
 
 
-EMPTY = {'added': [], 'exported': [], 'touched': [], 'types': []}
+EMPTY = {'added': [], 'exported': [], 'touched': [], 'types': [], 'removed': [], 'guards': [], 'small': [], 'moved': []}
+GUARD = re.compile(r'\)\s*:\s*(?:asserts\s+)?[\w$.]+\s+is\s|->\s*Type(?:Guard|Is)\[')
+GUARD_NAME = re.compile(r'^(?:is|has)[A-Z_]')
+EXPORT = re.compile(r'^export\s+(?:default\s+)?')
+CLOSING = re.compile(r'^\s*[}\])]')
+
+
+def body_of(lines, start, sign):
+    """The lines of the definition at `lines[start]`, while they carry `sign`: stripped, blank ones dropped."""
+    first = lines[start][1:]
+    indent = len(first) - len(first.lstrip())
+    body = [EXPORT.sub('', first.strip())]
+    for line in lines[start + 1:]:
+        if not line.startswith(sign):
+            break
+        code = line[1:]
+        if not code.strip():
+            continue
+        if len(code) - len(code.lstrip()) <= indent:
+            if CLOSING.match(code):
+                body.append(code.strip())
+            break
+        body.append(code.strip())
+    return '\n'.join(body)
 
 
 def names(diff):
-    """Per changed source file: the names its added lines define and the ones whose body the diff changes."""
-    files, current = {}, None
-    for line in diff.splitlines():
-        if line.startswith('+++ '):
-            path = line[6:] if line.startswith('+++ b/') else None
+    """Per changed source file: the names its diff defines, changes and deletes, and the ones moved in from another file."""
+    lines = diff.splitlines()
+    files, current, old, plus, minus, renamed, header = {}, None, None, {}, {}, {}, True
+    for i, line in enumerate(lines):
+        if line.startswith('diff --git '):
+            current, old, header = None, None, True
+        elif header and line.startswith('--- '):
+            old = line[6:] if line.startswith('--- a/') else None
+        elif header and line.startswith('+++ '):
+            # A deleted file has no new path: its definitions belong to the old one.
+            path = line[6:] if line.startswith('+++ b/') else old
             current = None if not path or SKIPPED.search(path) else files.setdefault(path, {key: [] for key in EMPTY})
-        elif current is None or line.startswith('---'):
-            continue
+            if current is not None:
+                plus.setdefault(path, {})
+                minus.setdefault(path, {})
+                if old and old != path:
+                    renamed[path] = old
         elif line.startswith('@@'):
+            header = False
             # The hunk header carries the line of the definition that the hunk is inside of.
             m = HUNK.match(line)
-            name = m and definition(m.group(1))
+            name = m and current is not None and definition(m.group(1))
             if name and name not in current['touched']:
                 current['touched'].append(name)
-        elif line.startswith('+'):
-            declared = TYPE.match(line[1:])
+        elif current is not None and line.startswith(('+', '-')):
+            sign, code = line[0], line[1:]
+            declared = TYPE.match(code)
             if declared:
-                if declared.group(1) not in current['types']:
+                if sign == '+' and declared.group(1) not in current['types']:
                     current['types'].append(declared.group(1))
                 continue
-            name = definition(line[1:])
-            if name and name not in current['added']:
+            name = definition(code)
+            if not name:
+                continue
+            if sign == '-':
+                if name not in current['removed']:
+                    current['removed'].append(name)
+                    minus[path][name] = body_of(lines, i, '-')
+            elif name not in current['added']:
                 current['added'].append(name)
-                if line[1:].startswith('export'):
+                plus[path][name] = body_of(lines, i, '+')
+                if code.startswith('export'):
                     current['exported'].append(name)
-    for found in files.values():
-        found['touched'] = [name for name in found['touched'] if name not in found['added']]
+                if GUARD.search(code) or GUARD_NAME.match(name):
+                    current['guards'].append(name)
+                elif plus[path][name].count('\n') < 3:
+                    current['small'].append(name)
+    for path, found in files.items():
+        added = found['added']
+        # The same body deleted and added in one file is a reordering, not a new definition.
+        found['added'] = [name for name in added if minus[path].get(name) != plus[path][name]]
+        for key in ('exported', 'guards', 'small'):
+            found[key] = [name for name in found[key] if name in found['added']]
+        found['removed'] = [name for name in found['removed'] if name not in added]
+        found['touched'] = [name for name in found['touched'] if name not in added and name not in found['removed']]
+        # A renamed file shows a definition as deleted and added only when its body changed on the way.
+        found['moved'] = [{'name': name, 'from': renamed[path], 'same': False}
+                          for name in found['added'] if path in renamed and name in minus[path]]
+    for path, found in files.items():
+        for name in found['added']:
+            source = next((other for other in files if other != path and name in files[other]['removed']), None)
+            if source and all(m['name'] != name for m in found['moved']):
+                found['moved'].append({'name': name, 'from': source, 'same': minus[source][name] == plus[path][name]})
     return files
 
 

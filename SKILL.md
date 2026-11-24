@@ -1,6 +1,6 @@
 ---
 name: pr-mindmap
-description: Build an interactive mind map of a GitHub PR or a stack of PRs from its link — the essence of the stack and of each PR, the functions grouped by meaning with a ≤50-char purpose, key/standard/unique marks, colors by kind of work, similar-function links, search, pinch zoom, depth and density controls, filters and foldable chrome — published as an HTML artifact plus a Markdown list. Use when the user gives one or more PR or stack links and asks for a mind map, a map, an overview or a function breakdown of the PR(s) ("ммап", "построй майнд мап пр-а", "карта PR", "карта стека", "mind map this PR").
+description: Build an interactive mind map of a GitHub PR or a stack of PRs from its link — the essence of the stack and of each PR, the functions grouped by meaning with a ≤50-char purpose, and on a click a plain-language explanation a manager understands, how many places use the function, its plugin or extension and what happens without it; moved functions marked from → to; key/standard/unique marks, colors by kind of work, similar-function links, search, pinch zoom, depth and density controls, filters and foldable chrome — published as an HTML artifact plus a Markdown list. Use when the user gives one or more PR or stack links and asks for a mind map, a map, an overview or a function breakdown of the PR(s) ("ммап", "построй майнд мап пр-а", "карта PR", "карта стека", "mind map this PR").
 argument-hint: <PR or stack URL> [more URLs] [only this PR]
 context: fork
 agent: general-purpose
@@ -16,6 +16,8 @@ Write the map text in the language of the request: Russian for a request in Russ
 The skill folder is `~/.claude/skills/pr-mindmap/`; `prmap` in it runs every step (`prmap --help`):
 - `prmap extract` — PR metadata, the stack chain and the names each diff defines (gh CLI) → `raw.json`;
 - `prmap draft` — a mechanical `data.json` from `raw.json`: the structure without the meaning;
+- `prmap uses` — the declaration of every function (`file`, `line`, `code`) and the places that call it (`uses`),
+  across the repository at the top of its stack, tests, stories, imports and definitions aside;
 - `prmap build` — checks `data.json` and builds the map from `template.html`: `map.html` (a complete file to open
   from disk), `map.artifact.html` (the same page in the form the Artifact tool publishes) and `map.md`;
   the docstring of `build.py` is the data schema;
@@ -36,7 +38,9 @@ A stack link (`github.com/<owner>/<repo>/stack/<n>`) brings the PRs of that GitH
 when the user says "only this PR" or lists exact PRs that do not form one chain.
 
 `raw.json` lists per PR: title, body, base/head, GitHub stack, commits and files; each file has `added` (names its added lines
-define), `exported`, `touched` (existing definitions whose body changed) and `types`.
+define), `exported`, `touched` (existing definitions whose body changed), `types`, `removed` (deleted definitions) and
+`moved` (added names that come from another file or from the old path of a renamed file, `same: true` when the body
+matches line by line).
 The names are a starting point, not the answer: open the diff (`gh pr diff <n> -R <repo>`) of every PR and read it.
 Drop false positives (hooks called inside components, local variables, CSS class constants) and add what the regex
 missed (methods of object literals; for changed behavior of an existing function say what changed in `why`).
@@ -65,6 +69,30 @@ Levels: root → stacks → PRs → groups → functions. Read `example/banner.j
   - `kind`: `"s"` standard — a usual pattern of the framework (specs, parser/serializer, plugin factory, getters,
     plain UI); `"u"` unique — logic specific to this project.
   - Names are unique across the map; when two PRs touch the same name, add a short suffix: `SettingsFields (alignment)`.
+  - A method is named `Owner.method` (`WHeaderNodeView.renderAttrs`, `headerPart.create`): the card shows it as a
+    method by that dot.
+  - `type`: `"logic"` does real work, `"guard"` is a type guard or a yes/no check of a value, `"util"` is a small
+    helper of a few lines. The draft guesses it from the signature and the size of the body.
+  - The card of a function shows the fields below on a click; `example/banner.json` has them on `SettingsDialog`,
+    `SettingsRow` and `SettingsSwitch` of #1475. Write them in the map language for a reader who does not write code,
+    such as a manager: what the user or the product gets, in short sentences, with no code names and no framework
+    terms. A term that cannot go is explained in the same sentence. Every statement comes from the diff or the PR text.
+  - `about` ≤400 chars: what the function is for and where the user meets its result. The card shows it right under
+    `why`, so it does not repeat `why`.
+  - `without` ≤200 chars: one sentence that stands alone under a rule, with no heading: whether the product can do
+    without the function, then the risk. In Russian it opens with «Можно без неё, но …», «Без неё нельзя: …» or
+    «Отчасти: …»; in English with "It can go, but …", "It cannot go: …" or "Partly: …".
+  - `ext` ≤40 chars: the plugin or extension the function belongs to, by its name in the code (`YfmTabs`, `Mermaid`);
+    code outside plugins and extensions gets its package or module (`core`). The draft guesses it from the path.
+  - `file`, `line`, `code` and `uses` come from `prmap uses` in step 3, for the final list of functions. `uses` lists the places that call the function across the repository at the top of its stack, each with
+    the PR that added it or `null` for the default branch; `code` links a function the default branch has already.
+    A key function with no places, or a common name with 30+, is likely a miscount: check it with
+    `git --git-dir ~/.cache/pr-mindmap/<owner>__<repo> grep -w <name> refs/prmap/<PR number>` and fix the list.
+  - `moved` (`{"from", "to"}`): the draft sets it when the PR deletes a definition in one file and adds it in another,
+    with `"changed": true` when the body differs; check each one in the diff. An unchanged move is only a move: no
+    `why`, `about`, `without` or `ext`; the card shows the old and the new path, as GitHub shows a renamed file. A
+    changed one is described as usual, and `about` says what changed. A file renamed without changes shows no
+    names: its functions stay out of the map.
 - **Colors** (`cats`, 3–10, legend order): kinds of work across the whole map (Markdown, schema, commands, cursor and
   keys, guards, text input, DOM, UI, upload, model…). Follow **Remember topic colors** below. `desc` explains the
   category in one sentence. Every function gets exactly one category via `cat`.
@@ -87,12 +115,13 @@ Create the directory and start with an empty JSON object if the file is missing.
 ## 3. Build and check
 
 ```bash
+~/.claude/skills/pr-mindmap/prmap uses <work>/data.json
 ~/.claude/skills/pr-mindmap/prmap build <work>/data.json
 ```
 
 It writes `map.html`, `map.artifact.html` and `map.md` next to the data. Fix every error it prints (lengths, unknown
-colors, duplicate names) and build again until it prints `ok`; a warning about a color without functions means the
-color should go.
+colors, duplicate names) and build again until it prints `ok` with `details N/N`, every function described; a warning
+about a color without functions means the color should go.
 If Google Chrome is installed, take one look:
 `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --hide-scrollbars --user-data-dir=<work>/chrome --window-size=1600,1000 --virtual-time-budget=6000 --screenshot=<work>/map.png file://<work>/map.html`
 and read the PNG once. Fix only what is visibly broken; no second look.
@@ -106,5 +135,5 @@ leave them in the work folder.
 Final report, short, in the user's language:
 - the artifact link and the paths of `map.html`, `map.md`, `data.json`;
 - the PRs covered and how they were grouped into stacks;
-- counts: PRs, functions, key, standard/unique, colors, similarity groups;
+- counts: PRs, functions, key, standard/unique, moved, colors, similarity groups;
 - anything chosen without asking (chain included or not, a lone PR split into areas).

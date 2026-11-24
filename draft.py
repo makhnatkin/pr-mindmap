@@ -4,9 +4,11 @@
 Usage: python3 draft.py raw.json [--out data.json]
 
 The draft takes its structure from the diffs alone: stacks from the GitHub stacks or the branch names of the chain, groups from folders,
-colors from packages, "similar" from shared name endings, the purpose of a function from its file. It is a starting
-point: the meaning (what each PR and function is for, which functions are key, colors by kind of work) is written
-by a person or by the skill on top of it.
+colors from packages, "similar" from shared name endings, the purpose of a function from its file, its plugin or
+extension from its path, its type from its signature and size (a type guard, a small utility or logic), and `moved` from a definition that the PR deletes in one file and adds in another
+(`changed: true` when its body differs).
+It is a starting point: the meaning (what each PR and function is for, which functions are key, colors by kind of
+work, the explanations) is written by a person or by the skill on top of it.
 """
 import argparse
 import json
@@ -61,6 +63,21 @@ def area_of(path):
     if len(parts) > 2 and parts[0] in ('packages', 'apps', 'libs', 'services', 'modules', 'crates'):
         return parts[1]
     return parts[0] if len(parts) > 1 else 'root'
+
+
+PLUGIN_FOLDERS = {'extensions', 'extension', 'plugins', 'plugin', 'addons'}
+
+
+def ext_of(path):
+    """The plugin or extension of a file: the first capitalized folder below extensions/ or plugins/, else its package."""
+    parts = PurePosixPath(path).parts[:-1]
+    for i, part in enumerate(parts):
+        if part.lower() in PLUGIN_FOLDERS:
+            below = parts[i + 1:]
+            return next((p for p in below if p[:1].isupper()), below[0] if below else part)
+    if 'src' in parts[:-1] and parts[0] not in ('packages', 'apps', 'libs', 'services', 'modules', 'crates'):
+        return parts[parts.index('src') + 1]
+    return area_of(path)
 
 
 def slug(name, taken):
@@ -151,6 +168,7 @@ def draft(raw):
         for folder, members in group_files(files).items():
             fns = []
             for f in members:
+                moved = {m['name']: m for m in f.get('moved', [])}
                 for name in f['added'] + f['touched']:
                     changed = name in f['touched']
                     unique = name if name not in seen else f'{name} (#{pr["n"]})'
@@ -158,12 +176,20 @@ def draft(raw):
                         continue
                     seen.add(unique)
                     file = PurePosixPath(f['path']).name
-                    fns.append({
-                        'name': unique, 'why': tail(f'changed · {file}' if changed else file, 50),
+                    move = moved.get(name)
+                    same = bool(move and move['same'])
+                    how = 'changed' if changed else 'moved' if same else 'moved, changed' if move else ''
+                    fn = {
+                        'name': unique, 'why': tail(f'{how} · {file}' if how else file, 50),
                         # Key: a new exported name that the description of the PR talks about.
-                        'key': not changed and name in f['exported'] and mentioned(name, text),
-                        'kind': 's', 'cat': cat_id.get(area_of(f['path']), other),
-                    })
+                        'key': not changed and not move and name in f['exported'] and mentioned(name, text),
+                        'kind': 's', 'cat': cat_id.get(area_of(f['path']), other), 'ext': ext_of(f['path'])[:40],
+                        'type': 'guard' if name in f.get('guards', []) else 'util' if name in f.get('small', []) else 'logic',
+                        'file': f['path'],
+                    }
+                    if move:
+                        fn['moved'] = {'from': move['from'], 'to': f['path'], **({} if same else {'changed': True})}
+                    fns.append(fn)
                     all_fns.append((unique, pr['n']))
             if fns:
                 groups.append({'name': folder, 'fns': fns})
