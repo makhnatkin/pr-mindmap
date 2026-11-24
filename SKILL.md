@@ -66,10 +66,23 @@ Levels: root → stacks → PRs → groups → functions. Read `example/banner.j
     plain UI); `"u"` unique — logic specific to this project.
   - Names are unique across the map; when two PRs touch the same name, add a short suffix: `SettingsFields (alignment)`.
 - **Colors** (`cats`, 3–10, legend order): kinds of work across the whole map (Markdown, schema, commands, cursor and
-  keys, guards, text input, DOM, UI, upload, model…). `desc` explains the color in one sentence:
-  "Functions that work with …". Every function gets exactly one color.
+  keys, guards, text input, DOM, UI, upload, model…). Follow **Remember topic colors** below. `desc` explains the
+  category in one sentence. Every function gets exactly one category via `cat`.
 - **Similar** (`sims`): groups of 2+ functions that do the same job for different parts (the `*Values` of each part,
   the `*ParserSpecs`, the Backspace/Delete selectors…). Label says what they share. Only real look-alikes.
+
+### Remember topic colors
+
+Read `~/.local/state/pr-mindmap/topic-colors.json` before choosing the map's categories. It is a local JSON object
+keyed by stable category IDs, with entries of the form `"md": {"name": "Markdown", "colors": ["#0b8276", "#3ccfbf"]}`.
+Create the directory and start with an empty JSON object if the file is missing.
+
+- Match topics by meaning. Reuse the saved ID and both colors when a topic recurs, even if the legend order or
+  the map language changes. Translate the map's `name` and `desc` as needed.
+- For a new topic, choose a stable ID and a distinct pair of readable `#RRGGBB` colors, light skin first and dark
+  skin second. Merge the new entry into the latest registry, preserving all previous assignments.
+- Copy each category's `colors` pair into its entry in `data.json`. The builder embeds both colors in the HTML
+  and the published Artifact. Both outputs render independently of the local registry.
 
 ## 3. Build and check
 

@@ -30,7 +30,8 @@ data.json:
       ]}]
     }]
   }],
-  "cats": [{"id": "cmd", "name": "Commands", "desc": "Functions that ..."}],     # 1-10 colors, in legend order
+  "cats": [{"id": "cmd", "name": "Commands", "desc": "Functions that ...",
+            "colors": ["#cc4a12", "#ff8a4c"]}],   # 1-10 categories, optional light/dark hex colors
   "sims": [{"id": "values", "label": "...", "members": ["fnA", "fnB"]}]          # groups of very similar functions
 }
 Function names must be unique across the map: add a short suffix in parentheses when two PRs touch the same name.
@@ -49,9 +50,10 @@ HERE = Path(__file__).resolve().parent
 LIMITS = {'root': 150, 'stack': 150, 'pr': 200, 'why': 50}
 PR_STATES = ('open', 'draft', 'merged', 'closed')
 CAT_ID = re.compile(r'^[a-z][a-z0-9-]*$')
+CAT_COLOR = re.compile(r'#[0-9a-fA-F]{6}')
 STACK_GH = re.compile(r'\bstack\s+#?(\d+)', re.I)
 PR_URL = re.compile(r'^(https://github\.com/[^/]+/[^/]+)/pull/\d+')
-# Light and dark values of the category colors, in legend order.
+# Default light and dark category colors for maps without explicit colors.
 PALETTE = [
     ('#6d4fe0', '#ab98ff'), ('#0b8276', '#3ccfbf'), ('#2563d9', '#7aa7ff'), ('#cc4a12', '#ff8a4c'),
     ('#9a6b00', '#f2c14e'), ('#c2255c', '#ff6b9a'), ('#4f8a10', '#94d82d'), ('#0d8aa0', '#4dd4ea'),
@@ -96,6 +98,12 @@ def _check(data):
         errors.append(f'cats: {len(ids)}, expected 1-{len(PALETTE)}')
     errors += [f'cat id {i!r}: lowercase Latin letters, digits and hyphens, starting with a letter' for i in ids if not CAT_ID.match(i)]
     errors += [f'duplicate cat id {i!r}' for i, n in Counter(ids).items() if n > 1]
+    for cat in data['cats']:
+        if 'colors' in cat:
+            colors = cat['colors']
+            if not (isinstance(colors, list) and len(colors) == 2
+                    and all(isinstance(color, str) and CAT_COLOR.fullmatch(color) for color in colors)):
+                errors.append(f"cat {cat['id']!r}: colors must contain two #RRGGBB values, light then dark")
     if len(data['root']['essence']) > LIMITS['root']:
         errors.append(f'root essence: {len(data["root"]["essence"])} > {LIMITS["root"]}')
     if not data['stacks']:
@@ -210,11 +218,15 @@ def markdown(data):
     return '\n'.join(out) + '\n'
 
 
+def category_colors(data):
+    return [cat.get('colors', PALETTE[i]) for i, cat in enumerate(data['cats'])]
+
+
 def data_script(data, palette=False):
     """The data as a script; the bare template also needs the colors, which a built page has in its CSS."""
     full = with_sims(data)
     if palette:
-        full['palette'] = PALETTE[:len(data['cats'])]
+        full['palette'] = category_colors(data)
     return 'window.PR_MAP_DATA = ' + json.dumps(full, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/') + ';'
 
 
@@ -223,10 +235,13 @@ def page(data):
     tpl = (HERE / 'template.html').read_text(encoding='utf-8')
     if DATA_TAG not in tpl:
         raise SystemExit('template.html has no data tag: ' + DATA_TAG)
-    light = '\n'.join(f'  --c-{c["id"]}: {PALETTE[i][0]};' for i, c in enumerate(data['cats']))
-    dark = '\n'.join(f'  --c-{c["id"]}: {PALETTE[i][1]};' for i, c in enumerate(data['cats']))
+    colors_by_cat = zip(data['cats'], category_colors(data))
+    light, dark = [], []
+    for cat, (light_color, dark_color) in colors_by_cat:
+        light.append(f'  --c-{cat["id"]}: {light_color};')
+        dark.append(f'  --c-{cat["id"]}: {dark_color};')
     return (tpl.replace('/*TITLE*/', html.escape(data['title']))
-            .replace('/*CAT_LIGHT*/', light).replace('/*CAT_DARK*/', dark)
+            .replace('/*CAT_LIGHT*/', '\n'.join(light)).replace('/*CAT_DARK*/', '\n'.join(dark))
             .replace(DATA_TAG, f'<script>{data_script(data)}</script>'))
 
 

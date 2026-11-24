@@ -141,6 +141,34 @@ class Build(unittest.TestCase):
         self.assertEqual([p.name for p in self.dir.iterdir()], ['map-data.js'])
         self.assertIn('"palette":', (self.dir / 'map-data.js').read_text(encoding='utf-8'))
 
+    def test_explicit_colors_stay_with_the_category(self):
+        data = example()
+        cat = data['cats'][0]
+        cat['colors'] = ['#2468ac', '#8aceef']
+        data['cats'].reverse()
+        data_path = self.dir / 'data.json'
+        data_path.write_text(json.dumps(data), encoding='utf-8')
+
+        build.build(data_path, log=lambda *_: None)
+        for path in (self.dir / 'map.html', self.dir / 'map.artifact.html'):
+            page = path.read_text(encoding='utf-8')
+            for color in cat['colors']:
+                self.assertIn(f'--c-{cat["id"]}: {color};', page)
+
+        data_js = self.dir / 'map-data.js'
+        build.build(data_path, data_js=data_js, log=lambda *_: None)
+        script = data_js.read_text(encoding='utf-8').strip()
+        embedded = json.loads(script.removeprefix('window.PR_MAP_DATA = ').removesuffix(';'))
+        self.assertEqual(embedded['palette'][0], list(build.PALETTE[0]))
+        self.assertEqual(embedded['palette'][-1], cat['colors'])
+
+    def test_invalid_category_colors(self):
+        data = example()
+        for colors in (None, '#2468ac', ['#2468ac'], ['#2468ac', 'red;']):
+            with self.subTest(colors=colors):
+                data['cats'][0]['colors'] = colors
+                self.assertIn('colors must contain two #RRGGBB values', '\n'.join(build.check(data)))
+
     def test_invalid_data_stops_the_build(self):
         data = example()
         data['cats'][0]['id'] = 'Bad Id'
