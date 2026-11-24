@@ -261,6 +261,52 @@
      "state": "draft",
      "title": "Shared settings windows and copying the banner as Markdown",
      "essence": "The settings dialog, row and switch are shared by all windows; popovers close on Tab and ignore their own anchor; Copy copies the banner Markdown.",
+     "path": [
+      {
+       "fn": "tabbable",
+       "note": "Which controls of a window take the focus: the Tab rule of the next step counts on this list."
+      },
+      {
+       "fn": "closeOnTabOut",
+       "note": "Tab past the last control and Shift+Tab before the first one close the window."
+      },
+      {
+       "fn": "nodeAnchor",
+       "note": "The window takes its place on the page from the banner block."
+      },
+      {
+       "fn": "closeUnlessAnchor",
+       "note": "A click on the button that opened the window must not close it and open it again."
+      },
+      {
+       "fn": "SettingsRow",
+       "note": "The label is tied to its control, so a screen reader reads them together."
+      },
+      {
+       "fn": "SettingsSwitch",
+       "note": "A row of the previous step with a switch: only the control differs."
+      },
+      {
+       "fn": "headerAt",
+       "note": "Finds the banner at a position; outside a banner there is none."
+      },
+      {
+       "fn": "headerMarkup",
+       "note": "The Markdown that Copy gives must be the same text the document saves."
+      },
+      {
+       "fn": "HeaderCopyButton",
+       "note": "Copies the Markdown of the previous step; check what the user sees after a click."
+      },
+      {
+       "fn": "HeaderToolbar",
+       "note": "The toolbar opens the shared windows instead of windows of its own."
+      },
+      {
+       "fn": "SettingsDialog",
+       "note": "The shared window: the rows and the Tab and click rules of the earlier steps meet here."
+      }
+     ],
      "groups": [
       {
        "name": "Settings windows",
@@ -284,7 +330,8 @@
            "url": "https://github.com/gravity-ui/markdown-editor/blob/978723588a9cf3cdc7a865e251f0c9e6d87b4fb3/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BannerSettings.tsx#L66"
           }
          ],
-         "code": "https://github.com/gravity-ui/markdown-editor/blob/d475f5ad018ba7f7f8822cf01046dc08cd597e32/packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsDialog.tsx#L31"
+         "code": "https://github.com/gravity-ui/markdown-editor/blob/d475f5ad018ba7f7f8822cf01046dc08cd597e32/packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsDialog.tsx#L31",
+         "main": true
         },
         {
          "name": "SettingsRow",

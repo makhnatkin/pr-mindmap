@@ -25,18 +25,20 @@ data.json:
       "n": 1475, "url": "https://github.com/o/r/pull/1475", "branch": "feat/x",
       "state": "open | draft | merged | closed",                         # optional, the icon of the PR
       "title": "...", "essence": "...",                                   # essence <= 200
+      "path": [{"fn": "uniqueName", "note": "<= 150 chars"}],             # optional: the review order, see below
       "groups": [{"name": "...", "fns": [
         {"name": "uniqueName", "why": "<= 50 chars", "key": true, "kind": "s|u", "cat": "<cat id>",
          "type": "logic | guard | util",   # real work, a type guard, or a small utility
-         "about": "<= 400 chars",          # what it is for, in plain words for a reader who does not write code
+         "about": "<= 500 chars",          # what it is for, in plain words for a reader who does not write code
          "without": "<= 200 chars",        # a sentence on whether the product can do without it, and the risk
          "ext": "YfmTabs",                 # <= 40 chars: its plugin or extension, else its package or module
          "file": "src/a.ts", "line": 12,   # the declaration at the head of the PR (uses.py)
          "code": "https://github.com/…",   # the declaration in the default branch, when the function exists there
          "uses": [{"in": "Caller", "pr": 1480, "url": "https://github.com/…"}],   # the places that use it (uses.py);
                                            # "pr": null for a place the default branch has already
-         "moved": {"from": "src/b.ts", "to": "src/a.ts", "changed": true}}
+         "moved": {"from": "src/b.ts", "to": "src/a.ts", "changed": true},
                                            # optional: moved from another file; an unchanged move needs nothing else
+         "main": true}                     # optional: a function the PR is built around
       ]}]
     }]
   }],
@@ -47,6 +49,10 @@ data.json:
 }
 Function names must be unique across the map: add a short suffix in parentheses when two PRs touch the same name.
 The fields after `cat` are optional for the builder; the `ok` line counts the functions that have them.
+A function needs the map functions that name it in their `uses`. The main functions of a PR are the ones with
+`main`, else its key functions that no function of the PR needs. `path` lists every function of the PR but the
+unchanged moves once, with what to look at on that step; without it the review goes from the functions that need
+nothing in the PR to the ones that need them, the main ones last.
 A category id becomes a part of a CSS name: lowercase Latin letters, digits and hyphens, starting with a letter.
 """
 import argparse
@@ -60,7 +66,7 @@ from collections import Counter
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-LIMITS = {'root': 150, 'stack': 150, 'pr': 200, 'why': 50, 'about': 500, 'without': 200, 'ext': 40}
+LIMITS = {'root': 150, 'stack': 150, 'pr': 200, 'why': 50, 'about': 500, 'without': 200, 'ext': 40, 'note': 150}
 TYPES = ('logic', 'guard', 'util')
 PR_STATES = ('open', 'draft', 'merged', 'closed')
 CAT_ID = re.compile(r'^[a-z][a-z0-9-]*$')
@@ -136,9 +142,38 @@ def detail_problems(f):
             isinstance(u, dict) and is_text(u.get('in')) and (u.get('pr') is None or is_count(u['pr'], 1))
             and str(u.get('url', '')).startswith('http') for u in uses)):
         yield 'uses: expected a list of {"in": name, "pr": number or null, "url": link}'
+    if not isinstance(f.get('main', False), bool):
+        yield f'main {f["main"]!r}, expected true or false'
+    elif f.get('main') and unchanged_move(f):
+        yield 'main on an unchanged move'
     if 'moved' in f and not (isinstance(f['moved'], dict) and isinstance(f['moved'].get('changed', False), bool)
                              and is_text(f['moved'].get('from')) and is_text(f['moved'].get('to'))):
         yield f'moved {f["moved"]!r}, expected {{"from": path, "to": path, "changed": true | false}}'
+
+
+def steps_of(pr):
+    """The functions of a PR that a review goes through: all but the unchanged moves."""
+    return [f for g in pr['groups'] for f in g['fns'] if not unchanged_move(f)]
+
+
+def path_problems(pr):
+    if 'path' not in pr:
+        return
+    path = pr['path']
+    if not (isinstance(path, list) and all(isinstance(step, dict) and is_text(step.get('fn')) for step in path)):
+        yield 'expected a list of {"fn": name, "note": text}'
+        return
+    for step in path:
+        note = step.get('note', '')
+        if not isinstance(note, str):
+            yield f'{step["fn"]}: note {note!r} is not text'
+        elif len(note) > LIMITS['note']:
+            yield f'{step["fn"]}: note {len(note)} > {LIMITS["note"]}'
+    listed = Counter(step['fn'] for step in path)
+    names = [f['name'] for f in steps_of(pr)]
+    yield from (f'{name} is not a function of the PR to review' for name in listed if name not in names)
+    yield from (f'{name} is listed {n} times' for name, n in listed.items() if n > 1)
+    yield from (f'{name} is missing' for name in names if name not in listed)
 
 
 def check(data):
@@ -184,6 +219,7 @@ def _check(data):
                 errors.append(f'#{pr["n"]}: url {pr["url"]!r} is not a link')
             if not pr['groups']:
                 errors.append(f'#{pr["n"]}: no groups')
+            errors += [f'#{pr["n"]}: path: {problem}' for problem in path_problems(pr)]
             for g in pr['groups']:
                 if not g['fns']:
                     errors.append(f'#{pr["n"]}: group {g["name"]!r} is empty')
@@ -213,7 +249,60 @@ def _check(data):
 def warnings(data):
     """What does not stop the build but is probably a mistake."""
     used = {f['cat'] for f in functions(data)}
-    return [f'cat {c["id"]!r} has no functions' for c in data['cats'] if c['id'] not in used]
+    out = [f'cat {c["id"]!r} has no functions' for c in data['cats'] if c['id'] not in used]
+    needs = needs_of(data)
+    for st in data['stacks']:
+        for pr in st['prs']:
+            seen = set()
+            for step in pr.get('path', []):
+                later = [name for name in needs.get(step['fn'], []) if name in {f['name'] for f in steps_of(pr)} - seen]
+                if later:
+                    out.append(f'#{pr["n"]}: path: {step["fn"]} comes before {", ".join(later)} it needs')
+                seen.add(step['fn'])
+    return out
+
+
+def needs_of(data):
+    """Name → the map functions it needs: the ones whose `uses` name it."""
+    names = {f['name'] for f in functions(data)}
+    needs = {}
+    for f in functions(data):
+        for u in f['uses'] if isinstance(f.get('uses'), list) else []:
+            if u['in'] in names and u['in'] != f['name']:
+                found = needs.setdefault(u['in'], [])
+                if f['name'] not in found:
+                    found.append(f['name'])
+    return needs
+
+
+def main_of(pr, needs):
+    """The functions the PR is built around: the ones marked `main`, else its key functions no function of it needs."""
+    fns = steps_of(pr)
+    marked = {f['name'] for f in fns if f.get('main')}
+    if marked:
+        return marked
+    needed = {name for f in fns for name in needs.get(f['name'], [])}
+    return {f['name'] for f in fns if f['key'] and f['name'] not in needed}
+
+
+def review_order(pr, needs):
+    """The steps of a review of the PR: its `path`, else each function after the ones of the PR it needs, in map
+    order, the main ones as late as they can go."""
+    if 'path' in pr:
+        return [{'fn': step['fn'], 'note': step.get('note', '')} for step in pr['path']]
+    main = main_of(pr, needs)
+    rank = {f['name']: i for i, f in enumerate(steps_of(pr))}
+    wait = {name: {other for other in needs.get(name, []) if other in rank and other != name} for name in rank}
+    order = []
+    while wait:
+        # Functions that need each other leave none ready: the one that waits for the fewest goes first.
+        ready = [name for name, rest in wait.items() if not rest] or list(wait)
+        step = min(ready, key=lambda name: (name in main, len(wait[name]), rank[name]))
+        order.append({'fn': step, 'note': ''})
+        del wait[step]
+        for rest in wait.values():
+            rest.discard(step)
+    return order
 
 
 def ref_of(st):
@@ -235,29 +324,36 @@ def diff_link(pr, f):
     return f'{pr["url"]}/files#diff-{hashlib.sha256(f["file"].encode()).hexdigest()}{line}'
 
 
-def with_sims(data):
-    """A copy of the data in which each function names its similarity groups and its place in the diff of its PR,
-    and each stack its GitHub page."""
+def page_data(data):
+    """A copy of the data for the page: each function with its similarity groups, its place in the diff of its PR,
+    the functions it needs and its `main`; each PR with its review order; each stack with its GitHub page."""
     of = {}
     for s in data.get('sims', []):
         for member in s['members']:
             of.setdefault(member, []).append(s['id'])
-    return {**data, 'sims': data.get('sims', []), 'stacks': [{**st, 'ref': ref_of(st), 'prs': [{**pr, 'groups': [
-        {**g, 'fns': [{**f, 'sims': of.get(f['name'], []), 'diff': diff_link(pr, f)} for f in g['fns']]}
-        for g in pr['groups']]} for pr in st['prs']]} for st in data['stacks']]}
+    needs = needs_of(data)
+
+    def pr_data(pr):
+        main = main_of(pr, needs)
+        return {**pr, 'order': review_order(pr, needs), 'groups': [{**g, 'fns': [
+            {**f, 'sims': of.get(f['name'], []), 'diff': diff_link(pr, f), 'needs': needs.get(f['name'], []),
+             'main': f['name'] in main} for f in g['fns']]} for g in pr['groups']]}
+
+    return {**data, 'sims': data.get('sims', []),
+            'stacks': [{**st, 'ref': ref_of(st), 'prs': [pr_data(pr) for pr in st['prs']]} for st in data['stacks']]}
 
 
 MD_LABELS = {
     'en': {'essence': 'Essence', 'stack': 'Stack essence', 'pr': 'PR essence', 'key': 'Key', 'split': 'Standard / unique',
-           'legend': 'Legend: ★ key · `std` usual pattern · `uniq` own logic · [color] kind of work · ≈ similar.',
+           'legend': 'Legend: ★ key · ◆ main · `std` usual pattern · `uniq` own logic · [color] kind of work · ≈ similar.',
            'colors': 'Colors', 'sims': 'Similar functions', 's': 'std', 'u': 'uniq',
            'uses': 'Used in', 'moved': 'moved', 'reworked': 'Moved and changed',
-           'logic': 'logic', 'guard': 'type guard', 'util': 'utility'},
+           'logic': 'logic', 'guard': 'type guard', 'util': 'utility', 'order': 'Review order'},
     'ru': {'essence': 'Суть', 'stack': 'Суть стека', 'pr': 'Суть PR', 'key': 'Ключевое', 'split': 'Стандартное / уникальное',
-           'legend': 'Обозначения: ★ ключевая · `станд.` стандартный приём · `уник.` своя логика · [цвет] смысл · ≈ похожие.',
+           'legend': 'Обозначения: ★ ключевая · ◆ главная · `станд.` стандартный приём · `уник.` своя логика · [цвет] смысл · ≈ похожие.',
            'colors': 'Цвета', 'sims': 'Похожие функции', 's': 'станд.', 'u': 'уник.',
            'uses': 'Используется', 'moved': 'перенос', 'reworked': 'Перенесена и изменена',
-           'logic': 'логика', 'guard': 'проверка типа', 'util': 'утилита'},
+           'logic': 'логика', 'guard': 'проверка типа', 'util': 'утилита', 'order': 'Порядок анализа'},
 }
 
 
@@ -285,6 +381,7 @@ def markdown(data):
     say = MD_LABELS['ru' if data.get('lang') == 'ru' else 'en']
     cat_name = {c['id']: c['name'] for c in data['cats']}
     sim_names = {m for s in data.get('sims', []) for m in s['members']}
+    needs = needs_of(data)
     out = [f'# {data["title"]}', '', f'**{say["essence"]}:** {data["root"]["essence"]}', '', say['legend'], '',
            f'## {say["colors"]}', '']
     out += [f'- **{c["name"]}** — {c["desc"]}' for c in data['cats']]
@@ -307,6 +404,12 @@ def markdown(data):
                 out.append(f'- **{g["name"]}**')
                 for f in g['fns']:
                     out += fn_lines(f, say, cat_name, sim_names, data.get('default', 'main'))
+            by_name, main = {f['name']: f for f in fns}, main_of(pr, needs)
+            out += ['', f'**{say["order"]}:**', '']
+            for i, step in enumerate(review_order(pr, needs), 1):
+                f = by_name[step['fn']]
+                where = f' · `{f["file"]}`' if f.get('file') else ''
+                out.append(f'{i}. `{f["name"]}`{" ◆" if f["name"] in main else ""} — {step["note"] or f["why"]}{where}')
     return '\n'.join(out) + '\n'
 
 
@@ -316,7 +419,7 @@ def category_colors(data):
 
 def data_script(data, palette=False):
     """The data as a script; the bare template also needs the colors, which a built page has in its CSS."""
-    full = with_sims(data)
+    full = page_data(data)
     if palette:
         full['palette'] = category_colors(data)
     return 'window.PR_MAP_DATA = ' + json.dumps(full, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/') + ';'
@@ -364,7 +467,8 @@ def build(data_path, html_path=None, artifact=None, md=None, data_js=None, log=p
         log(f'warning: {line}')
     prs = sum(len(st['prs']) for st in data['stacks'])
     fns = functions(data)
-    log(f'ok: {prs} PRs, {len(fns)} functions, details {sum(map(described, fns))}/{len(fns)}, '
+    paths = sum('path' in pr for st in data['stacks'] for pr in st['prs'])
+    log(f'ok: {prs} PRs, {len(fns)} functions, details {sum(map(described, fns))}/{len(fns)}, paths {paths}/{prs}, '
         f'{len(data["cats"])} colors, {len(data.get("sims", []))} similarity groups → {", ".join(written)}')
     return Path(html_path) if html_path else None
 

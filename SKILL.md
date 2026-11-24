@@ -1,6 +1,6 @@
 ---
 name: pr-mindmap
-description: Build an interactive mind map of a GitHub PR or a stack of PRs from its link — the essence of the stack and of each PR, the functions grouped by meaning with a ≤50-char purpose, and on a click a plain-language explanation a manager understands, how many places use the function, its plugin or extension and what happens without it; moved functions marked from → to; key/standard/unique marks, colors by kind of work, similar-function links, search, pinch zoom, depth and density controls, filters and foldable chrome — published as an HTML artifact plus a Markdown list. Use when the user gives one or more PR or stack links and asks for a mind map, a map, an overview or a function breakdown of the PR(s) ("ммап", "построй майнд мап пр-а", "карта PR", "карта стека", "mind map this PR").
+description: Build an interactive mind map of a GitHub PR or a stack of PRs from its link — the essence of the stack and of each PR, the functions grouped by meaning with a ≤50-char purpose, and on a click a plain-language explanation a manager understands, how many places use the function, its plugin or extension and what happens without it; moved functions marked from → to; key/standard/unique marks, colors by kind of work, similar-function links, a review order through each PR from the helpers to the main function, search, pinch zoom, depth and density controls, filters and foldable chrome — published as an HTML artifact plus a Markdown list. Use when the user gives one or more PR or stack links and asks for a mind map, a map, an overview or a function breakdown of the PR(s) ("ммап", "построй майнд мап пр-а", "карта PR", "карта стека", "mind map this PR").
 argument-hint: <PR or stack URL> [more URLs] [only this PR]
 context: fork
 agent: general-purpose
@@ -93,6 +93,15 @@ Levels: root → stacks → PRs → groups → functions. Read `example/banner.j
     `why`, `about`, `without` or `ext`; the card shows the old and the new path, as GitHub shows a renamed file. A
     changed one is described as usual, and `about` says what changed. A file renamed without changes shows no
     names: its functions stay out of the map.
+- **Review order**: the page goes through the functions of one PR with the R button, from the ones that need nothing
+  in the PR to the main ones; a step shows `why`, its note and the map functions it relies on and is needed for.
+  A function needs the map functions that name it in their `uses`, so a wrong link is fixed in `uses`.
+  - `main: true` on the 1–2 functions the PR is built around, from the key ones. Without it the builder takes the
+    key functions that no function of the PR needs.
+  - `path` of a PR card, `[{"fn", "note"}]`, is written in step 3: every function of the card but the unchanged
+    moves, once. Start from the order that `prmap build` writes to `map.md` and move a step only when the code
+    reads better otherwise. `note` ≤150 chars tells a reviewer what to check on that step, in the map language,
+    without repeating `why`.
 - **Colors** (`cats`, 3–10, legend order): kinds of work across the whole map (Markdown, schema, commands, cursor and
   keys, guards, text input, DOM, UI, upload, model…). Follow **Remember topic colors** below. `desc` explains the
   category in one sentence. Every function gets exactly one category via `cat`.
@@ -120,8 +129,10 @@ Create the directory and start with an empty JSON object if the file is missing.
 ```
 
 It writes `map.html`, `map.artifact.html` and `map.md` next to the data. Fix every error it prints (lengths, unknown
-colors, duplicate names) and build again until it prints `ok` with `details N/N`, every function described; a warning
-about a color without functions means the color should go.
+colors, duplicate names). Then write `main` and `path` from the «Review order» of each PR in `map.md` and build again
+until it prints `ok` with `details N/N` and `paths N/N`: every function described, every PR with its path. A warning
+about a color without functions means the color should go; a warning about a step that comes before a function it
+needs means the step moves or `uses` is wrong.
 If Google Chrome is installed, take one look:
 `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --hide-scrollbars --user-data-dir=<work>/chrome --window-size=1600,1000 --virtual-time-budget=6000 --screenshot=<work>/map.png file://<work>/map.html`
 and read the PNG once. Fix only what is visibly broken; no second look.
@@ -135,5 +146,5 @@ leave them in the work folder.
 Final report, short, in the user's language:
 - the artifact link and the paths of `map.html`, `map.md`, `data.json`;
 - the PRs covered and how they were grouped into stacks;
-- counts: PRs, functions, key, standard/unique, moved, colors, similarity groups;
+- counts: PRs, functions, key, main, standard/unique, moved, colors, similarity groups;
 - anything chosen without asking (chain included or not, a lone PR split into areas).

@@ -182,7 +182,7 @@ class Build(unittest.TestCase):
     def test_input_is_not_changed(self):
         data = example()
         before = copy.deepcopy(data)
-        build.with_sims(data)
+        build.page_data(data)
         build.markdown(data)
         self.assertEqual(data, before)
 
@@ -596,6 +596,85 @@ class Uses(unittest.TestCase):
         chains = uses.chains(prs)
         self.assertEqual(chains[2], [1, 2, 3])
         self.assertEqual(chains[9], [9])
+
+
+def order_data(path=None):
+    """A PR of four functions: Dialog needs closeOnTab and Row, closeOnTab needs tabbable; one more is only moved."""
+    def fn(name, *users, **extra):
+        uses = [{'in': user, 'pr': 7, 'url': f'https://github.com/o/r/blob/x/a.ts#L{i}'} for i, user in enumerate(users, 1)]
+        return {'name': name, 'why': f'why {name}', 'key': False, 'kind': 's', 'cat': 'ui', 'uses': uses, **extra}
+
+    pr = {'n': 7, 'url': 'https://github.com/o/r/pull/7', 'title': 'Dialog', 'essence': 'A dialog.', 'groups': [{'name': 'UI', 'fns': [
+        fn('Dialog', key=True, file='src/Dialog.tsx'), fn('closeOnTab', 'Dialog'), fn('Row', 'Dialog', 'Elsewhere'),
+        fn('tabbable', 'closeOnTab'), fn('moved', why='', moved={'from': 'a.ts', 'to': 'b.ts'})]}]}
+    if path is not None:
+        pr['path'] = path
+    return {'title': 'Map', 'root': {'title': 'Map', 'essence': 'A map.'}, 'cats': [{'id': 'ui', 'name': 'UI', 'desc': 'UI.'}],
+            'stacks': [{'name': 'Dialog', 'gh': 'no stack', 'essence': 'A dialog.', 'prs': [pr]}]}
+
+
+class Order(unittest.TestCase):
+    def pr(self, data):
+        return data['stacks'][0]['prs'][0]
+
+    def test_needs_come_from_the_places_of_use(self):
+        self.assertEqual(build.needs_of(order_data()), {'Dialog': ['closeOnTab', 'Row'], 'closeOnTab': ['tabbable']})
+
+    def test_helpers_go_first_and_the_main_function_last(self):
+        data = order_data()
+        needs = build.needs_of(data)
+        self.assertEqual(build.main_of(self.pr(data), needs), {'Dialog'})
+        self.assertEqual([s['fn'] for s in build.review_order(self.pr(data), needs)], ['Row', 'tabbable', 'closeOnTab', 'Dialog'])
+
+    def test_marked_main_functions_win(self):
+        data = order_data()
+        self.pr(data)['groups'][0]['fns'][2]['main'] = True
+        needs = build.needs_of(data)
+        self.assertEqual(build.main_of(self.pr(data), needs), {'Row'})
+        self.assertEqual([s['fn'] for s in build.review_order(self.pr(data), needs)], ['tabbable', 'closeOnTab', 'Row', 'Dialog'])
+
+    def test_functions_that_need_each_other_still_get_steps(self):
+        data = order_data()
+        self.pr(data)['groups'][0]['fns'][1]['uses'].append({'in': 'tabbable', 'pr': None, 'url': 'https://x'})
+        order = [s['fn'] for s in build.review_order(self.pr(data), build.needs_of(data))]
+        self.assertEqual(order, ['Row', 'closeOnTab', 'tabbable', 'Dialog'])
+
+    def test_path_is_the_order_with_notes(self):
+        path = [{'fn': n, 'note': f'look at {n}'} for n in ('tabbable', 'closeOnTab', 'Row', 'Dialog')]
+        data = order_data(path)
+        self.assertEqual(build.check(data), [])
+        self.assertEqual(build.review_order(self.pr(data), build.needs_of(data)), path)
+        page = build.page_data(data)['stacks'][0]['prs'][0]
+        self.assertEqual(page['order'], path)
+        dialog = page['groups'][0]['fns'][0]
+        self.assertEqual((dialog['needs'], dialog['main']), (['closeOnTab', 'Row'], True))
+
+    def test_path_problems(self):
+        problems = '\n'.join(build.check(order_data([
+            {'fn': 'tabbable'}, {'fn': 'tabbable'}, {'fn': 'Dialog', 'note': 'x' * 151}, {'fn': 'moved'}, {'fn': 'closeOnTab'}])))
+        self.assertIn('#7: path: Dialog: note 151 > 150', problems)
+        self.assertIn('#7: path: moved is not a function of the PR to review', problems)
+        self.assertIn('#7: path: tabbable is listed 2 times', problems)
+        self.assertIn('#7: path: Row is missing', problems)
+        self.assertIn('path: expected a list', '\n'.join(build.check(order_data(['Dialog']))))
+
+    def test_main_problems(self):
+        data = order_data()
+        fns = self.pr(data)['groups'][0]['fns']
+        fns[0]['main'], fns[4]['main'] = 'yes', True
+        problems = '\n'.join(build.check(data))
+        self.assertIn("Dialog: main 'yes'", problems)
+        self.assertIn('moved: main on an unchanged move', problems)
+
+    def test_a_step_before_what_it_needs_is_a_warning(self):
+        data = order_data([{'fn': n} for n in ('Dialog', 'Row', 'tabbable', 'closeOnTab')])
+        self.assertEqual(build.warnings(data), ['#7: path: Dialog comes before closeOnTab, Row it needs'])
+
+    def test_markdown_lists_the_review_order(self):
+        listing = build.markdown(order_data())
+        self.assertIn('**Review order:**\n\n1. `Row` — why Row\n', listing)
+        self.assertIn('4. `Dialog` ◆ — why Dialog · `src/Dialog.tsx`\n', listing)
+        self.assertIn('11. `SettingsDialog` ◆ — The shared window', build.markdown(example()))
 
 
 class Cli(unittest.TestCase):

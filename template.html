@@ -373,6 +373,19 @@ button.chip:hover, a.chip:hover { border-color: var(--ink); }
 .item .ct { font: 500 10.5px var(--font-code); color: var(--muted); }
 .item .num { font: 500 10.5px var(--font-code); color: var(--muted); }
 .item.numbered { grid-template-columns: max-content minmax(0, 1fr) auto; }
+/* The steps of a review as a strip: the current one ringed, a clear one filled, an unclear one dashed. */
+.order-bar { display: flex; flex-wrap: wrap; gap: 3px; }
+.order-bar button { min-width: 22px; height: 22px; padding: 0 5px; border: 1px solid var(--line); border-radius: var(--r-pill); background: transparent; color: var(--muted); font: 600 10.5px/1 var(--font-code); }
+.order-bar button:hover { border-color: var(--edge); color: var(--ink); }
+.order-bar button.ok { border-color: transparent; background: color-mix(in srgb, var(--c) 22%, transparent); color: var(--ink); }
+.order-bar button.unclear { border-style: dashed; border-color: var(--ink); color: var(--ink); }
+.order-bar button.main { border-radius: 4px; }
+.order-bar button[aria-current="step"] { border-color: var(--sel); box-shadow: inset 0 0 0 1px var(--sel); color: var(--ink); }
+.order-nav { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 2px; }
+.act { height: 28px; padding: 0 10px; border: 1px solid var(--line); border-radius: var(--r-ctl); background: transparent; color: var(--ink); font: 500 12px var(--font-ui); }
+.act:hover { background: var(--soft); }
+.act.go { margin-left: auto; border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
+.insp-body textarea.ask { width: 100%; min-height: 72px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--r-ctl); background: transparent; color: var(--ink); font: 12px/1.45 var(--font-ui); resize: vertical; }
 
 .legend { grid-area: foot; align-self: end; justify-self: start; display: flex; align-items: flex-end; gap: 2px; max-width: 100%; padding: 4px; }
 .cats { display: flex; flex-wrap: wrap; gap: 1px; min-width: 0; }
@@ -406,6 +419,8 @@ button.chip:hover, a.chip:hover { border-color: var(--ink); }
 .edges path { fill: none; stroke: var(--edge); stroke-width: var(--edge-w); }
 .edges path.on { stroke: var(--sel); stroke-width: calc(var(--edge-w) + .5px); }
 .links path { fill: none; stroke: var(--c); stroke-width: 1.5; stroke-dasharray: 2 5; stroke-linecap: round; }
+.links path.dep { stroke-dasharray: none; }
+.links path.tip { fill: var(--c); stroke: none; }
 .mind { position: relative; display: flex; align-items: center; width: max-content; padding: var(--pad); }
 .mind ul { list-style: none; margin: 0; padding: 0; padding-inline-start: var(--gap); display: flex; flex-direction: column; justify-content: center; gap: var(--gap-group); }
 .mind li { display: flex; align-items: center; }
@@ -505,6 +520,13 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
 .fn.is-dim { color: color-mix(in srgb, var(--ink) 30%, transparent); }
 .fn.is-dim .why, .fn.is-dim .kind, .fn.is-dim .star { color: inherit; }
 .fn.is-dim .dot { background: color-mix(in srgb, var(--faint) 55%, transparent); }
+/* In the review order the step of a function stands in place of its dot: filled once it is clear, square for a main one. */
+.fn .step { display: none; grid-column: 1; grid-row: 1; place-items: center; min-width: 16px; height: 16px; padding: 0 3px; border-radius: var(--r-pill); box-shadow: inset 0 0 0 1.5px var(--c); color: var(--c); font: 700 9.5px/1 var(--font-code); }
+.fn.in-order { grid-template-columns: 16px minmax(0, 1fr) auto; }
+.fn.in-order .dot { display: none; }
+.fn.in-order .step { display: inline-grid; }
+.fn .step.ok { background: var(--c); color: var(--surface); }
+.fn .step.main { border-radius: 4px; }
 
 /* ---------- Skin menu ---------- */
 [aria-expanded="true"][data-tip]::after { display: none; }
@@ -694,6 +716,7 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
 <symbol id="i-guard" viewBox="0 0 24 24"><path d="M12 3.5 5 6.2v5.3c0 4.3 2.9 7.6 7 9 4.1-1.4 7-4.7 7-9V6.2Z"/><path d="m9 12 2.2 2.2 3.8-4"/></symbol>
 <symbol id="i-util" viewBox="0 0 24 24"><path d="M15 4.2a4.5 4.5 0 0 0-5.5 5.9l-5.3 5.3a1.8 1.8 0 0 0 2.5 2.5l5.3-5.3a4.5 4.5 0 0 0 5.9-5.5l-2.7 2.7-2.6-.7-.7-2.6Z"/></symbol>
 <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+<symbol id="i-steps" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><path d="M9 6h6a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h6"/></symbol>
 <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M9.5 4.5v15"/></symbol>
 <!-- Octicons of the GitHub skin (primer/octicons, MIT). -->
 <symbol id="o-stack" viewBox="0 0 16 16"><path d="M7.122.392a1.75 1.75 0 0 1 1.756 0l5.003 2.902c.83.481.83 1.68 0 2.162L8.878 8.358a1.75 1.75 0 0 1-1.756 0L2.119 5.456a1.251 1.251 0 0 1 0-2.162ZM8.125 1.69a.248.248 0 0 0-.25 0l-4.63 2.685 4.63 2.685a.248.248 0 0 0 .25 0l4.63-2.685ZM1.601 7.789a.75.75 0 0 1 1.025-.273l5.249 3.044a.248.248 0 0 0 .25 0l5.249-3.044a.75.75 0 0 1 .752 1.298l-5.248 3.044a1.75 1.75 0 0 1-1.756 0L1.874 8.814A.75.75 0 0 1 1.6 7.789Zm0 3.5a.75.75 0 0 1 1.025-.273l5.249 3.044a.248.248 0 0 0 .25 0l5.249-3.044a.75.75 0 0 1 .752 1.298l-5.248 3.044a1.75 1.75 0 0 1-1.756 0l-5.248-3.044a.75.75 0 0 1-.273-1.025Z"/></symbol>
@@ -723,6 +746,7 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
       </div>
       <span class="grow"></span>
       <div class="tools">
+        <button class="ib" id="order" aria-pressed="false" aria-label="Review order" data-tip="Review order · R"><svg class="ic" aria-hidden="true"><use href="#i-steps"/></svg></button>
         <button class="ib" id="only-key" aria-pressed="false" aria-label="Key functions only" data-tip="Key functions only ★ · K"><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg></button>
         <button class="ib" id="filter" aria-pressed="false" aria-label="Hide other colors" data-tip="Hide other colors · F"><svg class="ic" aria-hidden="true"><use href="#i-filter"/></svg></button>
         <span class="sep"></span>
@@ -750,6 +774,8 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
         <h2 class="micro">Legend</h2>
         <dl>
           <dt>★</dt><dd>key function; its dot has a ring</dd>
+          <dt>◆</dt><dd>main function of a PR: the last step of its review</dd>
+          <dt>→</dt><dd>from a function to the ones that need it</dd>
           <dt>UNIQ</dt><dd>logic of the project itself</dd>
           <dt>STD</dt><dd>a usual pattern of the framework</dd>
           <dt>≈</dt><dd>similar to the selected function</dd>
@@ -766,6 +792,7 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
         <h2 class="micro">Keys</h2>
         <dl>
           <dt>/</dt><dd>search</dd>
+          <dt>R · , · .</dt><dd>review order · previous · next step</dd>
           <dt>K · F</dt><dd>key only · hide other colors</dd>
           <dt>E · [ · ]</dt><dd>expand or collapse all · tree depth</dd>
           <dt>D · L</dt><dd>density · layout</dd>
@@ -833,6 +860,11 @@ const MARKUP_RU = {
   "About the map": "О карте",
   "Function or PR": "Функция или PR",
   "Find a function or PR": "Найти функцию или PR",
+  "Review order": "Порядок анализа",
+  "Review order · R": "Порядок анализа · R",
+  "main function of a PR: the last step of its review": "главная функция PR: последний шаг разбора",
+  "from a function to the ones that need it": "от функции к тем, что на неё опираются",
+  "review order · previous · next step": "порядок анализа · назад · дальше",
   "Key functions only": "Только ключевые",
   "Key functions only ★ · K": "Только ключевые ★ · K",
   "Hide other colors": "Скрыть остальные цвета",
@@ -876,7 +908,7 @@ const MARKUP_RU = {
   "double click": "двойной клик",
   "zoom in, with Shift zoom out": "приблизить, с Shift — отдалить",
   "panel header": "заголовок панели",
-  "drag the panel; double click docks it": "перетащить панель; двойной клик — в угол",
+  "drag the panel; double click docks it": "перетащить панель; двойной клик — к правому краю",
   "panel edge": "край панели",
   "panel width": "ширина панели",
   "Keys": "Клавиши",
@@ -978,6 +1010,7 @@ const count = (n, en, ru) => (RU ? plural(n, ...ru) : `${n} ${n === 1 ? en[0] : 
 const fnWord = (n) => count(n, ['function', 'functions'], ['функция', 'функции', 'функций']);
 const prWord = (n) => count(n, ['PR', 'PRs'], ['PR', 'PR', 'PR']);
 const stackWord = (n) => count(n, ['stack', 'stacks'], ['стек', 'стека', 'стеков']);
+const stepWord = (n) => count(n, ['step', 'steps'], ['шаг', 'шага', 'шагов']);
 /** `ref` is the GitHub page of a stack or a PR: {kind: 'stack' | 'pr', n, url}. */
 const refText = (ref) => `${ref.kind === 'stack' ? say('Stack', 'Стек') : 'PR'} #${ref.n}`;
 function refLink(ref, cls, ...kids) {
@@ -1010,12 +1043,24 @@ DATA.stacks.forEach((st, i) => {
   }
 });
 const simsOf = (F) => (F.f.sims ?? []).map((id) => simById[id]).filter(Boolean);
+// `needs`: the map functions a function calls; `users`: the ones that call it.
+for (const F of fns) Object.assign(F, {needs: (F.f.needs ?? []).map((name) => fnByName.get(name)).filter(Boolean), users: []});
+for (const U of fns) for (const F of U.needs) F.users.push(U);
 
-/** `onlyKey` hides functions without ★; `filter` hides functions of other colors instead of graying them. */
-const state = {sel: null, cat: null, fn: null, onlyKey: false, filter: false, density: 'm', layout: 'both', skin: 'github'};
+/**
+ * `onlyKey` hides functions without ★; `filter` hides functions of other colors instead of graying them;
+ * `order` is the review of a PR under way: {P, steps: [{F, note}], i}.
+ */
+const state = {sel: null, cat: null, fn: null, order: null, onlyKey: false, filter: false, density: 'm', layout: 'both', skin: 'github'};
+const stored = (key) => { try { return JSON.parse(localStorage.getItem(key)) ?? {}; } catch { return {}; } };
+const store = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} };
 const PREFS = 'pr-mindmap:v4';
-const prefs = (() => { try { return JSON.parse(localStorage.getItem(PREFS)) ?? {}; } catch { return {}; } })();
-const savePrefs = (patch) => { Object.assign(prefs, patch); try { localStorage.setItem(PREFS, JSON.stringify(prefs)); } catch {} };
+const prefs = stored(PREFS);
+const savePrefs = (patch) => { Object.assign(prefs, patch); store(PREFS, prefs); };
+/** The steps of the review order the reader went through: function name → 'ok' or 'unclear'. */
+const READ = `pr-mindmap:read:${DATA.title}:${prs[0]?.pr.url ?? ''}`;
+const read = stored(READ);
+const markRead = (F, how) => { read[F.f.name] = how; store(READ, read); };
 
 /* ---------- Tree DOM ---------- */
 const app = $('app'), board = $('board'), canvas = $('canvas'), mind = $('mind');
@@ -1054,7 +1099,12 @@ function toggleButton(owner) {
   });
   return b;
 }
-const pickFn = (F) => select(state.fn === F ? {cat: F.f.cat} : {fn: F});
+/** A click on a function: its step while its PR is under review, else the function or, once more, its color. */
+function pickFn(F) {
+  const k = state.order ? state.order.steps.findIndex((s) => s.F === F) : -1;
+  if (k >= 0) goStep(k + 1);
+  else select(state.fn === F ? {cat: F.f.cat} : {fn: F});
+}
 
 const rootNode = nodeBox('root', () => select(state.sel?.root ? null : {root: true}));
 rootNode.append(h('b', null, DATA.root.title),
@@ -1102,7 +1152,8 @@ for (const S of stacks) {
         sim.title = say('Similar to the selected function', 'Похожа на выбранную функцию');
         const tags = h('span', 'tags', sim, h('span', `kind ${f.kind}`, f.kind === 'u' ? say('uniq', 'уник') : say('std', 'станд')));
         if (f.moved) tags.append(h('span', 'kind', say('moved', 'перенос')));
-        F.row = withColor(h('button', 'fn', h('span', 'dot'), name, tags, h('span', 'why', why)), f.cat);
+        F.step = h('span', 'step');
+        F.row = withColor(h('button', 'fn', h('span', 'dot'), F.step, name, tags, h('span', 'why', why)), f.cat);
         F.row.title = why;
         F.row.setAttribute('aria-pressed', 'false');
         F.row.addEventListener('click', () => pickFn(F));
@@ -1342,14 +1393,15 @@ function moveTo(target, animate = true) {
   };
   anim = requestAnimationFrame(step);
 }
-/** The part of the board that the bar, the index and the dock do not cover. */
-function safeArea() {
+/** The part of the board that the bar, the index and the dock do not cover; with `drawer`, the drawer either. */
+function safeArea(drawer = false) {
   const b = board.getBoundingClientRect();
   const shown = (e) => e.offsetParent !== null;
   const top = shown($('bar')) ? $('bar').getBoundingClientRect().bottom - b.top + 12 : 12;
   const bottom = shown($('dock')) ? b.bottom - $('dock').getBoundingClientRect().top + 12 : 12;
   const left = shown($('index')) ? $('index').getBoundingClientRect().right - b.left + 12 : 12;
-  return {x: left, y: top, w: Math.max(80, b.width - left - 12), h: Math.max(80, b.height - top - bottom)};
+  const panel = $('insp'), right = drawer && shown(panel) && panel.classList.contains('drawer') ? b.right - panel.getBoundingClientRect().left + 12 : 12;
+  return {x: left, y: top, w: Math.max(80, b.width - left - right), h: Math.max(80, b.height - top - bottom)};
 }
 function boardPoint(clientX, clientY) {
   const r = board.getBoundingClientRect();
@@ -1383,9 +1435,14 @@ function flyTo(target, scale = Math.min(1.1, Math.max(view.s, 0.85))) {
   const r = target.getBoundingClientRect(), c = canvas.getBoundingClientRect();
   const cx = (r.left + r.width / 2 - c.left) / view.s;
   const cy = (r.top + r.height / 2 - c.top) / view.s;
-  const a = safeArea(), s = clamp(scale);
+  const a = safeArea(true), s = clamp(scale);
   fitting = false;
   moveTo({s, x: a.x + a.w / 2 - cx * s, y: a.y + a.h / 2 - cy * s});
+}
+/** Flies to `target` when the chrome covers a part of it. */
+function bringIntoView(target) {
+  const r = target.getBoundingClientRect(), b = board.getBoundingClientRect(), a = safeArea(true);
+  if (r.left < b.left + a.x || r.right > b.left + a.x + a.w || r.top < b.top + a.y || r.bottom > b.top + a.y + a.h) flyTo(target, view.s < 0.6 ? 0.9 : view.s);
 }
 
 let lastPoint = null;
@@ -1619,32 +1676,50 @@ function visibleFace(F) {
   if (F.row.hidden) return F.group.card;
   return F.group.folded ? F.dot : F.row;
 }
-/** Dashed curves from the selected function to the functions similar to it. */
+/**
+ * A curve from box `a` to box `b`: across the gap between their columns, or within one column out to its free side
+ * `out` and back; `x` and `dir` are where and which way it comes into `b`.
+ */
+function curve(a, b, out) {
+  if (b.l > a.r + 40) return {d: `M${a.r} ${a.y}C${a.r + 90} ${a.y} ${b.l - 90} ${b.y} ${b.l} ${b.y}`, x: b.l, dir: 1};
+  if (b.r < a.l - 40) return {d: `M${a.l} ${a.y}C${a.l - 90} ${a.y} ${b.r + 90} ${b.y} ${b.r} ${b.y}`, x: b.r, dir: -1};
+  const ax = out > 0 ? a.r : a.l, bx = out > 0 ? b.r : b.l;
+  const bow = (out > 0 ? Math.max(ax, bx) : Math.min(ax, bx)) + out * Math.min(140, 40 + Math.abs(b.y - a.y) / 4);
+  return {d: `M${ax} ${a.y}C${bow} ${a.y} ${bow} ${b.y} ${bx} ${b.y}`, x: bx, dir: -out};
+}
+/**
+ * Dashed curves from the selected function to the similar ones, and arrows from a function to the ones that need it:
+ * around the selected function, or across the PR under review, the ones of the current step on top.
+ */
 function drawLinks(R = rectsReader()) {
-  const paths = [];
-  const from = state.fn && visibleFace(state.fn);
-  if (from) {
-    const a = R(from);
-    const done = new Set([from]);
-    for (const other of relatedSet()) {
-      const to = visibleFace(other);
-      if (!to || done.has(to)) continue;
-      done.add(to);
-      const b = R(to);
-      let d;
-      if (b.l > a.r + 40) d = `M${a.r} ${a.y}C${a.r + 90} ${a.y} ${b.l - 90} ${b.y} ${b.l} ${b.y}`;
-      else if (b.r < a.l - 40) d = `M${a.l} ${a.y}C${a.l - 90} ${a.y} ${b.r + 90} ${b.y} ${b.r} ${b.y}`;
-      else {
-        // Same column: the curve bows out to the free side of the branch.
-        const out = state.fn.stack.side === 'r' ? 1 : -1;
-        const ax = out > 0 ? a.r : a.l, bx = out > 0 ? b.r : b.l;
-        const bow = (out > 0 ? Math.max(ax, bx) : Math.min(ax, bx)) + out * Math.min(140, 40 + Math.abs(b.y - a.y) / 4);
-        d = `M${ax} ${a.y}C${bow} ${a.y} ${bow} ${b.y} ${bx} ${b.y}`;
+  const under = [], over = [], seen = new Map();
+  const link = (A, B, kind, color, top = true) => {
+    const from = visibleFace(A), to = visibleFace(B);
+    if (!from || !to || from === to) return;
+    const pairs = seen.get(from) ?? new Set();
+    if (pairs.has(to)) return;
+    seen.set(from, pairs.add(to));
+    const a = R(from), b = R(to), c = curve(a, b, A.stack.side === 'r' ? 1 : -1);
+    const out = top ? over : under;
+    out.push(svgEl('path', {class: kind, d: c.d, style: `--c: ${color}`}));
+    if (kind === 'dep') out.push(svgEl('path', {class: 'tip', d: `M${c.x} ${b.y}l${-c.dir * 7} -3.5v7z`, style: `--c: ${color}`}));
+  };
+  const o = state.order;
+  if (o) {
+    const inPr = new Set(o.steps.map((s) => s.F)), current = state.fn;
+    for (const B of inPr) {
+      for (const A of B.needs) {
+        const now = A === current || B === current;
+        if (inPr.has(A)) link(A, B, 'dep', now ? cvar(A.f.cat) : 'var(--edge)', now);
       }
-      paths.push(withColor(svgEl('path', {d}), state.fn.f.cat));
     }
+  } else if (state.fn) {
+    const F = state.fn;
+    for (const other of relatedSet()) if (other !== F) link(F, other, 'sim', cvar(F.f.cat));
+    for (const A of F.needs) link(A, F, 'dep', cvar(A.f.cat));
+    for (const B of F.users) link(F, B, 'dep', cvar(F.f.cat));
   }
-  linksSvg.replaceChildren(...paths);
+  linksSvg.replaceChildren(...under, ...over);
 }
 
 /* ---------- Refresh ---------- */
@@ -1659,6 +1734,7 @@ function syncControls() {
   $('expand-all').dataset.tip = `${expandLabel} · E`;
   $('only-key').setAttribute('aria-pressed', String(state.onlyKey));
   $('filter').setAttribute('aria-pressed', String(state.filter));
+  $('order').setAttribute('aria-pressed', String(Boolean(state.order)));
   app.classList.remove('d-s', 'd-m', 'd-l');
   app.classList.add(`d-${state.density}`);
 }
@@ -1688,18 +1764,23 @@ function refresh({anchor = null, rearrange = !anchor} = {}) {
 }
 
 /* ---------- Selection ---------- */
+/** Under review, the functions of the PR show their steps and the rest of the map is gray. */
 function paint() {
-  const related = relatedSet();
+  const related = relatedSet(), o = state.order;
+  const stepOf = new Map(o ? o.steps.map((s, j) => [s.F, j + 1]) : []);
   for (const F of fns) {
-    const sel = state.fn === F;
-    const dim = Boolean(state.cat) && F.f.cat !== state.cat && !related.has(F);
-    const sim = Boolean(state.fn) && !sel && related.has(F);
+    const sel = state.fn === F, k = stepOf.get(F);
+    const dim = o ? !k : Boolean(state.cat) && F.f.cat !== state.cat && !related.has(F);
+    const sim = !o && Boolean(state.fn) && !sel && related.has(F);
     for (const e of [F.row, F.dot]) {
       e.classList.toggle('is-dim', dim);
       e.classList.toggle('is-sel', sel);
       e.classList.toggle('is-sim', sim);
     }
     F.row.setAttribute('aria-pressed', String(sel));
+    F.row.classList.toggle('in-order', Boolean(k));
+    F.step.textContent = k ?? '';
+    F.step.className = `step${F.f.main ? ' main' : ''}${read[F.f.name] === 'ok' ? ' ok' : ''}`;
   }
   rootNode.classList.toggle('is-sel', Boolean(state.sel?.root));
   for (const S of stacks) S.node.classList.toggle('is-sel', state.sel?.stack === S);
@@ -1709,11 +1790,15 @@ function paint() {
   const current = state.sel?.stack ?? state.sel?.pr?.stack ?? state.sel?.fn?.stack;
   if (current) markStack(current);
 }
-/** `sel` is null or one of {fn}, {cat}, {pr}, {stack}, {root}. A function also selects its color. */
-function select(sel) {
+/**
+ * `sel` is null or one of {fn}, {cat}, {pr}, {stack}, {root}. A function also selects its color, except on a step of
+ * the review `order`; a selection without `order` ends the review.
+ */
+function select(sel, order = null) {
+  state.order = order;
   state.sel = sel;
   state.fn = sel?.fn ?? null;
-  state.cat = sel?.fn ? sel.fn.f.cat : sel?.cat ?? null;
+  state.cat = order ? null : sel?.fn?.f.cat ?? sel?.cat ?? null;
   paint();
   // A selection changes the layout only while the filter hides the other colors.
   refresh({rearrange: state.filter});
@@ -1801,9 +1886,10 @@ function renderInspector() {
   insp.hidden = !sel;
   fitPane();
   if (!sel) return;
-  const kids = [];
-  let label = '';
-  if (sel.fn) {
+  let kids = [], label = '';
+  if (state.order) {
+    ({label, kids} = orderView(state.order));
+  } else if (sel.fn) {
     const F = sel.fn, {f} = F;
     const catChip = withColor(h('button', 'chip', h('span', 'dot'), catById[f.cat].name), f.cat);
     catChip.addEventListener('click', () => select({cat: f.cat}));
@@ -1817,12 +1903,14 @@ function renderInspector() {
       kids.push(h('p', null, say('Moved without changes.', 'Перенесена без изменений.')));
     } else {
       if (f.ext) label.push(Object.assign(chip(f.ext), {title: say('Plugin or extension', 'Плагин или расширение')}));
+      if (f.main) label.push(chip(say('◆ main', '◆ главная')));
       if (f.key) label.push(chip(say('★ key', '★ ключевая')));
       label.push(chip(f.kind === 'u' ? say('uniq · own logic', 'уник · своя логика') : say('std · usual pattern', 'станд · обычный приём')));
       kids.push(h('p', 'lead why', f.why));
       if (f.about) kids.push(h('p', 'lead', f.about));
       if (f.without) kids.push(h('hr'), h('p', null, f.without));
       kids.push(...usesOf(f));
+      if (F.needs.length) kids.push(h('p', 'micro', say('Relies on', 'Опирается на')), fnList(F.needs));
       // A similar function that is a place of use is listed once, among the places.
       const placed = new Set(Array.isArray(f.uses) ? f.uses.map((u) => u.in) : []);
       for (const s of simsOf(F)) {
@@ -1856,6 +1944,12 @@ function renderInspector() {
     label = refText(prRef(pr));
     const links = [refLink(prRef(pr), 'chip', icon('ext'))];
     if (P.stack.ref?.kind === 'stack') links.push(refLink(P.stack.ref, 'chip', icon('ext')));
+    if (stepsOf(P).length) {
+      const review = h('button', 'chip', icon('steps'), say('Review order', 'Порядок анализа'));
+      review.title = say('Go through the functions of the PR, the helpers first · R', 'Пройти функции PR, сначала вспомогательные · R');
+      review.addEventListener('click', () => startOrder(P));
+      links.push(review);
+    }
     const std = P.fns.filter((F) => F.f.kind === 's').length;
     kids.push(h('h2', null, pr.title), h('p', 'lead', pr.essence),
       h('div', 'chips', ...links, chip(fnWord(P.fns.length)), chip(`★ ${P.fns.filter((F) => F.f.key).length}`),
@@ -1882,8 +1976,137 @@ function renderInspector() {
   tagsOrLabel.replaceChildren(...(Array.isArray(label) ? label : [label]));
   inspBody.replaceChildren(...kids);
 }
-$('insp-close').addEventListener('click', () => select(null));
+$('insp-close').addEventListener('click', () => (state.order ? stopOrder() : select(null)));
 $('insp-fold').addEventListener('click', () => insp.classList.toggle('folded'));
+
+/* ---------- Review order ---------- */
+const stepsOf = (P) => (P.pr.order ?? []).map((s) => ({F: fnByName.get(s.fn), note: s.note})).filter((s) => s.F);
+/** The PR to review: the selected one or the one of the selected function, else the first one with steps. */
+function prToReview() {
+  const P = state.sel?.pr ?? state.sel?.fn?.pr;
+  return P && stepsOf(P).length ? P : prs.find((other) => stepsOf(other).length);
+}
+function startOrder(P) {
+  const steps = stepsOf(P);
+  if (!steps.length) return;
+  P.stack.closed = false;
+  P.closed = false;
+  for (const G of P.groups) G.folded = false;
+  if (state.onlyKey || state.filter) {
+    state.onlyKey = state.filter = false;
+    refresh();
+  }
+  // A review begun before goes on from its first step that is not clear yet.
+  const open = steps.findIndex((s) => read[s.F.f.name] !== 'ok');
+  const begun = steps.some((s) => read[s.F.f.name]);
+  goStep(!begun ? 0 : open < 0 ? steps.length + 1 : open + 1, {P, steps, i: 0}, true);
+}
+function stopOrder() { if (state.order) select({pr: state.order.P}); }
+function toggleOrder() {
+  const P = state.order ? null : prToReview();
+  if (P) startOrder(P);
+  else stopOrder();
+}
+/** Step 0 is the essence of the PR, steps 1…n are its functions, n + 1 is the end of the review. */
+function goStep(i, o = state.order, fly = false) {
+  o.i = Math.max(0, Math.min(o.steps.length + 1, i));
+  const F = o.steps[o.i - 1]?.F, target = F ? F.row : o.P.node;
+  select(F ? {fn: F} : {pr: o.P}, o);
+  if (fly) flyTo(target);
+  else bringIntoView(target);
+}
+/** Map functions as a list: the ones of the PR under review by their step, the others by their PR. */
+function fnList(list, o = null) {
+  const box = h('div', 'list');
+  for (const F of list) {
+    const k = o ? o.steps.findIndex((s) => s.F === F) + 1 : 0;
+    box.append(listItem({cat: F.f.cat, name: F.f.name, code: true, count: k ? say(`step ${k}`, `шаг ${k}`) : `#${F.pr.pr.n}`,
+      onClick: () => (k ? goStep(k) : navigate({fn: F}))}));
+  }
+  return box;
+}
+function act(text, onClick, tip = '', cls = '') {
+  const b = h('button', cls ? `act ${cls}` : 'act', text);
+  if (tip) b.title = tip;
+  b.addEventListener('click', onClick);
+  return b;
+}
+/** A question about a step to ask a model: the function, its PR and file, and the functions that need it. */
+function question(F, P) {
+  const {f} = F, at = f.file ? `${f.file}${f.line ? `:${f.line}` : ''}` : '';
+  const users = F.users.map((U) => U.f.name).join(', ');
+  return say(
+    `Explain in plain words, as to a child: what does ${f.name} do in PR ${P.pr.url}${at ? `, file ${at}` : ''}?${users ? ` Why does ${users} need it?` : ''}`,
+    `Объясни простыми словами, как маленькому: что делает ${f.name} в PR ${P.pr.url}${at ? `, файл ${at}` : ''}?${users ? ` Зачем она нужна для ${users}?` : ''}`);
+}
+/** The Artifact frame may deny the clipboard: then the hidden text field copies it, or nothing does. */
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {}
+  const area = Object.assign(h('textarea'), {value: text});
+  area.style.cssText = 'position:fixed;opacity:0';
+  document.body.append(area);
+  area.select();
+  let done = false;
+  try { done = document.execCommand('copy'); } catch {}
+  area.remove();
+  return done;
+}
+/** The panel of the review: the strip of steps, then the essence of the PR, a step or the end of the review. */
+function orderView(o) {
+  const {P, steps} = o, n = steps.length, k = o.i, F = steps[k - 1]?.F;
+  const bar = h('div', 'order-bar');
+  steps.forEach((s, j) => {
+    const b = withColor(h('button', [read[s.F.f.name], s.F.f.main && 'main'].filter(Boolean).join(' '), String(j + 1)), s.F.f.cat);
+    b.title = `${j + 1}. ${s.F.f.name}`;
+    if (j + 1 === k) b.setAttribute('aria-current', 'step');
+    b.addEventListener('click', () => goStep(j + 1));
+    bar.append(b);
+  });
+  const kids = [bar], nav = h('div', 'order-nav');
+  if (k > 0) nav.append(act('←', () => goStep(k - 1), say('Back · ,', 'Назад · ,')));
+  if (k === 0) {
+    const main = steps.filter((s) => s.F.f.main).map((s) => s.F);
+    kids.push(h('h2', null, P.pr.title), h('p', 'lead', P.pr.essence),
+      h('p', null, say(`${stepWord(n)}: the helpers first, the main functions last.`, `${stepWord(n)}: сначала вспомогательные функции, главные в конце.`)));
+    if (main.length) kids.push(h('p', 'micro', say('Goal', 'Цель')), fnList(main, o));
+    nav.append(act(say('Start →', 'Начать →'), () => goStep(1), say('First step · .', 'Первый шаг · .'), 'go'));
+  } else if (F) {
+    const {f} = F, note = steps[k - 1].note;
+    kids.push(fnTitle(f));
+    if (f.main) kids.push(h('p', 'micro', `◆ ${say('Main function', 'Главная функция')}`));
+    if (f.file) kids.push(h('p', 'branch', f.file));
+    kids.push(h('p', 'lead why', f.why));
+    if (note || f.about) kids.push(h('p', 'lead', note || f.about));
+    if (F.needs.length) kids.push(h('p', 'micro', say('Relies on', 'Опирается на')), fnList(F.needs, o));
+    if (F.users.length) kids.push(h('p', 'micro', say('Needed for', 'Нужна для')), fnList(F.users, o));
+    const ask = act(say('Unclear — copy a question', 'Непонятно — скопировать вопрос'), async () => {
+      markRead(F, 'unclear');
+      bar.children[k - 1].className = `unclear${f.main ? ' main' : ''}`;
+      paint();
+      const text = question(F, P);
+      if (await copyText(text)) {
+        ask.textContent = say('Question copied', 'Вопрос скопирован');
+      } else if (!nav.nextElementSibling) {
+        const area = Object.assign(h('textarea', 'ask'), {value: text, readOnly: true});
+        nav.after(area);
+        area.select();
+      }
+    }, say('A question for Claude about this step', 'Вопрос к Claude об этом шаге'));
+    nav.append(ask, act(say('Clear →', 'Понятно →'), () => { markRead(F, 'ok'); goStep(k + 1); }, say('Mark the step clear and go on', 'Отметить шаг и перейти дальше'), 'go'));
+  } else {
+    const ok = steps.filter((s) => read[s.F.f.name] === 'ok').length;
+    const unclear = steps.filter((s) => read[s.F.f.name] === 'unclear').map((s) => s.F);
+    kids.push(h('h2', null, say('Review done', 'Разбор закончен')), h('p', 'lead', say(`Clear: ${ok} of ${n}.`, `Понятно: ${ok} из ${n}.`)));
+    if (unclear.length) kids.push(h('p', 'micro', say('Unclear', 'Непонятно')), fnList(unclear, o));
+    const next = prs.slice(prs.indexOf(P) + 1).find((other) => stepsOf(other).length);
+    if (next) nav.append(act(`${say('Next PR', 'Следующий PR')} #${next.pr.n} →`, () => startOrder(next), next.pr.title, 'go'));
+  }
+  kids.push(nav);
+  return {label: `${say('Review order', 'Порядок анализа')} · #${P.pr.n}`, kids};
+}
 
 /* ---------- Panel of the selection: place and width ---------- */
 const PANE = {min: 240, max: 720, margin: 8, header: 48};
@@ -2153,6 +2376,7 @@ function stepDepth(delta) {
 }
 $('only-key').addEventListener('click', () => { state.onlyKey = !state.onlyKey; refresh(); });
 $('filter').addEventListener('click', () => { state.filter = !state.filter; refresh(); renderInspector(); });
+$('order').addEventListener('click', toggleOrder);
 /** Every branch open down to the functions, or only the stacks. */
 function toggleAll() { setDepth(currentDepth() === 4 ? 1 : 4); refresh(); }
 $('expand-all').addEventListener('click', toggleAll);
@@ -2176,6 +2400,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (!results.hidden || !$('help-pop').hidden || !$('skin-pop').hidden) { closeSearch(); setHelp(false); setSkinMenu(false); search.blur(); return; }
     if (app.classList.contains('zen')) { setZen(false); return; }
+    if (state.order) { stopOrder(); return; }
     select(null);
     return;
   }
@@ -2199,6 +2424,7 @@ document.addEventListener('keydown', (e) => {
     KeyS: () => setSkin(SKINS[(SKINS.findIndex((skin) => skin.id === state.skin) + 1) % SKINS.length].id),
     KeyH: () => setZen(!app.classList.contains('zen')),
     BracketLeft: () => stepDepth(-1), BracketRight: () => stepDepth(1), KeyE: toggleAll,
+    KeyR: toggleOrder, Period: () => state.order && goStep(state.order.i + 1), Comma: () => state.order && goStep(state.order.i - 1),
   };
   // `?` is Shift + Slash on the US layout.
   if (e.code === 'Slash' && e.shiftKey) { e.preventDefault(); setHelp($('help-pop').hidden); return; }
@@ -2206,11 +2432,7 @@ document.addEventListener('keydown', (e) => {
   if (action) { e.preventDefault(); action(); }
 });
 // A node focused with Tab comes into view.
-mind.addEventListener('focusin', (e) => {
-  if (!tabbing) return;
-  const r = e.target.getBoundingClientRect(), b = board.getBoundingClientRect(), a = safeArea();
-  if (r.left < b.left + a.x || r.right > b.left + a.x + a.w || r.top < b.top + a.y || r.bottom > b.top + a.y + a.h) flyTo(e.target, view.s < 0.6 ? 0.9 : view.s);
-});
+mind.addEventListener('focusin', (e) => { if (tabbing) bringIntoView(e.target); });
 
 /* ---------- Start ---------- */
 $('counts').textContent = `${prWord(prs.length)} · ${fns.length} fn`;

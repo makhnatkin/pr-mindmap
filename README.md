@@ -16,7 +16,10 @@ The map shows:
 - functions the PR only moves: where from and where to, as GitHub shows a renamed file;
 - which functions are key (★), which follow a usual pattern and which carry the project's own logic;
 - a color for the kind of work (commands, schema, interface…); a click on a color or a function keeps only them bright;
-- similar functions from different PRs: the ≈ mark and dashed links.
+- similar functions from different PRs: the ≈ mark and dashed links;
+- arrows from a function to the ones that need it, and a review order: the R button goes through the functions of a
+  PR from the helpers to the main one (◆). A step shows what to check and the functions it relies on and is needed
+  for; «Clear» marks it, «Unclear» copies a question about it for Claude. The marks stay in the browser.
 
 ![A selected function and the ones similar to it](docs/detail.png)
 
@@ -96,8 +99,9 @@ The full schema is at the top of [build.py](build.py), a working example is [exa
         {"name": "setHeaderBackground", "why": "≤ 50 chars", "key": true, "kind": "u", "cat": "cmd",
          "type": "logic", "ext": "Banner", "about": "≤ 400 chars", "without": "≤ 200 chars",
          "file": "src/background.ts", "line": 12,
-         "uses": [{"in": "BannerSettings", "pr": 1480, "url": "https://github.com/o/r/blob/…#L40"}]}
-      ]}]
+         "uses": [{"in": "BannerSettings", "pr": 1480, "url": "https://github.com/o/r/blob/…#L40"}], "main": true}
+      ]}],
+      "path": [{"fn": "setHeaderBackground", "note": "≤ 150 chars: what to check on this step"}]
     }]
   }]
 }
@@ -112,6 +116,10 @@ the way.
 (a link to the function on the default branch, when it is there) and `uses`: the functions that call it at the top of
 its stack, with tests, stories, imports, re-exports and definitions left out; `pr` is the PR that added the place,
 `null` the default branch.
+A function needs the map functions that name it in `uses`. `main` marks a function the PR is built around; without it
+the key functions that no function of the PR needs are the main ones. `path` is the review order of a PR, every
+function but the unchanged moves once; without it the order goes from the functions that need nothing in the PR to the
+main ones. `map.md` lists the order of each PR.
 The builder checks lengths, color references and similar groups, and writes no files while there are errors.
 
 ## Controls
@@ -121,6 +129,7 @@ The builder checks lengths, color references and similar groups, and writes no f
 - **Density:** S shows names only, M functions with their purpose, L also the essence of stacks and PRs (`D`).
 - **Filters:** key functions only (`K`), hide other colors (`F`).
 - **Search:** `/`, arrows and Enter.
+- **Review order:** `R` starts and ends it for the selected PR, `,` and `.` go to the previous and the next step, `Esc` ends it.
 - **View:** layout to both sides or to one (`L`), theme (`T`), skin (`S`), minimap (`M`), hide the interface (`H`).
 - **The selection panel** sits at the right edge over the map; a drag of its header makes it float, the button in the header switches the two modes, a double click on the header docks it again. It changes width by its edge; position and width are remembered.
 - `0` fits the whole map, `1` sets 100%, `Esc` clears the selection, `?` shows the hints.
