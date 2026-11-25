@@ -2185,12 +2185,13 @@ function orderView(o) {
 }
 
 /* ---------- Panel of the selection: place and width ---------- */
-const PANE = {min: 240, max: 720, margin: 8, header: 48};
+const PANE = {min: 240, margin: 8, header: 48};
 const chromeBox = $('chrome');
 /** `floating` puts the panel at x, y of the chrome, else it is a drawer at the right edge; `w` is null until the reader changes the width. */
 const pane = {floating: false, x: 0, y: 0, w: null, ...prefs.pane};
 const narrow = () => Boolean(window.matchMedia?.('(max-width: 760px)').matches);
 const within = (v, lo, hi) => Math.min(Math.max(v, lo), Math.max(lo, hi));
+const widest = (c) => c.width - 2 * PANE.margin;
 function applyPane() {
   const drawer = !pane.floating && !narrow(), bar = $('bar');
   insp.classList.toggle('floating', pane.floating);
@@ -2213,7 +2214,7 @@ function fitPane() {
     return;
   }
   const c = chromeBox.getBoundingClientRect();
-  if (pane.w) pane.w = within(pane.w, PANE.min, Math.min(PANE.max, c.width - 2 * PANE.margin));
+  if (pane.w) pane.w = within(pane.w, PANE.min, widest(c));
   if (pane.floating) {
     pane.x = within(pane.x, PANE.margin, c.width - (pane.w ?? insp.offsetWidth) - PANE.margin);
     pane.y = within(pane.y, PANE.margin, c.height - PANE.header);
@@ -2258,7 +2259,7 @@ for (const grip of insp.querySelectorAll('.insp-grip')) {
     if (e.button !== 0 || narrow()) return;
     const left = grip.classList.contains('l');
     trackPane(e, 'resizing', (dx, _dy, start, c) => {
-      pane.w = within(start.w + (left ? -dx : dx), PANE.min, Math.min(PANE.max, c.width - 2 * PANE.margin));
+      pane.w = within(start.w + (left ? -dx : dx), PANE.min, widest(c));
       // The drawer grows from the right edge; a floating panel keeps the edge across from the grip in place.
       if (pane.floating && left) pane.x = start.x + start.w - pane.w;
       applyPane();
