@@ -20,6 +20,8 @@ sys.path.insert(0, str(ROOT))
 import build  # noqa: E402
 import draft  # noqa: E402
 import extract  # noqa: E402
+import merge  # noqa: E402
+import report  # noqa: E402
 import uses  # noqa: E402
 
 EXAMPLE = ROOT / 'example' / 'banner.json'
@@ -675,6 +677,136 @@ class Order(unittest.TestCase):
         self.assertIn('**Review order:**\n\n1. `Row` — why Row\n', listing)
         self.assertIn('4. `Dialog` ◆ — why Dialog · `src/Dialog.tsx`\n', listing)
         self.assertIn('11. `SettingsDialog` ◆ — The shared window', build.markdown(example()))
+
+
+DIGEST = hashlib.sha256(b'src/a.ts').hexdigest()
+
+
+def with_risks(*found):
+    data = order_data()
+    data['stacks'][0]['prs'][0]['groups'][0]['fns'][0]['risks'] = list(found)
+    return data
+
+
+class Risks(unittest.TestCase):
+    def problems(self, *found):
+        return '\n'.join(build.check(with_risks(*found)))
+
+    def test_risks_are_checked(self):
+        self.assertEqual(self.problems({'title': 'r', 'what': 'w', 'why': 'y', 'suggestion': 's', 'level': 'high',
+                                        'at': 'src/a.ts:4', 'id': 1}), '')
+        self.assertIn("risk «r»: level 'none', expected one of high, mid, low", self.problems({'title': 'r', 'level': 'none'}))
+        self.assertIn('risks: expected a list', self.problems({'title': ''}))
+        self.assertIn('risks: expected a list', self.problems({'text': 'r'}))
+        self.assertIn('risks: expected a list', self.problems({'title': 'r', 'line': 3}))
+        self.assertIn('risks: 4 > 3', self.problems(*[{'title': 'r'}] * 4))
+        self.assertIn('risk 201 > 200', self.problems({'title': 'x' * 201}))
+        self.assertIn('risk «r»: why is empty', self.problems({'title': 'r', 'why': ' '}))
+        self.assertIn("risk at 'src/a.ts'", self.problems({'title': 'r', 'at': 'src/a.ts'}))
+        self.assertIn("risk at 'src/a.ts:0'", self.problems({'title': 'r', 'at': 'src/a.ts:0'}))
+        self.assertIn('risk «r»: id 0', self.problems({'title': 'r', 'id': 0}))
+        self.assertIn('risk id 2 is on 2 risks', self.problems({'title': 'r', 'id': 2}, {'title': 'q', 'id': 2}))
+
+    def test_analysed(self):
+        self.assertTrue(build.analysed({'risks': []}))
+        self.assertTrue(build.analysed({'moved': {'from': 'a', 'to': 'b'}}))
+        self.assertFalse(build.analysed({'about': 'a'}))
+
+    def test_page_links_the_lines_and_the_cards(self):
+        data = with_risks({'title': 'r', 'at': 'src/a.ts:4', 'id': 1}, {'title': 'q', 'id': 2})
+        dialog = build.page_data(data)['stacks'][0]['prs'][0]['groups'][0]['fns'][0]
+        self.assertEqual(dialog['risks'], [{'title': 'r', 'at': 'src/a.ts:4', 'id': 1,
+                                            'url': f'https://github.com/o/r/pull/7/files#diff-{DIGEST}R4'},
+                                           {'title': 'q', 'id': 2}])
+        data['report'] = 'report/index.html'
+        dialog = build.page_data(data)['stacks'][0]['prs'][0]['groups'][0]['fns'][0]
+        self.assertEqual([r['card'] for r in dialog['risks']], ['report/index.html?only=1', 'report/index.html?only=2'])
+        self.assertIn(f'    - Risk: r · [src/a.ts:4](https://github.com/o/r/pull/7/files#diff-{DIGEST}R4)'
+                      ' · [report № 1](report/index.html#f1)\n    - Risk: q · [report № 2](report/index.html#f2)\n',
+                      build.markdown(data))
+
+    def test_only_the_page_on_disk_links_the_report(self):
+        out = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, out)
+        data = {**with_risks({'title': 'r', 'id': 1}), 'report': 'report/index.html'}
+        (out / 'data.json').write_text(json.dumps(data))
+        build.build(out / 'data.json', log=lambda line: None)
+        self.assertIn('report/index.html?only=1', (out / 'map.html').read_text())
+        self.assertNotIn('report/index.html', (out / 'map.artifact.html').read_text())
+
+    def test_the_report_gives_the_checked_level(self):
+        out = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, out)
+        data = with_risks({'title': 'r', 'level': 'low', 'id': 1}, {'title': 'q', 'level': 'high', 'id': 2},
+                          {'title': 'p', 'id': 3})
+        (out / 'f1.json').write_text(json.dumps({'verdict': 'confirmed', 'severity': 'высокая'}))
+        (out / 'f2.json').write_text(json.dumps({'verdict': 'refuted', 'severity': 'нет'}))
+        self.assertEqual(build.from_report(data, out), 2)
+        found = [r for _, _, r in build.risks(data)]
+        self.assertEqual([(r.get('level'), r.get('verdict')) for r in found], [('high', 'confirmed'), ('none', 'refuted'), (None, None)])
+        # A refuted risk counts nowhere, a risk without a level counts as `mid`.
+        self.assertEqual(build.risk_counts(found), {'high': 1, 'mid': 1})
+
+    def test_markdown_names_the_levels(self):
+        listing = build.markdown(with_risks({'title': 'r', 'level': 'high'}, {'title': 'q', 'verdict': 'refuted'},
+                                            {'title': 'p', 'level': 'low'}))
+        self.assertIn('    - Risk (high): r\n    - Risk (refuted): q\n    - Risk (low): p\n', listing)
+        self.assertIn('**Standard / unique:** 5 / 0  \n**Risks:** high 1, low 1\n', listing)
+
+    def test_example_has_risks(self):
+        fns = {f['name']: f for f in build.functions(example())}
+        self.assertTrue(all(fns[name]['risks'] for name in ('SettingsDialog', 'SettingsRow', 'SettingsSwitch')))
+
+
+class Report(unittest.TestCase):
+    def test_findings_number_the_risks(self):
+        data = with_risks({'title': 'r', 'what': 'w', 'at': 'src/a.ts:4'}, {'title': 'q'})
+        found = report.findings(data)
+        self.assertEqual([r['id'] for r in data['stacks'][0]['prs'][0]['groups'][0]['fns'][0]['risks']], [1, 2])
+        self.assertEqual(found[0], {'id': 1, 'pr': 7, 'url': f'https://github.com/o/r/pull/7/files#diff-{DIGEST}R4',
+                                    'path': 'src/a.ts', 'line': 4, 'fn': 'Dialog', 'title': 'r', 'what': 'w', 'why': '',
+                                    'suggestion': ''})
+        # A risk without a line points at the declaration of its function.
+        self.assertEqual((found[1]['path'], found[1]['line'], found[1]['url']),
+                         ('src/Dialog.tsx', None, f'https://github.com/o/r/pull/7/files#diff-{hashlib.sha256(b"src/Dialog.tsx").hexdigest()}'))
+
+    def test_folder_of_the_report(self):
+        out = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, out)
+        (out / 'data.json').write_text(json.dumps(with_risks({'title': 'r', 'at': 'src/a.ts:4'})))
+        report.main([str(out / 'data.json'), '--cache', '/c'])
+        data = json.loads((out / 'data.json').read_text())
+        self.assertEqual(data['report'], 'report/index.html')
+        findings = json.loads((out / 'report' / 'findings.json').read_text())
+        self.assertEqual((findings['title'], findings['repo'], len(findings['findings'])), ('Map: risks of the functions', 'o/r', 1))
+        context = (out / 'report' / 'context.md').read_text()
+        self.assertIn('`git --git-dir /c/o__r show refs/prmap/<n>:<path>`', context)
+        self.assertIn('- Dialog: #7 from the bottom; the top PR is #7.', context)
+
+
+class Merge(unittest.TestCase):
+    def test_fields_of_each_pr(self):
+        data = order_data()
+        found = {7: {'fns': {'Dialog': {'about': 'a', 'risks': [], 'why': 'w'},
+                             'moved': {'about': 'b'}, 'Nobody': {'about': 'c'}}}, 9: {'fns': {}}}
+        problems = merge.merge(data, found)
+        dialog = data['stacks'][0]['prs'][0]['groups'][0]['fns'][0]
+        self.assertEqual((dialog['about'], dialog['risks'], dialog['why']), ('a', [], 'why Dialog'))
+        self.assertEqual(problems, ['#7: Dialog: why left out', '#7: moved is not a function of the PR to analyse',
+                                    '#7: Nobody is not a function of the PR to analyse',
+                                    '#7: no analysis of closeOnTab, Row, tabbable', '#9: not a PR of the map'])
+        self.assertEqual(merge.merge(order_data(), {}), ['#7: no analysis'])
+
+    def test_files_of_the_folder(self):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder)
+        (folder / '7.json').write_text('{"pr": 7, "fns": {}}')
+        (folder / '8.json').write_text('{"fns": {}}')
+        (folder / 'bad.json').write_text('{')
+        analyses, problems = merge.read(folder)
+        self.assertEqual(sorted(analyses), [7, 8])
+        self.assertEqual(len(problems), 1)
+        self.assertTrue(problems[0].startswith('bad.json: '))
 
 
 class Cli(unittest.TestCase):

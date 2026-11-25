@@ -38,17 +38,26 @@ data.json:
                                            # "pr": null for a place the default branch has already
          "moved": {"from": "src/b.ts", "to": "src/a.ts", "changed": true},
                                            # optional: moved from another file; an unchanged move needs nothing else
-         "main": true}                     # optional: a function the PR is built around
+         "main": true,                     # optional: a function the PR is built around
+         "risks": [{"title": "<= 200 chars", "what": "...", "why": "...", "suggestion": "...",
+                    "level": "high | mid | low", "at": "src/a.ts:40", "id": 3}]}
+                                           # 0-3 risks (analysis.md): `level` how much it costs, `at` a line at the
+                                           # head of the PR, `id` the card of the risk in the report (report.py)
       ]}]
     }]
   }],
   "cats": [{"id": "cmd", "name": "Commands", "desc": "Functions that ...",
             "colors": ["#cc4a12", "#ff8a4c"]}],   # 1-10 categories, optional light/dark hex colors
   "sims": [{"id": "values", "label": "...", "members": ["fnA", "fnB"]}],         # groups of very similar functions
-  "default": "main"                           # optional: the default branch of the repository (uses.py)
+  "default": "main",                          # optional: the default branch of the repository (uses.py)
+  "report": "report/index.html"               # optional: the report of the risks from the folder of the page (report.py)
 }
 Function names must be unique across the map: add a short suffix in parentheses when two PRs touch the same name.
-The fields after `cat` are optional for the builder; the `ok` line counts the functions that have them.
+The fields after `cat` are optional for the builder; the `ok` line counts the functions that have them: `details`
+the card fields, `risks` the risks of analysis.md. A risk with `id` links its card of the report in map.html, which
+lies next to the report; map.artifact.html is published apart from it and has no such links. A card the report has
+already checked (`f<id>.json` next to it) gives its risk the checked level, `none` for a risk without harm, and the
+verdict; the map marks each node with the number of its risks of each level, the ones without harm aside.
 A function needs the map functions that name it in their `uses`. The main functions of a PR are the ones with
 `main`, else its key functions that no function of the PR needs. `path` lists every function of the PR but the
 unchanged moves once, with what to look at on that step; without it the review goes from the functions that need
@@ -66,7 +75,13 @@ from collections import Counter
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-LIMITS = {'root': 150, 'stack': 150, 'pr': 200, 'why': 50, 'about': 500, 'without': 200, 'ext': 40, 'note': 150}
+LIMITS = {'root': 150, 'stack': 150, 'pr': 200, 'why': 50, 'about': 500, 'without': 200, 'ext': 40, 'note': 150,
+          'risk': 200, 'risks': 3}
+RISK_TEXTS = ('what', 'why', 'suggestion')
+RISK_LEVELS = ('high', 'mid', 'low')
+# The severity of a card of the review-findings-report skill → the level of its risk.
+SEVERITY = {'высокая': 'high', 'средняя': 'mid', 'низкая': 'low', 'нет': 'none'}
+AT = re.compile(r'^(\S.*):([1-9]\d*)$')
 TYPES = ('logic', 'guard', 'util')
 PR_STATES = ('open', 'draft', 'merged', 'closed')
 CAT_ID = re.compile(r'^[a-z][a-z0-9-]*$')
@@ -106,6 +121,47 @@ def unchanged_move(f):
 def described(f):
     """An unchanged move, or a function with its type, plugin, places of use, explanation and risk."""
     return unchanged_move(f) or (all(f.get(field) for field in ('type', 'ext', 'about', 'without')) and 'uses' in f)
+
+
+def analysed(f):
+    """An unchanged move, or a function with its risks looked at."""
+    return unchanged_move(f) or isinstance(f.get('risks'), list)
+
+
+def risks(data):
+    """The risks of the map in its order, each with its PR and function."""
+    return [(pr, f, r) for st in data['stacks'] for pr in st['prs'] for g in pr['groups'] for f in g['fns']
+            for r in f.get('risks') or [] if isinstance(r, dict)]
+
+
+def level_of(r):
+    """The level of a risk: `none` for a refuted one, `mid` for one without a level."""
+    return 'none' if r.get('verdict') == 'refuted' else r.get('level', 'mid')
+
+
+def risk_counts(found):
+    """The number of risks of each level, high first, the ones without harm aside."""
+    levels = Counter(map(level_of, found))
+    return {level: levels[level] for level in RISK_LEVELS if levels[level]}
+
+
+def from_report(data, folder):
+    """Gives each risk whose card the report in `folder` has checked its level and verdict; returns their number."""
+    done = 0
+    for _, _, r in risks(data):
+        card = folder / f'f{r["id"]}.json' if 'id' in r else None
+        if not (card and card.is_file()):
+            continue
+        try:
+            d = json.loads(card.read_text(encoding='utf-8'))
+        except json.JSONDecodeError:
+            continue
+        if d.get('severity') in SEVERITY:
+            r['level'] = SEVERITY[d['severity']]
+        if d.get('verdict'):
+            r['verdict'] = d['verdict']
+        done += 1
+    return done
 
 
 def is_count(value, low=0):
@@ -149,6 +205,29 @@ def detail_problems(f):
     if 'moved' in f and not (isinstance(f['moved'], dict) and isinstance(f['moved'].get('changed', False), bool)
                              and is_text(f['moved'].get('from')) and is_text(f['moved'].get('to'))):
         yield f'moved {f["moved"]!r}, expected {{"from": path, "to": path, "changed": true | false}}'
+    yield from risk_problems(f)
+
+
+def risk_problems(f):
+    if 'risks' not in f:
+        return
+    found = f['risks']
+    if not (isinstance(found, list) and all(isinstance(r, dict) and is_text(r.get('title'))
+                                            and set(r) <= {'title', *RISK_TEXTS, 'level', 'at', 'id'} for r in found)):
+        yield 'risks: expected a list of {"title", "what", "why", "suggestion": text, "level", "at": "path:line"}'
+        return
+    if len(found) > LIMITS['risks']:
+        yield f'risks: {len(found)} > {LIMITS["risks"]}'
+    for r in found:
+        if len(r['title']) > LIMITS['risk']:
+            yield f'risk {len(r["title"])} > {LIMITS["risk"]} «{r["title"][:40]}…»'
+        yield from (f'risk «{r["title"][:40]}»: {key} is empty' for key in RISK_TEXTS if key in r and not is_text(r[key]))
+        if 'level' in r and r['level'] not in RISK_LEVELS:
+            yield f'risk «{r["title"][:40]}»: level {r["level"]!r}, expected one of {", ".join(RISK_LEVELS)}'
+        if 'at' in r and not (isinstance(r['at'], str) and AT.match(r['at'])):
+            yield f'risk at {r["at"]!r}, expected "path:line"'
+        if 'id' in r and not is_count(r['id'], 1):
+            yield f'risk «{r["title"][:40]}»: id {r["id"]!r}, expected a number from 1'
 
 
 def steps_of(pr):
@@ -235,6 +314,10 @@ def _check(data):
     dup = sorted(name for name, n in names.items() if n > 1)
     if dup:
         errors.append(f'duplicate function names: {dup}')
+    cards = Counter(r.get('id') for _, _, r in risks(data) if 'id' in r)
+    errors += [f'risk id {i!r} is on {n} risks' for i, n in cards.items() if n > 1]
+    if 'report' in data and not is_text(data['report']):
+        errors.append('report: expected the path of the report from the folder of the page')
     sim_ids = Counter(s['id'] for s in data.get('sims', []))
     errors += [f'duplicate sim id {i!r}' for i, n in sim_ids.items() if n > 1]
     for s in data.get('sims', []):
@@ -324,20 +407,39 @@ def diff_link(pr, f):
     return f'{pr["url"]}/files#diff-{hashlib.sha256(f["file"].encode()).hexdigest()}{line}'
 
 
+def at_link(pr, at):
+    """`path:line` of a risk in the diff of `pr`."""
+    path, line = AT.match(at).groups()
+    return diff_link(pr, {'file': path, 'line': int(line)})
+
+
 def page_data(data):
     """A copy of the data for the page: each function with its similarity groups, its place in the diff of its PR,
-    the functions it needs and its `main`; each PR with its review order; each stack with its GitHub page."""
+    the functions it needs, its `main` and its risks with their lines in the diff and their cards in the report; each
+    PR with its review order; each stack with its GitHub page."""
     of = {}
     for s in data.get('sims', []):
         for member in s['members']:
             of.setdefault(member, []).append(s['id'])
-    needs = needs_of(data)
+    needs, report = needs_of(data), data.get('report')
+
+    def risk_data(pr, r):
+        out = {**r, 'url': at_link(pr, r['at'])} if r.get('at') else dict(r)
+        if report and 'id' in r:
+            out['card'] = f'{report}?only={r["id"]}'
+        return out
+
+    def fn_data(pr, f, main):
+        out = {**f, 'sims': of.get(f['name'], []), 'diff': diff_link(pr, f), 'needs': needs.get(f['name'], []),
+               'main': f['name'] in main}
+        if 'risks' in f:
+            out['risks'] = [risk_data(pr, r) for r in f['risks']]
+        return out
 
     def pr_data(pr):
         main = main_of(pr, needs)
-        return {**pr, 'order': review_order(pr, needs), 'groups': [{**g, 'fns': [
-            {**f, 'sims': of.get(f['name'], []), 'diff': diff_link(pr, f), 'needs': needs.get(f['name'], []),
-             'main': f['name'] in main} for f in g['fns']]} for g in pr['groups']]}
+        return {**pr, 'order': review_order(pr, needs), 'groups': [
+            {**g, 'fns': [fn_data(pr, f, main) for f in g['fns']]} for g in pr['groups']]}
 
     return {**data, 'sims': data.get('sims', []),
             'stacks': [{**st, 'ref': ref_of(st), 'prs': [pr_data(pr) for pr in st['prs']]} for st in data['stacks']]}
@@ -348,17 +450,21 @@ MD_LABELS = {
            'legend': 'Legend: ★ key · ◆ main · `std` usual pattern · `uniq` own logic · [color] kind of work · ≈ similar.',
            'colors': 'Colors', 'sims': 'Similar functions', 's': 'std', 'u': 'uniq',
            'uses': 'Used in', 'moved': 'moved', 'reworked': 'Moved and changed',
-           'logic': 'logic', 'guard': 'type guard', 'util': 'utility', 'order': 'Review order'},
+           'logic': 'logic', 'guard': 'type guard', 'util': 'utility', 'order': 'Review order', 'risk': 'Risk', 'card': 'report',
+           'risks': 'Risks', 'refuted': 'refuted', 'levels': {'high': 'high', 'mid': 'medium', 'low': 'low', 'none': 'no harm'}},
     'ru': {'essence': 'Суть', 'stack': 'Суть стека', 'pr': 'Суть PR', 'key': 'Ключевое', 'split': 'Стандартное / уникальное',
            'legend': 'Обозначения: ★ ключевая · ◆ главная · `станд.` стандартный приём · `уник.` своя логика · [цвет] смысл · ≈ похожие.',
            'colors': 'Цвета', 'sims': 'Похожие функции', 's': 'станд.', 'u': 'уник.',
            'uses': 'Используется', 'moved': 'перенос', 'reworked': 'Перенесена и изменена',
-           'logic': 'логика', 'guard': 'проверка типа', 'util': 'утилита', 'order': 'Порядок анализа'},
+           'logic': 'логика', 'guard': 'проверка типа', 'util': 'утилита', 'order': 'Порядок анализа', 'risk': 'Риск', 'card': 'доклад',
+           'risks': 'Риски', 'refuted': 'опровергнут',
+           'levels': {'high': 'высокая', 'mid': 'средняя', 'low': 'низкая', 'none': 'без вреда'}},
 }
 
 
-def fn_lines(f, say, cat_name, sim_names, default):
-    """A function in the Markdown list: its line, then its explanation, risk and places of use."""
+def fn_lines(f, say, cat_name, sim_names, default, pr, report=None):
+    """A function in the Markdown list: its line, then its explanation, what it costs to go without it, its risks
+    with their cards of the report and its places of use."""
     if unchanged_move(f):
         return [f'  - `{f["name"]}` · {say["moved"]}: `{f["moved"]["from"]}` → `{f["moved"]["to"]}`']
     tags = [f'`{say[f["kind"]]}`', f'[{cat_name[f["cat"]]}]', say[f['type']] if f.get('type') else '', f.get('ext', '')]
@@ -368,6 +474,11 @@ def fn_lines(f, say, cat_name, sim_names, default):
     if f.get('moved'):
         out.append(f'    - {say["reworked"]}: `{f["moved"]["from"]}` → `{f["moved"]["to"]}`')
     out += [f'    - {f[field]}' for field in ('about', 'without') if f.get(field)]
+    for r in f.get('risks', []):
+        at = f' · [{r["at"]}]({at_link(pr, r["at"])})' if r.get('at') else ''
+        card = f' · [{say["card"]} № {r["id"]}]({report}#f{r["id"]})' if report and 'id' in r else ''
+        level = say['refuted'] if r.get('verdict') == 'refuted' else say['levels'].get(r.get('level'))
+        out.append(f'    - {say["risk"]}{f" ({level})" if level else ""}: {r["title"]}{at}{card}')
     uses = f.get('uses')
     if isinstance(uses, list) and uses:
         where = [(u['in'], u['url'], f'#{u["pr"]}' if u['pr'] else default) for u in uses]
@@ -399,11 +510,16 @@ def markdown(data):
             out += ['', f'### #{pr["n"]} {pr["title"]}', '', where, '',
                     f'**{say["pr"]}:** {pr["essence"]}', '',
                     f'**{say["key"]}:** ' + (', '.join(f'`{f["name"]}`' for f in fns if f['key']) or '—') + '  ',
-                    f'**{say["split"]}:** {std} / {len(fns) - std}', '']
+                    f'**{say["split"]}:** {std} / {len(fns) - std}']
+            counts = risk_counts([r for f in fns for r in f.get('risks') or []])
+            if counts:
+                out[-1] += '  '
+                out.append(f'**{say["risks"]}:** ' + ', '.join(f'{say["levels"][lv]} {n}' for lv, n in counts.items()))
+            out.append('')
             for g in pr['groups']:
                 out.append(f'- **{g["name"]}**')
                 for f in g['fns']:
-                    out += fn_lines(f, say, cat_name, sim_names, data.get('default', 'main'))
+                    out += fn_lines(f, say, cat_name, sim_names, data.get('default', 'main'), pr, data.get('report'))
             by_name, main = {f['name']: f for f in fns}, main_of(pr, needs)
             out += ['', f'**{say["order"]}:**', '']
             for i, step in enumerate(review_order(pr, needs), 1):
@@ -453,12 +569,15 @@ def build(data_path, html_path=None, artifact=None, md=None, data_js=None, log=p
     errors = check(data)
     if errors:
         raise SystemExit('\n'.join(errors))
+    if data.get('report'):
+        from_report(data, data_path.parent / Path(data['report']).parent)
     if not (html_path or artifact or md or data_js):
         stem = 'map' if data_path.stem == 'data' else data_path.stem
         html_path, artifact, md = (data_path.with_name(stem + ext) for ext in ('.html', '.artifact.html', '.md'))
     fragment = page(data)
+    published = page({k: v for k, v in data.items() if k != 'report'}) if artifact and 'report' in data else fragment
     written = []
-    for path, text in ((html_path, standalone(fragment, data.get('lang', 'en'))), (artifact, fragment),
+    for path, text in ((html_path, standalone(fragment, data.get('lang', 'en'))), (artifact, published),
                        (md, markdown(data)), (data_js, data_script(data, palette=True) + '\n')):
         if path:
             Path(path).write_text(text, encoding='utf-8')
@@ -468,7 +587,12 @@ def build(data_path, html_path=None, artifact=None, md=None, data_js=None, log=p
     prs = sum(len(st['prs']) for st in data['stacks'])
     fns = functions(data)
     paths = sum('path' in pr for st in data['stacks'] for pr in st['prs'])
-    log(f'ok: {prs} PRs, {len(fns)} functions, details {sum(map(described, fns))}/{len(fns)}, paths {paths}/{prs}, '
+    found = [r for _, _, r in risks(data)]
+    levels = ' · '.join(f'{lv} {n}' for lv, n in risk_counts(found).items())
+    log(f'ok: {prs} PRs, {len(fns)} functions, details {sum(map(described, fns))}/{len(fns)}, '
+        f'risks {sum(map(analysed, fns))}/{len(fns)}{f" ({levels})" if levels else ""}, '
+        f'report {sum("id" in r for r in found)}/{len(found)}, '
+        f'paths {paths}/{prs}, '
         f'{len(data["cats"])} colors, {len(data.get("sims", []))} similarity groups → {", ".join(written)}')
     return Path(html_path) if html_path else None
 

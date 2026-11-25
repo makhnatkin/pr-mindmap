@@ -174,6 +174,8 @@
 }
 :root {
 /*CAT_LIGHT*/
+  /* Levels of a risk: Primer red, orange and yellow, the same in every skin and in the report of the map. */
+  --risk-high: #d1242f; --risk-mid: #e16f24; --risk-low: #bf8700;
   /* Distances of the tree; the script reads them to size the map without laying it out again. */
   --gap: 36px; --gap-stack: 26px; --gap-pr: 12px; --gap-group: 6px; --gap-col: 8px; --bracket: 14px; --pad: 28px;
   --cardw: 300px;
@@ -188,6 +190,7 @@
   }
   :root:not([data-theme="light"]) {
 /*CAT_DARK*/
+    --risk-high: #f85149; --risk-mid: #db6d28; --risk-low: #d29922;
     color-scheme: dark;
   }
 }
@@ -200,6 +203,7 @@
 }
 :root[data-theme="dark"] {
 /*CAT_DARK*/
+  --risk-high: #f85149; --risk-mid: #db6d28; --risk-low: #d29922;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -386,6 +390,16 @@ button.chip:hover, a.chip:hover { border-color: var(--ink); }
 .act:hover { background: var(--soft); }
 .act.go { margin-left: auto; border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
 .insp-body textarea.ask { width: 100%; min-height: 72px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--r-ctl); background: transparent; color: var(--ink); font: 12px/1.45 var(--font-ui); resize: vertical; }
+/* The risks of a function: each opens its card of the report and its line in the PR. */
+.risks { display: grid; gap: 6px; margin: 0; padding-left: 16px; color: var(--ink); font-size: 12.5px; line-height: 1.45; }
+.risks li::marker { color: var(--rk); }
+.risks .lv { margin-right: 6px; font: 600 10.5px var(--font-code); color: var(--rk); white-space: nowrap; }
+.risks li.rk-none { color: var(--muted); }
+.risks code { font: 11.5px var(--font-code); }
+.risks a { color: inherit; text-decoration: none; }
+.risks a:hover { text-decoration: underline; }
+.risks a .ic { width: 12px; height: 12px; margin-left: 3px; vertical-align: -1px; color: var(--muted); }
+.risks a.at { font: 11px var(--font-code); color: var(--muted); }
 
 .legend { grid-area: foot; align-self: end; justify-self: start; display: flex; align-items: flex-end; gap: 2px; max-width: 100%; padding: 4px; }
 .cats { display: flex; flex-wrap: wrap; gap: 1px; min-width: 0; }
@@ -461,6 +475,18 @@ li.closed > ul { display: none; }
 .pr .t { font: 600 13px/1.3 var(--font-ui); }
 .pr .meta { margin-top: 5px; }
 .pr .meta .hit { color: var(--ink); }
+/* Risks of a node: a triangle in the color of the level with the number of risks of that level. */
+.rks { display: inline-flex; align-items: center; gap: 6px; }
+.rk { display: inline-flex; align-items: center; gap: 2px; color: var(--rk); font: 700 10.5px/1 var(--font-code); white-space: nowrap; }
+.rk svg { width: 11px; height: 11px; flex: none; fill: currentColor; }
+.rk-high { --rk: var(--risk-high); }
+.rk-mid { --rk: var(--risk-mid); }
+.rk-low { --rk: var(--risk-low); }
+.rk-none { --rk: var(--faint); }
+.root .rks { margin-top: 8px; padding: 3px 7px; border-radius: var(--r-pill); background: var(--surface); }
+.gh .rks { flex: none; }
+.fn .name .rks { margin-left: 6px; vertical-align: -1px; }
+.fn.is-dim .rk { color: inherit; }
 .mix { display: flex; gap: 1px; height: 3px; margin-top: 8px; border-radius: 2px; overflow: hidden; }
 .mix i { background: var(--c); flex: 1 1 0; transition: background-color .15s; }
 .mix i.off { background: color-mix(in srgb, var(--c) 15%, transparent); }
@@ -618,6 +644,7 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
 [data-skin="github"] .insp-body p { font-size: 13px; line-height: 1.5; }
 [data-skin="github"] .insp-body p.branch { font: 400 12px/1.5 var(--font-code); }
 [data-skin="github"] .insp-body p.micro { margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--line); }
+[data-skin="github"] .risks { font-size: 13px; line-height: 1.5; }
 /* Tree: Boxes; a PR card is a row of the pull request list, with the state icon before the title. */
 [data-skin="github"] .node { padding: 7px 11px; border-color: var(--line); }
 [data-skin="github"] .node:hover { border-color: var(--frame); box-shadow: 0 0 0 1px var(--frame), var(--node-shadow); }
@@ -693,6 +720,7 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
 
 <svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs>
 <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+<symbol id="i-risk" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M6.7 1.8a1.5 1.5 0 0 1 2.6 0l6 10.6A1.5 1.5 0 0 1 14 14.6H2a1.5 1.5 0 0 1-1.3-2.2ZM7.2 5.5h1.6v4.2H7.2Zm.8 5.4a.95.95 0 1 0 0 1.9.95.95 0 0 0 0-1.9Z"/></symbol>
 <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.7l5.9-.8Z"/></symbol>
 <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16l-6.2 7.4V18l-3.6 2v-7.6Z"/></symbol>
 <symbol id="i-both" viewBox="0 0 24 24"><rect x="9.5" y="9.5" width="5" height="5" rx="1.2"/><path d="M9.5 12H6m0-6v12M6 6H3m3 6H3m3 6H3M14.5 12H18m0-6v12m0-12h3m-3 6h3m-3 6h3"/></symbol>
@@ -774,6 +802,7 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
         <h2 class="micro">Legend</h2>
         <dl>
           <dt>★</dt><dd>key function; its dot has a ring</dd>
+          <dt><span class="rks"><span class="rk rk-high"><svg aria-hidden="true"><use href="#i-risk"/></svg></span><span class="rk rk-mid"><svg aria-hidden="true"><use href="#i-risk"/></svg></span><span class="rk rk-low"><svg aria-hidden="true"><use href="#i-risk"/></svg></span></span></dt><dd>risks by severity: high, medium, low; the number is how many</dd>
           <dt>◆</dt><dd>main function of a PR: the last step of its review</dd>
           <dt>→</dt><dd>from a function to the ones that need it</dd>
           <dt>UNIQ</dt><dd>logic of the project itself</dd>
@@ -894,6 +923,7 @@ const MARKUP_RU = {
   "Hide the interface · H": "Скрыть интерфейс · H",
   "Legend": "Обозначения",
   "key function; its dot has a ring": "ключевая функция; у точки — кольцо",
+  "risks by severity: high, medium, low; the number is how many": "риски по критичности: высокая, средняя, низкая; число — сколько их",
   "UNIQ": "УНИК",
   "logic of the project itself": "своя логика проекта",
   "STD": "СТАНД",
@@ -1011,6 +1041,25 @@ const fnWord = (n) => count(n, ['function', 'functions'], ['функция', 'ф
 const prWord = (n) => count(n, ['PR', 'PRs'], ['PR', 'PR', 'PR']);
 const stackWord = (n) => count(n, ['stack', 'stacks'], ['стек', 'стека', 'стеков']);
 const stepWord = (n) => count(n, ['step', 'steps'], ['шаг', 'шага', 'шагов']);
+/** Levels of a risk, high first. A refuted risk is `none` and counts nowhere; a risk without a level counts as `mid`. */
+const LEVELS = ['high', 'mid', 'low'];
+const LEVEL_NAME = {high: say('high', 'высокая'), mid: say('medium', 'средняя'), low: say('low', 'низкая'), none: say('no harm', 'без вреда')};
+const levelOf = (r) => (r.verdict === 'refuted' ? 'none' : r.level ?? 'mid');
+const risksIn = (list) => list.flatMap((F) => F.f.risks ?? []);
+/** The risks of `found` by level: a triangle in the color of the level and their number; `short` leaves out a 1. */
+function riskMarks(found, short = false) {
+  const box = h('span', 'rks');
+  for (const level of LEVELS) {
+    const n = found.filter((r) => levelOf(r) === level).length;
+    if (!n) continue;
+    const triangle = svgEl('svg', {'aria-hidden': 'true'});
+    triangle.append(svgEl('use', {href: '#i-risk'}));
+    const mark = h('span', `rk rk-${level}`, triangle, short && n === 1 ? null : String(n));
+    mark.title = say(`Risks of ${LEVEL_NAME[level]} severity: ${n}`, `Риски, критичность ${LEVEL_NAME[level]}: ${n}`);
+    box.append(mark);
+  }
+  return box.childElementCount ? box : null;
+}
 /** `ref` is the GitHub page of a stack or a PR: {kind: 'stack' | 'pr', n, url}. */
 const refText = (ref) => `${ref.kind === 'stack' ? say('Stack', 'Стек') : 'PR'} #${ref.n}`;
 function refLink(ref, cls, ...kids) {
@@ -1107,8 +1156,8 @@ function pickFn(F) {
 }
 
 const rootNode = nodeBox('root', () => select(state.sel?.root ? null : {root: true}));
-rootNode.append(h('b', null, DATA.root.title),
-  h('span', 'meta', `${prWord(prs.length)} · ${fnWord(fns.length)}`), h('span', 'ess', DATA.root.essence));
+rootNode.append(...[h('b', null, DATA.root.title), h('span', 'meta', `${prWord(prs.length)} · ${fnWord(fns.length)}`),
+  riskMarks(risksIn(fns)), h('span', 'ess', DATA.root.essence)].filter(Boolean));
 const branchL = h('ul', 'branch l'), branchR = h('ul', 'branch r');
 mind.append(branchL, rootNode, branchR);
 
@@ -1116,7 +1165,7 @@ for (const S of stacks) {
   S.node = nodeBox('stack', () => select(state.sel?.stack === S ? null : {stack: S}));
   const size = S.ref?.kind === 'pr' ? `${S.fns.length} fn` : `${prWord(S.prs.length)} · ${S.fns.length} fn`;
   S.node.append(h('span', 'head', oct('stack'), h('span', 'nm', S.st.name)),
-    h('span', 'meta', S.ref ? refLink(S.ref, 'n') : h('span', null, S.st.gh), h('span', null, size)),
+    h('span', 'meta', S.ref ? refLink(S.ref, 'n') : h('span', null, S.st.gh), h('span', null, size), riskMarks(risksIn(S.fns))),
     h('span', 'ess', S.st.essence), mixBar(S.fns));
   S.tg = toggleButton(S);
   S.node.append(S.tg);
@@ -1128,7 +1177,8 @@ for (const S of stacks) {
     P.hit = h('span', 'hit');
     const stateIcon = PR_ICON[pr.state] ? oct(PR_ICON[pr.state], `s-${pr.state}`) : oct('pr');
     P.node.append(h('span', 'head', stateIcon, h('span', 't', pr.title)), h('span', 'ess', pr.essence), mixBar(P.fns),
-      h('span', 'meta', refLink(prRef(pr), 'n'), h('span', null, `${P.fns.length} fn · ★ ${P.fns.filter((F) => F.f.key).length}`), P.hit));
+      h('span', 'meta', refLink(prRef(pr), 'n'), h('span', null, `${P.fns.length} fn · ★ ${P.fns.filter((F) => F.f.key).length}`),
+        riskMarks(risksIn(P.fns)), P.hit));
     P.tg = toggleButton(P);
     P.node.append(P.tg);
     P.ul = h('ul');
@@ -1136,7 +1186,7 @@ for (const S of stacks) {
     S.ul.append(P.li);
     for (const G of P.groups) {
       G.ct = h('span', 'ct');
-      G.head = h('button', 'gh', icon('chev'), h('span', 'nm', G.g.name), G.ct);
+      G.head = h('button', 'gh', icon('chev'), h('span', 'nm', G.g.name), riskMarks(risksIn(G.fns)), G.ct);
       G.head.addEventListener('click', () => { G.folded = !G.folded; refresh({anchor: G.card}); });
       G.dots = h('span', 'dots');
       G.rows = h('div', 'rows');
@@ -1147,6 +1197,8 @@ for (const S of stacks) {
         const {f} = F;
         const name = h('span', 'name', f.type === 'guard' || f.type === 'util' ? typeBadge(f) : null, f.name);
         if (f.key) name.append(h('span', 'star', '★'));
+        const marks = riskMarks(f.risks ?? [], true);
+        if (marks) name.append(marks);
         const why = unchangedMove(f) ? `${fileName(f.moved.from)} → ${fileName(f.moved.to)}` : f.why;
         const sim = h('span', 'sim', '≈');
         sim.title = say('Similar to the selected function', 'Похожа на выбранную функцию');
@@ -1828,6 +1880,11 @@ const chip = (text, cat) => {
   c.append(text);
   return c;
 };
+/** A chip with the risks of `list` by level, or nothing for a list without risks. */
+function riskChip(list) {
+  const marks = riskMarks(risksIn(list));
+  return marks ? h('span', 'chip', marks) : null;
+}
 function listItem({cat, num, name, code, count, onClick}) {
   const b = h('button', cat ? 'item' : 'item numbered', cat ? withColor(h('span', 'dot'), cat) : h('span', 'num', num ?? ''),
     h('span', `nm${code ? ' code' : ''}`, name), h('span', 'ct', count ?? ''));
@@ -1849,9 +1906,9 @@ function showPr(P) {
   markStack(P.stack);
   flyTo(P.node);
 }
+const outLink = (cls, text, href, title = '') => Object.assign(h('a', cls, text), {href, title, target: '_blank', rel: 'noopener'});
 const newTab = (href, title) => {
-  const a = h('a', 'ib sm', icon('ext'));
-  Object.assign(a, {href, title, target: '_blank', rel: 'noopener'});
+  const a = outLink('ib sm', icon('ext'), href, title);
   a.setAttribute('aria-label', title);
   return a;
 };
@@ -1881,6 +1938,24 @@ function usesOf(f) {
   }
   return [head, list];
 }
+const withCode = (text) => text.split('`').map((part, i) => (i % 2 ? h('code', null, part) : part));
+/** The risks of `f`: a risk opens its card of the report in a new window, its file name opens its line in the PR. */
+function risksOf(f) {
+  if (!f.risks?.length) return [];
+  const list = h('ul', 'risks');
+  for (const r of f.risks) {
+    const level = levelOf(r), item = h('li', `rk-${level}`);
+    if (r.level || r.verdict === 'refuted') item.append(h('span', 'lv', r.verdict === 'refuted' ? say('refuted', 'опровергнут') : LEVEL_NAME[level]));
+    if (r.card) {
+      const card = outLink(null, null, r.card, say('Open the card of the report in a new window', 'Открыть карточку доклада в новом окне'));
+      card.append(...withCode(r.title), icon('ext'));
+      item.append(card);
+    } else item.append(...withCode(r.title));
+    if (r.url) item.append(' ', outLink('at', r.at.split('/').pop(), r.url, r.at));
+    list.append(item);
+  }
+  return [h('p', 'micro', count(f.risks.length, ['risk', 'risks'], ['риск', 'риска', 'рисков'])), list];
+}
 function renderInspector() {
   const sel = state.sel;
   insp.hidden = !sel;
@@ -1909,7 +1984,7 @@ function renderInspector() {
       kids.push(h('p', 'lead why', f.why));
       if (f.about) kids.push(h('p', 'lead', f.about));
       if (f.without) kids.push(h('hr'), h('p', null, f.without));
-      kids.push(...usesOf(f));
+      kids.push(...risksOf(f), ...usesOf(f));
       if (F.needs.length) kids.push(h('p', 'micro', say('Relies on', 'Опирается на')), fnList(F.needs));
       // A similar function that is a place of use is listed once, among the places.
       const placed = new Set(Array.isArray(f.uses) ? f.uses.map((u) => u.in) : []);
@@ -1952,7 +2027,7 @@ function renderInspector() {
     }
     const std = P.fns.filter((F) => F.f.kind === 's').length;
     kids.push(h('h2', null, pr.title), h('p', 'lead', pr.essence),
-      h('div', 'chips', ...links, chip(fnWord(P.fns.length)), chip(`★ ${P.fns.filter((F) => F.f.key).length}`),
+      h('div', 'chips', ...links, chip(fnWord(P.fns.length)), chip(`★ ${P.fns.filter((F) => F.f.key).length}`), riskChip(P.fns),
         chip(say(`std ${std} · uniq ${P.fns.length - std}`, `станд ${std} · уник ${P.fns.length - std}`))));
     if (pr.branch) kids.push(h('p', 'branch', pr.branch));
     kids.push(h('p', 'micro', say('Kinds of work', 'Типы работы')), catBreakdown(P.fns));
@@ -1962,14 +2037,14 @@ function renderInspector() {
     const list = h('div', 'list');
     for (const P of S.prs) list.append(listItem({num: `#${P.pr.n}`, name: P.pr.title, count: P.fns.length, onClick: () => navigate({pr: P})}));
     kids.push(h('h2', null, S.st.name), h('p', 'lead', S.st.essence),
-      h('div', 'chips', S.ref ? refLink(S.ref, 'chip', icon('ext')) : chip(S.st.gh), chip(prWord(S.prs.length)), chip(fnWord(S.fns.length))),
+      h('div', 'chips', S.ref ? refLink(S.ref, 'chip', icon('ext')) : chip(S.st.gh), chip(prWord(S.prs.length)), chip(fnWord(S.fns.length)), riskChip(S.fns)),
       h('p', 'micro', 'PR'), list);
   } else {
     label = say('About the map', 'О карте');
     const list = h('div', 'list');
     for (const S of stacks) list.append(listItem({num: S.tag, name: S.st.name, count: prWord(S.prs.length), onClick: () => navigate({stack: S})}));
     kids.push(h('h2', null, DATA.root.title), h('p', 'lead', DATA.root.essence),
-      h('div', 'chips', chip(stackWord(stacks.length)), chip(prWord(prs.length)), chip(fnWord(fns.length))), h('p', 'micro', say('Stacks', 'Стеки')), list);
+      h('div', 'chips', chip(stackWord(stacks.length)), chip(prWord(prs.length)), chip(fnWord(fns.length)), riskChip(fns)), h('p', 'micro', say('Stacks', 'Стеки')), list);
   }
   const tagsOrLabel = $('insp-label');
   tagsOrLabel.className = Array.isArray(label) ? 'insp-tags' : 'micro';
@@ -2082,6 +2157,7 @@ function orderView(o) {
     if (note || f.about) kids.push(h('p', 'lead', note || f.about));
     if (F.needs.length) kids.push(h('p', 'micro', say('Relies on', 'Опирается на')), fnList(F.needs, o));
     if (F.users.length) kids.push(h('p', 'micro', say('Needed for', 'Нужна для')), fnList(F.users, o));
+    kids.push(...risksOf(f));
     const ask = act(say('Unclear — copy a question', 'Непонятно — скопировать вопрос'), async () => {
       markRead(F, 'unclear');
       bar.children[k - 1].className = `unclear${f.main ? ' main' : ''}`;

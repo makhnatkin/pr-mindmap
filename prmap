@@ -5,6 +5,8 @@
   prmap extract <PR or stack URL>... [--no-chain] [--out raw.json]      PR metadata, the stack chain and the names in the diffs
   prmap draft raw.json [--out data.json]                       a mechanical data.json from raw.json
   prmap uses data.json [--cache DIR]                           the places in the code that use each function
+  prmap merge data.json [--dir DIR]                            analysis/<n>.json of each PR into data.json
+  prmap report data.json [--dir DIR]                           findings.json and context.md of the report of the risks
   prmap build data.json [--html ...] [--md ...] [--open]       the page and the Markdown list from data.json
   prmap example [--out DIR] [--no-open]                        the example map (15 PRs, 166 functions)
   prmap dev                                                    template.html with the example data, for editing the template
@@ -24,6 +26,8 @@ sys.path.insert(0, str(HERE))
 import build as builder  # noqa: E402
 import draft as drafter  # noqa: E402
 import extract as extractor  # noqa: E402
+import merge as merger  # noqa: E402
+import report as reporter  # noqa: E402
 import uses as counter  # noqa: E402
 
 EXAMPLE = HERE / 'example' / 'banner.json'
@@ -81,6 +85,14 @@ def main():
     p = sub.add_parser('uses', help='data.json → `uses` of each function, counted at the PR heads')
     p.add_argument('rest', nargs=argparse.REMAINDER)
     p.set_defaults(run=lambda a: counter.main(a.rest))
+
+    p = sub.add_parser('merge', help='analysis/<n>.json of each PR → data.json')
+    p.add_argument('rest', nargs=argparse.REMAINDER)
+    p.set_defaults(run=lambda a: merger.main(a.rest))
+
+    p = sub.add_parser('report', help='data.json → findings.json and context.md of the report of the risks')
+    p.add_argument('rest', nargs=argparse.REMAINDER)
+    p.set_defaults(run=lambda a: reporter.main(a.rest))
 
     p = sub.add_parser('build', help='data.json → the page and the Markdown list')
     p.add_argument('rest', nargs=argparse.REMAINDER)

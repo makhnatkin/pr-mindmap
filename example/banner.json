@@ -331,7 +331,19 @@
           }
          ],
          "code": "https://github.com/gravity-ui/markdown-editor/blob/d475f5ad018ba7f7f8822cf01046dc08cd597e32/packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsDialog.tsx#L31",
-         "main": true
+         "main": true,
+         "risks": [
+          {
+           "title": "Shift+Tab while the window itself has the focus, after a click on its empty part, moves the focus out and leaves the window open: `event.target` is the `dialog`, not the first control.",
+           "level": "mid",
+           "at": "packages/editor-banner-extension/src/wysiwyg/utils/popup.ts:41"
+          },
+          {
+           "title": "Without `closeAnchor` a click on the banner that opened the window counts as a click outside: the window closes, and the same click may open it again.",
+           "level": "mid",
+           "at": "packages/editor-banner-extension/src/wysiwyg/utils/popup.ts:20"
+          }
+         ]
         },
         {
          "name": "SettingsRow",
@@ -357,7 +369,19 @@
            "url": "https://github.com/gravity-ui/markdown-editor/blob/978723588a9cf3cdc7a865e251f0c9e6d87b4fb3/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/DimensionSelect.tsx#L25"
           }
          ],
-         "code": "https://github.com/gravity-ui/markdown-editor/blob/d475f5ad018ba7f7f8822cf01046dc08cd597e32/packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsRow.tsx#L7"
+         "code": "https://github.com/gravity-ui/markdown-editor/blob/d475f5ad018ba7f7f8822cf01046dc08cd597e32/packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsRow.tsx#L7",
+         "risks": [
+          {
+           "title": "The caption names the control only when `children` puts `labelId` into `aria-labelledby`; a control that ignores it stays without a name for a screen reader.",
+           "level": "low",
+           "at": "packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsRow.tsx:20"
+          },
+          {
+           "title": "A click on the caption does not move the focus to the control: the caption is `Text`, while in `SettingsSwitch` it is a `label`.",
+           "level": "low",
+           "at": "packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsRow.tsx:17"
+          }
+         ]
         },
         {
          "name": "SettingsSwitch",
@@ -383,7 +407,19 @@
            "url": "https://github.com/gravity-ui/markdown-editor/blob/978723588a9cf3cdc7a865e251f0c9e6d87b4fb3/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/SettingsFields.tsx#L33"
           }
          ],
-         "code": "https://github.com/gravity-ui/markdown-editor/blob/d475f5ad018ba7f7f8822cf01046dc08cd597e32/packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsSwitch.tsx#L12"
+         "code": "https://github.com/gravity-ui/markdown-editor/blob/d475f5ad018ba7f7f8822cf01046dc08cd597e32/packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsSwitch.tsx#L12",
+         "risks": [
+          {
+           "title": "With `checked` and no `onUpdate` the switch does not move on a click: the window that shows it keeps the state now.",
+           "level": "low",
+           "at": "packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsSwitch.tsx:22"
+          },
+          {
+           "title": "The click is no longer logged here: `logClick` went away with the state, so the window that keeps the state logs it, or the metric stops.",
+           "level": "mid",
+           "at": "packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsSwitch.tsx:24"
+          }
+         ]
         }
        ]
       },

@@ -12,6 +12,10 @@ The map shows:
 - on a click on a function: what it is for in plain words, its plugin or extension, whether the product can do
   without it, and the places in the code that use it, each with the PR that added it or the main branch;
 - a link to the declaration: the code on the main branch for a function it has already, the PR diff otherwise;
+- the risks of a function, each with its level, its line in the PR and its card in the review report of the map,
+  which opens in a new window;
+- a triangle in the color of the level, red high, orange medium, yellow low, with the number of risks of that level
+  on the root, every stack, PR, group and function, folded or not;
 - the type of a function: real logic, a type guard or a small helper; a method shows its owner, `Owner.method`;
 - functions the PR only moves: where from and where to, as GitHub shows a renamed file;
 - which functions are key (★), which follow a usual pattern and which carry the project's own logic;
@@ -45,8 +49,10 @@ Without installing, `./prmap` from the repository folder does the same.
 ```
 
 The skill collects the stack, reads the diffs, writes the essence of each PR, groups the functions by meaning, assigns
-colors and finds similar functions. The result is `map.html`, `map.md` and a published artifact. The map speaks the
-language of the request: English, or Russian for a request in Russian.
+colors and finds similar functions; one agent per PR, all at the same time, finds the risks of its functions. The
+risks then go to a review report, `report/index.html`, built by the separate review-findings-report skill: an agent
+checks each risk and writes its card. The result is `map.html`, `map.md`, the report and a published artifact. The map
+speaks the language of the request: English, or Russian for a request in Russian.
 
 **Without a model: a draft in a few seconds.**
 
@@ -72,6 +78,8 @@ A GitHub stack link (`github.com/<owner>/<repo>/stack/<n>`) gives the PRs of tha
 | `prmap extract <PR or stack URL>… [--out raw.json]` | PR metadata, the stack chain, names from the diffs |
 | `prmap draft raw.json [--out data.json]` | a mechanical `data.json` from `raw.json` |
 | `prmap uses data.json` | the declaration of each function and the places in the code that call it, at the top of its stack |
+| `prmap merge data.json` | the analysis of each PR from `analysis/<n>.json` into `data.json` |
+| `prmap report data.json` | `report/findings.json` and `report/context.md`: the risks of the map as findings of the report |
 | `prmap build data.json [--open]` | `map.html`, `map.artifact.html`, `map.md` next to the data |
 | `prmap example` | the example: 15 PRs, 166 functions |
 | `prmap dev` | `template.html` with the example data, for editing the template |
@@ -97,9 +105,11 @@ The full schema is at the top of [build.py](build.py), a working example is [exa
       "title": "Background rendering", "essence": "≤ 200 chars",
       "groups": [{"name": "Commands", "fns": [
         {"name": "setHeaderBackground", "why": "≤ 50 chars", "key": true, "kind": "u", "cat": "cmd",
-         "type": "logic", "ext": "Banner", "about": "≤ 400 chars", "without": "≤ 200 chars",
+         "type": "logic", "ext": "Banner", "about": "≤ 500 chars", "without": "≤ 200 chars",
          "file": "src/background.ts", "line": 12,
-         "uses": [{"in": "BannerSettings", "pr": 1480, "url": "https://github.com/o/r/blob/…#L40"}], "main": true}
+         "uses": [{"in": "BannerSettings", "pr": 1480, "url": "https://github.com/o/r/blob/…#L40"}], "main": true,
+         "risks": [{"title": "≤ 200 chars", "what": "…", "why": "…", "suggestion": "…", "level": "high",
+                    "at": "src/background.ts:20", "id": 1}]}
       ]}],
       "path": [{"fn": "setHeaderBackground", "note": "≤ 150 chars: what to check on this step"}]
     }]
@@ -116,6 +126,11 @@ the way.
 (a link to the function on the default branch, when it is there) and `uses`: the functions that call it at the top of
 its stack, with tests, stories, imports, re-exports and definitions left out; `pr` is the PR that added the place,
 `null` the default branch.
+`risks` (0–3, each with the line where it happens and its `level`: `high`, `mid` or `low`) come with `about` and `without` from the agent of each PR, which
+follows [analysis.md](analysis.md); `prmap merge` folds its `analysis/<n>.json` into the data. `prmap report` gives
+each risk `id`, the number of its card, and the data `report`, the path of the report: in `map.html` a risk opens its
+card, `report/index.html?only=<id>`. The published artifact has no such links, as the report stays on disk.
+A card the report has checked gives its risk the checked level; a refuted risk or one without harm counts nowhere.
 A function needs the map functions that name it in `uses`. `main` marks a function the PR is built around; without it
 the key functions that no function of the PR needs are the main ones. `path` is the review order of a PR, every
 function but the unchanged moves once; without it the order goes from the functions that need nothing in the PR to the
@@ -148,9 +163,10 @@ python3 -m unittest discover -s tests -v    # tests; the browser one runs when C
 
 - [template.html](template.html) is the whole page: styles, markup and script. A new skin is a block of `-l`/`-d`
   colors and shapes next to the others plus a line in `SKINS`.
-- [extract.py](extract.py), [draft.py](draft.py), [uses.py](uses.py), [build.py](build.py) collect, draft, count
-  uses and build; `prmap` calls them.
-- [SKILL.md](SKILL.md) is the skill for Claude Code.
+- [extract.py](extract.py), [draft.py](draft.py), [uses.py](uses.py), [merge.py](merge.py), [report.py](report.py),
+  [build.py](build.py) collect, draft, find the code and its uses, fold in the analysis, prepare the report and build;
+  `prmap` calls them.
+- [SKILL.md](SKILL.md) is the skill for Claude Code, [analysis.md](analysis.md) the brief of its agent for one PR.
 
 The page loads its fonts from Google Fonts; offline, system fonts take their place.
 

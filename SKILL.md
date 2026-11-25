@@ -1,9 +1,7 @@
 ---
 name: pr-mindmap
-description: Build an interactive mind map of a GitHub PR or a stack of PRs from its link — the essence of the stack and of each PR, the functions grouped by meaning with a ≤50-char purpose, and on a click a plain-language explanation a manager understands, how many places use the function, its plugin or extension and what happens without it; moved functions marked from → to; key/standard/unique marks, colors by kind of work, similar-function links, a review order through each PR from the helpers to the main function, search, pinch zoom, depth and density controls, filters and foldable chrome — published as an HTML artifact plus a Markdown list. Use when the user gives one or more PR or stack links and asks for a mind map, a map, an overview or a function breakdown of the PR(s) ("ммап", "построй майнд мап пр-а", "карта PR", "карта стека", "mind map this PR").
+description: Build an interactive mind map of a GitHub PR or a stack of PRs from its link — the essence of the stack and of each PR, the functions grouped by meaning with a ≤50-char purpose, and on a click a plain-language explanation a manager understands, how many places use the function, its plugin or extension and what happens without it, plus the risks of each function, found by one agent per PR and checked one by one in a full review report (the review-findings-report skill), each risk a link to its card of the report in a new window and a triangle in the color of its level (high, medium, low) with the number of risks on every node, folded or not; moved functions marked from → to; key/standard/unique marks, colors by kind of work, similar-function links, a review order through each PR from the helpers to the main function, search, pinch zoom, depth and density controls, filters and foldable chrome — published as an HTML artifact plus a Markdown list. Use when the user gives one or more PR or stack links and asks for a mind map, a map, an overview or a function breakdown of the PR(s) ("ммап", "построй майнд мап пр-а", "карта PR", "карта стека", "mind map this PR").
 argument-hint: <PR or stack URL> [more URLs] [only this PR]
-context: fork
-agent: general-purpose
 ---
 
 # PR mind map
@@ -18,6 +16,10 @@ The skill folder is `~/.claude/skills/pr-mindmap/`; `prmap` in it runs every ste
 - `prmap draft` — a mechanical `data.json` from `raw.json`: the structure without the meaning;
 - `prmap uses` — the declaration of every function (`file`, `line`, `code`) and the places that call it (`uses`),
   across the repository at the top of its stack, tests, stories, imports and definitions aside;
+- `analysis.md` — the brief of the agent that analyses one PR: `about`, `without` and `risks` of each of its
+  functions, written to `<work>/analysis/<n>.json`; `prmap merge` folds them into `data.json`;
+- `prmap report` — numbers the risks and writes `findings.json` and `context.md` of the report to `<work>/report/`;
+  the review-findings-report skill (`~/.claude/skills/review-findings-report/`) builds the report from them;
 - `prmap build` — checks `data.json` and builds the map from `template.html`: `map.html` (a complete file to open
   from disk), `map.artifact.html` (the same page in the form the Artifact tool publishes) and `map.md`;
   the docstring of `build.py` is the data schema;
@@ -73,21 +75,11 @@ Levels: root → stacks → PRs → groups → functions. Read `example/banner.j
     method by that dot.
   - `type`: `"logic"` does real work, `"guard"` is a type guard or a yes/no check of a value, `"util"` is a small
     helper of a few lines. The draft guesses it from the signature and the size of the body.
-  - The card of a function shows the fields below on a click; `example/banner.json` has them on `SettingsDialog`,
-    `SettingsRow` and `SettingsSwitch` of #1475. Write them in the map language for a reader who does not write code,
-    such as a manager: what the user or the product gets, in short sentences, with no code names and no framework
-    terms. A term that cannot go is explained in the same sentence. Every statement comes from the diff or the PR text.
-  - `about` ≤400 chars: what the function is for and where the user meets its result. The card shows it right under
-    `why`, so it does not repeat `why`.
-  - `without` ≤200 chars: one sentence that stands alone under a rule, with no heading: whether the product can do
-    without the function, then the risk. In Russian it opens with «Можно без неё, но …», «Без неё нельзя: …» or
-    «Отчасти: …»; in English with "It can go, but …", "It cannot go: …" or "Partly: …".
   - `ext` ≤40 chars: the plugin or extension the function belongs to, by its name in the code (`YfmTabs`, `Mermaid`);
     code outside plugins and extensions gets its package or module (`core`). The draft guesses it from the path.
-  - `file`, `line`, `code` and `uses` come from `prmap uses` in step 3, for the final list of functions. `uses` lists the places that call the function across the repository at the top of its stack, each with
-    the PR that added it or `null` for the default branch; `code` links a function the default branch has already.
-    A key function with no places, or a common name with 30+, is likely a miscount: check it with
-    `git --git-dir ~/.cache/pr-mindmap/<owner>__<repo> grep -w <name> refs/prmap/<PR number>` and fix the list.
+  - `file`, `line`, `code` and `uses` come from `prmap uses` in step 3; `about`, `without` and `risks` from the
+    agents of step 4. `example/banner.json` has all of them on `SettingsDialog`, `SettingsRow` and `SettingsSwitch`
+    of #1475.
   - `moved` (`{"from", "to"}`): the draft sets it when the PR deletes a definition in one file and adds it in another,
     with `"changed": true` when the body differs; check each one in the diff. An unchanged move is only a move: no
     `why`, `about`, `without` or `ext`; the card shows the old and the new path, as GitHub shows a renamed file. A
@@ -98,7 +90,7 @@ Levels: root → stacks → PRs → groups → functions. Read `example/banner.j
   A function needs the map functions that name it in their `uses`, so a wrong link is fixed in `uses`.
   - `main: true` on the 1–2 functions the PR is built around, from the key ones. Without it the builder takes the
     key functions that no function of the PR needs.
-  - `path` of a PR card, `[{"fn", "note"}]`, is written in step 3: every function of the card but the unchanged
+  - `path` of a PR card, `[{"fn", "note"}]`, is written in step 6: every function of the card but the unchanged
     moves, once. Start from the order that `prmap build` writes to `map.md` and move a step only when the code
     reads better otherwise. `note` ≤150 chars tells a reviewer what to check on that step, in the map language,
     without repeating `why`.
@@ -121,30 +113,68 @@ Create the directory and start with an empty JSON object if the file is missing.
 - Copy each category's `colors` pair into its entry in `data.json`. The builder embeds both colors in the HTML
   and the published Artifact. Both outputs render independently of the local registry.
 
-## 3. Build and check
+## 3. Find the code
+
+For the final list of functions:
 
 ```bash
 ~/.claude/skills/pr-mindmap/prmap uses <work>/data.json
+```
+
+`uses` lists the places that call a function across the repository at the top of its stack, each with the PR that
+added it or `null` for the default branch; `code` links a function the default branch has already. A key function with no places, or a common name with 30+, is likely a miscount: check it with
+`git --git-dir ~/.cache/pr-mindmap/<owner>__<repo> grep -w <name> refs/prmap/<PR number>` and fix the list.
+
+## 4. Analyse each PR
+
+Start one agent per PR number with the Agent tool, `subagent_type: "general-purpose"` and `run_in_background: false`,
+all in one message so they work at the same time. The prompt of each:
+`Follow ~/.claude/skills/pr-mindmap/analysis.md for PR <n> of <owner>/<repo>; the work folder is <work>.`
+When they are done:
+
+```bash
+~/.claude/skills/pr-mindmap/prmap merge <work>/data.json
+```
+
+It folds `<work>/analysis/<n>.json` into the data and lists what it left out: a PR without a file gets a new agent
+once; a missing or unknown function is fixed in that file by hand, and the merge runs again.
+
+## 5. Build the report
+
+```bash
+~/.claude/skills/pr-mindmap/prmap report <work>/data.json
+```
+
+It numbers the risks, writes `<work>/report/findings.json` and `context.md` and sets `report` of the data: in
+`map.html` each risk links its card of the report, and `prmap build` takes the checked level of each risk from its card. Then build the report by steps 2–4 of
+`~/.claude/skills/review-findings-report/SKILL.md` with the folder `<work>/report`: an agent per finding, `build.py`,
+the shots. A map without risks skips this step.
+
+## 6. Build and check
+
+```bash
 ~/.claude/skills/pr-mindmap/prmap build <work>/data.json
 ```
 
 It writes `map.html`, `map.artifact.html` and `map.md` next to the data. Fix every error it prints (lengths, unknown
-colors, duplicate names). Then write `main` and `path` from the «Review order» of each PR in `map.md` and build again
-until it prints `ok` with `details N/N` and `paths N/N`: every function described, every PR with its path. A warning
-about a color without functions means the color should go; a warning about a step that comes before a function it
-needs means the step moves or `uses` is wrong.
+colors, duplicate names). Then write `main` and `path` from the «Review order» of each PR in `map.md` and build
+again until it prints `ok` with `details N/N`, `risks N/N`, `report R/R` and `paths N/N`: every function described
+and analysed, every risk in the report, every PR with its path. A warning about a color without
+functions means the color should go; a warning about a step that comes before a function it needs means the step
+moves or `uses` is wrong.
 If Google Chrome is installed, take one look:
 `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --hide-scrollbars --user-data-dir=<work>/chrome --window-size=1600,1000 --virtual-time-budget=6000 --screenshot=<work>/map.png file://<work>/map.html`
 and read the PNG once. Fix only what is visibly broken; no second look.
 
-## 4. Publish and report
+## 7. Publish and report
 
 Publish `map.artifact.html` as an Artifact (icon `map`, description: one sentence naming the PRs); `map.html` is the
-standalone copy for opening from disk. Copy `map.html` and `map.md` to the folder the user named, if any; otherwise
-leave them in the work folder.
+standalone copy for opening from disk, and its links to the report lead to the folder `report` next to it. Copy
+`map.html`, `map.md` and `report/` to the folder the user named, if any; otherwise leave them in the work folder.
 
 Final report, short, in the user's language:
-- the artifact link and the paths of `map.html`, `map.md`, `data.json`;
+- the artifact link and the paths of `map.html`, `map.md`, `data.json` and `report/index.html`;
 - the PRs covered and how they were grouped into stacks;
-- counts: PRs, functions, key, main, standard/unique, moved, colors, similarity groups;
+- counts: PRs, functions, key, main, standard/unique, moved, risks by level, colors, similarity groups, and the
+  summary line of the report;
 - anything chosen without asking (chain included or not, a lone PR split into areas).
