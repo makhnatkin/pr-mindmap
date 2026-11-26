@@ -4,6 +4,7 @@
 The browser test needs Google Chrome or Chromium and is skipped without one; the syntax test needs node.
 """
 import copy
+import hashlib
 import json
 import re
 import shutil
@@ -19,6 +20,9 @@ sys.path.insert(0, str(ROOT))
 import build  # noqa: E402
 import draft  # noqa: E402
 import extract  # noqa: E402
+import merge  # noqa: E402
+import report  # noqa: E402
+import uses  # noqa: E402
 
 EXAMPLE = ROOT / 'example' / 'banner.json'
 CHROME = next((p for p in (
@@ -141,6 +145,34 @@ class Build(unittest.TestCase):
         self.assertEqual([p.name for p in self.dir.iterdir()], ['map-data.js'])
         self.assertIn('"palette":', (self.dir / 'map-data.js').read_text(encoding='utf-8'))
 
+    def test_explicit_colors_stay_with_the_category(self):
+        data = example()
+        cat = data['cats'][0]
+        cat['colors'] = ['#2468ac', '#8aceef']
+        data['cats'].reverse()
+        data_path = self.dir / 'data.json'
+        data_path.write_text(json.dumps(data), encoding='utf-8')
+
+        build.build(data_path, log=lambda *_: None)
+        for path in (self.dir / 'map.html', self.dir / 'map.artifact.html'):
+            page = path.read_text(encoding='utf-8')
+            for color in cat['colors']:
+                self.assertIn(f'--c-{cat["id"]}: {color};', page)
+
+        data_js = self.dir / 'map-data.js'
+        build.build(data_path, data_js=data_js, log=lambda *_: None)
+        script = data_js.read_text(encoding='utf-8').strip()
+        embedded = json.loads(script.removeprefix('window.PR_MAP_DATA = ').removesuffix(';'))
+        self.assertEqual(embedded['palette'][0], list(build.PALETTE[0]))
+        self.assertEqual(embedded['palette'][-1], cat['colors'])
+
+    def test_invalid_category_colors(self):
+        data = example()
+        for colors in (None, '#2468ac', ['#2468ac'], ['#2468ac', 'red;']):
+            with self.subTest(colors=colors):
+                data['cats'][0]['colors'] = colors
+                self.assertIn('colors must contain two #RRGGBB values', '\n'.join(build.check(data)))
+
     def test_invalid_data_stops_the_build(self):
         data = example()
         data['cats'][0]['id'] = 'Bad Id'
@@ -152,7 +184,7 @@ class Build(unittest.TestCase):
     def test_input_is_not_changed(self):
         data = example()
         before = copy.deepcopy(data)
-        build.with_sims(data)
+        build.page_data(data)
         build.markdown(data)
         self.assertEqual(data, before)
 
@@ -277,6 +309,504 @@ class Draft(unittest.TestCase):
         raw['prs'][0]['body'] = 'x ' * 400
         raw['prs'][0]['title'] = 'feat: ' + 'long title ' * 30
         self.assertEqual(build.check(draft.draft(raw)), [])
+
+
+MOVE_DIFF = '''diff --git a/src/old.ts b/src/old.ts
+--- a/src/old.ts
++++ b/src/old.ts
+@@ -1,9 +1,3 @@
+-export function shared(a: number) {
+-    return a + 1;
+-}
+-function reworked(a: number) {
+-    return a;
+-}
+ function stays() {}
+diff --git a/src/new.ts b/src/new.ts
+new file mode 100644
+--- /dev/null
++++ b/src/new.ts
+@@ -0,0 +1,6 @@
++function shared(a: number) {
++    return a + 1;
++}
++export function reworked(a: number) {
++    return a * 2;
++}
+diff --git a/src/reorder.ts b/src/reorder.ts
+--- a/src/reorder.ts
++++ b/src/reorder.ts
+@@ -1,6 +1,6 @@
+-function first() {
+-    return 1;
+-}
+ function second() {}
++function first() {
++    return 1;
++}
+diff --git a/src/ext/Old.tsx b/src/ui/Switch.tsx
+similarity index 60%
+rename from src/ext/Old.tsx
+rename to src/ui/Switch.tsx
+--- a/src/ext/Old.tsx
++++ b/src/ui/Switch.tsx
+@@ -1,3 +1,3 @@
+-export function Switch({label}) {
++export function Switch({label, onUpdate}) {
+     return null;
+ }
+diff --git a/src/gone.ts b/src/gone.ts
+deleted file mode 100644
+--- a/src/gone.ts
++++ /dev/null
+@@ -1,2 +0,0 @@
+-export const removedHelper = () => {
+-};
+'''
+
+
+class Moves(unittest.TestCase):
+    def test_moves_between_files(self):
+        found = extract.names(MOVE_DIFF)
+        self.assertEqual(found['src/new.ts']['moved'], [{'name': 'shared', 'from': 'src/old.ts', 'same': True},
+                                                        {'name': 'reworked', 'from': 'src/old.ts', 'same': False}])
+        self.assertEqual(found['src/old.ts']['removed'], ['shared', 'reworked'])
+
+    def test_renamed_file_with_changes(self):
+        switch = extract.names(MOVE_DIFF)['src/ui/Switch.tsx']
+        self.assertEqual(switch['moved'], [{'name': 'Switch', 'from': 'src/ext/Old.tsx', 'same': False}])
+        self.assertEqual(switch['removed'], [])
+
+    def test_reordering_is_not_a_change(self):
+        reorder = extract.names(MOVE_DIFF)['src/reorder.ts']
+        self.assertEqual((reorder['added'], reorder['removed'], reorder['moved']), ([], [], []))
+
+    def test_deleted_file_keeps_its_path(self):
+        self.assertEqual(extract.names(MOVE_DIFF)['src/gone.ts']['removed'], ['removedHelper'])
+
+    def test_draft_marks_moves(self):
+        found = extract.names(MOVE_DIFF)
+        files = [{'path': path, 'additions': 1, 'deletions': 1, **found[path]} for path in ('src/new.ts', 'src/ui/Switch.tsx')]
+        pr = {**raw_pr(5, 'refactor/move', []), 'files': files}
+        fns = {f['name']: f for f in build.functions(draft.draft({'repo': 'o/r', 'default': 'main', 'prs': [pr]}))}
+        self.assertEqual(fns['shared']['moved'], {'from': 'src/old.ts', 'to': 'src/new.ts'})
+        self.assertEqual(fns['reworked']['moved'], {'from': 'src/old.ts', 'to': 'src/new.ts', 'changed': True})
+        self.assertTrue(fns['shared']['why'].startswith('moved ·'))
+        self.assertFalse(fns['reworked']['key'])
+
+    def test_extension_from_the_path(self):
+        self.assertEqual(draft.ext_of('src/extensions/yfm/YfmTabs/plugin.ts'), 'YfmTabs')
+        self.assertEqual(draft.ext_of('packages/editor/src/extensions/markdown/Bold/index.ts'), 'Bold')
+        self.assertEqual(draft.ext_of('src/core/utils/dom.ts'), 'core')
+        self.assertEqual(draft.ext_of('packages/ui/src/title/node.ts'), 'ui')
+
+
+class Details(unittest.TestCase):
+    def fn(self, data):
+        return data['stacks'][0]['prs'][0]['groups'][0]['fns'][0]
+
+    def problems(self, **fields):
+        data = example()
+        self.fn(data).update(fields)
+        return '\n'.join(build.check(data))
+
+    def test_limits_and_types(self):
+        self.assertIn('about 501 > 500', self.problems(about='x' * 501))
+        self.assertIn('without 201 > 200', self.problems(without='x' * 201))
+        self.assertIn('ext 41 > 40', self.problems(ext='x' * 41))
+        self.assertIn('ext is empty', self.problems(ext=' '))
+        self.assertIn("type 'big'", self.problems(type='big'))
+        self.assertIn('line 0', self.problems(line=0))
+        self.assertIn('is not a link', self.problems(code='src/a.ts'))
+        for wrong in (-1, True, '3', [{'in': 'Caller', 'pr': 0, 'url': 'https://x'}], [{'in': 'Caller', 'pr': None}]):
+            with self.subTest(uses=wrong):
+                self.assertIn('uses: expected a list', self.problems(uses=wrong))
+        for wrong in ({'from': 'a.ts'}, 'a.ts', {'from': 'a.ts', 'to': 'b.ts', 'changed': 'yes'}):
+            with self.subTest(moved=wrong):
+                self.assertIn('moved', self.problems(moved=wrong))
+
+    def test_an_unchanged_move_needs_no_why(self):
+        self.assertEqual(self.problems(why='', moved={'from': 'a.ts', 'to': 'b.ts'}), '')
+        self.assertIn('why is empty', self.problems(why='', moved={'from': 'a.ts', 'to': 'b.ts', 'changed': True}))
+
+    def test_described(self):
+        full = {'type': 'logic', 'ext': 'Banner', 'about': 'a', 'without': 'b', 'uses': []}
+        self.assertTrue(build.described(full))
+        self.assertTrue(build.described({'moved': {'from': 'a', 'to': 'b'}}))
+        self.assertFalse(build.described({'moved': {'from': 'a', 'to': 'b', 'changed': True}}))
+        self.assertFalse(build.described({**full, 'type': None}))
+        self.assertFalse(build.described({k: v for k, v in full.items() if k != 'uses'}))
+
+    def test_diff_link_names_the_file_by_its_hash(self):
+        pr = {'url': 'https://github.com/o/r/pull/7'}
+        digest = hashlib.sha256(b'src/a.ts').hexdigest()
+        self.assertEqual(build.diff_link(pr, {'file': 'src/a.ts', 'line': 12}), f'https://github.com/o/r/pull/7/files#diff-{digest}R12')
+        self.assertIsNone(build.diff_link(pr, {}))
+
+    def test_markdown_carries_the_details(self):
+        listing = build.markdown(example())
+        self.assertIn('— Row with a switch · `std` · [UI] · logic · editor-banner-extension', listing)
+        self.assertIn('    - Moved and changed: `packages/', listing)
+        self.assertIn('    - The settings window that opens next to a banner.', listing)
+        self.assertIn('    - It cannot go: the banner settings window', listing)
+        self.assertRegex(listing, r'    - Used in: \[SettingsFields\]\(https://github\.com/[^)]+\) \(main\)')
+
+    def test_unchanged_move_is_one_line(self):
+        data = example()
+        f = self.fn(data)
+        f.update(why='', moved={'from': 'src/a.ts', 'to': 'src/b.ts'})
+        listing = build.markdown(data)
+        self.assertIn(f'  - `{f["name"]}` · moved: `src/a.ts` → `src/b.ts`\n', listing)
+
+
+class Guards(unittest.TestCase):
+    DIFF = '''diff --git a/src/is.ts b/src/is.ts
+--- /dev/null
++++ b/src/is.ts
+@@ -0,0 +1,12 @@
++export const isNode = (value: unknown): value is Node =>
++    value instanceof Node;
++export function hasTitle(attrs) {
++    return Boolean(attrs.title);
++}
++export const pick = (a, b) => a ?? b;
++export function render(view) {
++    const dom = view.dom;
++    dom.textContent = '';
++    view.update();
++    return dom;
++}
+'''
+
+    def test_type_guards_and_small_helpers(self):
+        found = extract.names(self.DIFF)['src/is.ts']
+        self.assertEqual(found['guards'], ['isNode', 'hasTitle'])
+        self.assertEqual(found['small'], ['pick'])
+
+    def test_draft_takes_the_type_and_the_file(self):
+        found = extract.names(self.DIFF)
+        pr = {**raw_pr(9, 'feat/is', []), 'files': [{'path': 'src/is.ts', 'additions': 12, 'deletions': 0, **found['src/is.ts']}]}
+        fns = {f['name']: f for f in build.functions(draft.draft({'repo': 'o/r', 'default': 'main', 'prs': [pr]}))}
+        self.assertEqual({name: f['type'] for name, f in fns.items()},
+                         {'isNode': 'guard', 'hasTitle': 'guard', 'pick': 'util', 'render': 'logic'})
+        self.assertEqual(fns['render']['file'], 'src/is.ts')
+
+
+BANNER = '''import {
+    SettingsDialog,
+    SettingsRow,
+} from './settings';
+export {SettingsRow} from './settings';
+
+// SettingsDialog of the banner
+export function BannerSettings({
+    block,
+}: Props) {
+    if (block) {
+        log(1);
+    } else {
+        return <SettingsRow label="a" />;
+    }
+    return (
+        <SettingsDialog title="x">
+            <SettingsRow label="b" />
+        </SettingsDialog>
+    );
+}
+
+export const BannerPanel: FC<Props> = ({
+    open,
+}) => {
+    const inner = () => <SettingsRow label="c" />;
+    return list.SettingsRow;
+};
+
+export const headerPart = {
+    create(schema) {
+        return schema.create();
+    },
+    adopt: (node) => headerPart.create(node),
+};
+
+class View {
+    renderAttrs() {
+        this.update();
+    }
+    update() {
+        this.renderAttrs();
+    }
+}
+
+register(SettingsDialog);
+'''
+
+
+class Uses(unittest.TestCase):
+    LINES = BANNER.splitlines()
+
+    def at(self, text):
+        return next(i for i, line in enumerate(self.LINES) if text in line)
+
+    def test_the_function_around_a_line(self):
+        self.assertEqual(uses.around(self.LINES, self.at('<SettingsDialog title')), 'BannerSettings')
+        self.assertEqual(uses.around(self.LINES, self.at('label="a"')), 'BannerSettings')
+        self.assertEqual(uses.around(self.LINES, self.at('label="c"')), 'BannerPanel')
+        self.assertEqual(uses.around(self.LINES, self.at('return schema.create')), 'headerPart.create')
+        self.assertEqual(uses.around(self.LINES, self.at('this.renderAttrs')), 'View.update')
+        self.assertIsNone(uses.around(self.LINES, self.at('register(')))
+
+    def test_declarations(self):
+        self.assertTrue(uses.declares('export const BannerPanel: FC<Props> = ({', 'BannerPanel'))
+        self.assertTrue(uses.declares('    adopt: (node) => headerPart.create(node),', 'adopt'))
+        self.assertTrue(uses.declares('    renderAttrs() {', 'renderAttrs'))
+        self.assertFalse(uses.declares('        log(1);', 'log'))
+
+    def test_imports_and_comments_are_skipped(self):
+        skip = uses.skipped(self.LINES)
+        for text in ('import {', '    SettingsDialog,', "} from './settings';", 'export {SettingsRow}', '// SettingsDialog'):
+            self.assertIn(self.at(text), skip)
+        self.assertNotIn(self.at('<SettingsDialog title'), skip)
+
+    def repo(self, files):
+        root = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, root)
+        for path, text in files.items():
+            (root / path).parent.mkdir(parents=True, exist_ok=True)
+            (root / path).write_text(text)
+        git = ['git', '-C', str(root), '-c', 'user.name=t', '-c', 'user.email=t@t', '-c', 'commit.gpgsign=false',
+               '-c', 'core.hooksPath=/dev/null']
+        for args in (['init', '-q'], ['add', '.'], ['commit', '-q', '-m', 'x'], ['update-ref', 'refs/prmap/1', 'HEAD']):
+            subprocess.run([*git, *args], check=True, capture_output=True)
+        return uses.Tree(root / '.git', 'refs/prmap/1')
+
+    def test_places_and_declaration_in_a_tree(self):
+        tree = self.repo({'src/Banner.tsx': BANNER, 'src/Banner.test.tsx': 'SettingsRow();\n', 'README.md': 'SettingsRow\n',
+                          'src/settings.tsx': 'export function SettingsRow() {\n    return null;\n}\n'})
+        found = uses.places(tree, 'SettingsRow (rows)', {'BannerSettings': 'BannerSettings (#2)'})
+        self.assertEqual(sorted(found), [('src/Banner.tsx', 'BannerPanel'), ('src/Banner.tsx', 'BannerSettings (#2)')])
+        self.assertEqual(found[('src/Banner.tsx', 'BannerSettings (#2)')], self.at('label="a"') + 1)
+        self.assertEqual(uses.places(tree, 'headerPart.create', {}), {('src/Banner.tsx', 'headerPart.adopt'): self.at('adopt:') + 1})
+        self.assertEqual(uses.places(tree, 'renderAttrs', {}, only='src/Banner.tsx'), {('src/Banner.tsx', 'View.update'): self.at('this.renderAttrs') + 1})
+        self.assertEqual(uses.declaration(tree, 'SettingsRow', ['src/settings.tsx']), {'file': 'src/settings.tsx', 'line': 1})
+        self.assertEqual(uses.declaration(tree, 'View.renderAttrs'), {'file': 'src/Banner.tsx', 'line': self.at('    renderAttrs() {') + 1})
+        self.assertTrue(tree.has('src/settings.tsx', 'return null;'))
+        self.assertIsNone(tree.lines('src/missing.ts'))
+
+    def test_chains_follow_the_bases(self):
+        prs = {1: {'base': 'main', 'head': 'a'}, 2: {'base': 'a', 'head': 'b'}, 3: {'base': 'b', 'head': 'c'},
+               9: {'base': 'main', 'head': 'z'}}
+        chains = uses.chains(prs)
+        self.assertEqual(chains[2], [1, 2, 3])
+        self.assertEqual(chains[9], [9])
+
+
+def order_data(path=None):
+    """A PR of four functions: Dialog needs closeOnTab and Row, closeOnTab needs tabbable; one more is only moved."""
+    def fn(name, *users, **extra):
+        uses = [{'in': user, 'pr': 7, 'url': f'https://github.com/o/r/blob/x/a.ts#L{i}'} for i, user in enumerate(users, 1)]
+        return {'name': name, 'why': f'why {name}', 'key': False, 'kind': 's', 'cat': 'ui', 'uses': uses, **extra}
+
+    pr = {'n': 7, 'url': 'https://github.com/o/r/pull/7', 'title': 'Dialog', 'essence': 'A dialog.', 'groups': [{'name': 'UI', 'fns': [
+        fn('Dialog', key=True, file='src/Dialog.tsx'), fn('closeOnTab', 'Dialog'), fn('Row', 'Dialog', 'Elsewhere'),
+        fn('tabbable', 'closeOnTab'), fn('moved', why='', moved={'from': 'a.ts', 'to': 'b.ts'})]}]}
+    if path is not None:
+        pr['path'] = path
+    return {'title': 'Map', 'root': {'title': 'Map', 'essence': 'A map.'}, 'cats': [{'id': 'ui', 'name': 'UI', 'desc': 'UI.'}],
+            'stacks': [{'name': 'Dialog', 'gh': 'no stack', 'essence': 'A dialog.', 'prs': [pr]}]}
+
+
+class Order(unittest.TestCase):
+    def pr(self, data):
+        return data['stacks'][0]['prs'][0]
+
+    def test_needs_come_from_the_places_of_use(self):
+        self.assertEqual(build.needs_of(order_data()), {'Dialog': ['closeOnTab', 'Row'], 'closeOnTab': ['tabbable']})
+
+    def test_helpers_go_first_and_the_main_function_last(self):
+        data = order_data()
+        needs = build.needs_of(data)
+        self.assertEqual(build.main_of(self.pr(data), needs), {'Dialog'})
+        self.assertEqual([s['fn'] for s in build.review_order(self.pr(data), needs)], ['Row', 'tabbable', 'closeOnTab', 'Dialog'])
+
+    def test_marked_main_functions_win(self):
+        data = order_data()
+        self.pr(data)['groups'][0]['fns'][2]['main'] = True
+        needs = build.needs_of(data)
+        self.assertEqual(build.main_of(self.pr(data), needs), {'Row'})
+        self.assertEqual([s['fn'] for s in build.review_order(self.pr(data), needs)], ['tabbable', 'closeOnTab', 'Row', 'Dialog'])
+
+    def test_functions_that_need_each_other_still_get_steps(self):
+        data = order_data()
+        self.pr(data)['groups'][0]['fns'][1]['uses'].append({'in': 'tabbable', 'pr': None, 'url': 'https://x'})
+        order = [s['fn'] for s in build.review_order(self.pr(data), build.needs_of(data))]
+        self.assertEqual(order, ['Row', 'closeOnTab', 'tabbable', 'Dialog'])
+
+    def test_path_is_the_order_with_notes(self):
+        path = [{'fn': n, 'note': f'look at {n}'} for n in ('tabbable', 'closeOnTab', 'Row', 'Dialog')]
+        data = order_data(path)
+        self.assertEqual(build.check(data), [])
+        self.assertEqual(build.review_order(self.pr(data), build.needs_of(data)), path)
+        page = build.page_data(data)['stacks'][0]['prs'][0]
+        self.assertEqual(page['order'], path)
+        dialog = page['groups'][0]['fns'][0]
+        self.assertEqual((dialog['needs'], dialog['main']), (['closeOnTab', 'Row'], True))
+
+    def test_path_problems(self):
+        problems = '\n'.join(build.check(order_data([
+            {'fn': 'tabbable'}, {'fn': 'tabbable'}, {'fn': 'Dialog', 'note': 'x' * 151}, {'fn': 'moved'}, {'fn': 'closeOnTab'}])))
+        self.assertIn('#7: path: Dialog: note 151 > 150', problems)
+        self.assertIn('#7: path: moved is not a function of the PR to review', problems)
+        self.assertIn('#7: path: tabbable is listed 2 times', problems)
+        self.assertIn('#7: path: Row is missing', problems)
+        self.assertIn('path: expected a list', '\n'.join(build.check(order_data(['Dialog']))))
+
+    def test_main_problems(self):
+        data = order_data()
+        fns = self.pr(data)['groups'][0]['fns']
+        fns[0]['main'], fns[4]['main'] = 'yes', True
+        problems = '\n'.join(build.check(data))
+        self.assertIn("Dialog: main 'yes'", problems)
+        self.assertIn('moved: main on an unchanged move', problems)
+
+    def test_a_step_before_what_it_needs_is_a_warning(self):
+        data = order_data([{'fn': n} for n in ('Dialog', 'Row', 'tabbable', 'closeOnTab')])
+        self.assertEqual(build.warnings(data), ['#7: path: Dialog comes before closeOnTab, Row it needs'])
+
+    def test_markdown_lists_the_review_order(self):
+        listing = build.markdown(order_data())
+        self.assertIn('**Review order:**\n\n1. `Row` — why Row\n', listing)
+        self.assertIn('4. `Dialog` ◆ — why Dialog · `src/Dialog.tsx`\n', listing)
+        self.assertIn('11. `SettingsDialog` ◆ — The shared window', build.markdown(example()))
+
+
+DIGEST = hashlib.sha256(b'src/a.ts').hexdigest()
+
+
+def with_risks(*found):
+    data = order_data()
+    data['stacks'][0]['prs'][0]['groups'][0]['fns'][0]['risks'] = list(found)
+    return data
+
+
+class Risks(unittest.TestCase):
+    def problems(self, *found):
+        return '\n'.join(build.check(with_risks(*found)))
+
+    def test_risks_are_checked(self):
+        self.assertEqual(self.problems({'title': 'r', 'what': 'w', 'why': 'y', 'suggestion': 's', 'level': 'high',
+                                        'at': 'src/a.ts:4', 'id': 1}), '')
+        self.assertIn("risk «r»: level 'none', expected one of high, mid, low", self.problems({'title': 'r', 'level': 'none'}))
+        self.assertIn('risks: expected a list', self.problems({'title': ''}))
+        self.assertIn('risks: expected a list', self.problems({'text': 'r'}))
+        self.assertIn('risks: expected a list', self.problems({'title': 'r', 'line': 3}))
+        self.assertIn('risks: 4 > 3', self.problems(*[{'title': 'r'}] * 4))
+        self.assertIn('risk 201 > 200', self.problems({'title': 'x' * 201}))
+        self.assertIn('risk «r»: why is empty', self.problems({'title': 'r', 'why': ' '}))
+        self.assertIn("risk at 'src/a.ts'", self.problems({'title': 'r', 'at': 'src/a.ts'}))
+        self.assertIn("risk at 'src/a.ts:0'", self.problems({'title': 'r', 'at': 'src/a.ts:0'}))
+        self.assertIn('risk «r»: id 0', self.problems({'title': 'r', 'id': 0}))
+        self.assertIn('risk id 2 is on 2 risks', self.problems({'title': 'r', 'id': 2}, {'title': 'q', 'id': 2}))
+
+    def test_analysed(self):
+        self.assertTrue(build.analysed({'risks': []}))
+        self.assertTrue(build.analysed({'moved': {'from': 'a', 'to': 'b'}}))
+        self.assertFalse(build.analysed({'about': 'a'}))
+
+    def test_page_links_the_lines_and_the_cards(self):
+        data = with_risks({'title': 'r', 'at': 'src/a.ts:4', 'id': 1}, {'title': 'q', 'id': 2})
+        dialog = build.page_data(data)['stacks'][0]['prs'][0]['groups'][0]['fns'][0]
+        self.assertEqual(dialog['risks'], [{'title': 'r', 'at': 'src/a.ts:4', 'id': 1,
+                                            'url': f'https://github.com/o/r/pull/7/files#diff-{DIGEST}R4'},
+                                           {'title': 'q', 'id': 2}])
+        data['report'] = 'report/index.html'
+        dialog = build.page_data(data)['stacks'][0]['prs'][0]['groups'][0]['fns'][0]
+        self.assertEqual([r['card'] for r in dialog['risks']], ['report/index.html?only=1', 'report/index.html?only=2'])
+        self.assertIn(f'    - Risk: r · [src/a.ts:4](https://github.com/o/r/pull/7/files#diff-{DIGEST}R4)'
+                      ' · [report № 1](report/index.html#f1)\n    - Risk: q · [report № 2](report/index.html#f2)\n',
+                      build.markdown(data))
+
+    def test_only_the_page_on_disk_links_the_report(self):
+        out = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, out)
+        data = {**with_risks({'title': 'r', 'id': 1}), 'report': 'report/index.html'}
+        (out / 'data.json').write_text(json.dumps(data))
+        build.build(out / 'data.json', log=lambda line: None)
+        self.assertIn('report/index.html?only=1', (out / 'map.html').read_text())
+        self.assertNotIn('report/index.html', (out / 'map.artifact.html').read_text())
+
+    def test_the_report_gives_the_checked_level(self):
+        out = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, out)
+        data = with_risks({'title': 'r', 'level': 'low', 'id': 1}, {'title': 'q', 'level': 'high', 'id': 2},
+                          {'title': 'p', 'id': 3})
+        (out / 'f1.json').write_text(json.dumps({'verdict': 'confirmed', 'severity': 'высокая'}))
+        (out / 'f2.json').write_text(json.dumps({'verdict': 'refuted', 'severity': 'нет'}))
+        self.assertEqual(build.from_report(data, out), 2)
+        found = [r for _, _, r in build.risks(data)]
+        self.assertEqual([(r.get('level'), r.get('verdict')) for r in found], [('high', 'confirmed'), ('none', 'refuted'), (None, None)])
+        # A refuted risk counts nowhere, a risk without a level counts as `mid`.
+        self.assertEqual(build.risk_counts(found), {'high': 1, 'mid': 1})
+
+    def test_markdown_names_the_levels(self):
+        listing = build.markdown(with_risks({'title': 'r', 'level': 'high'}, {'title': 'q', 'verdict': 'refuted'},
+                                            {'title': 'p', 'level': 'low'}))
+        self.assertIn('    - Risk (high): r\n    - Risk (refuted): q\n    - Risk (low): p\n', listing)
+        self.assertIn('**Standard / unique:** 5 / 0  \n**Risks:** high 1, low 1\n', listing)
+
+    def test_example_has_risks(self):
+        fns = {f['name']: f for f in build.functions(example())}
+        self.assertTrue(all(fns[name]['risks'] for name in ('SettingsDialog', 'SettingsRow', 'SettingsSwitch')))
+
+
+class Report(unittest.TestCase):
+    def test_findings_number_the_risks(self):
+        data = with_risks({'title': 'r', 'what': 'w', 'at': 'src/a.ts:4'}, {'title': 'q'})
+        found = report.findings(data)
+        self.assertEqual([r['id'] for r in data['stacks'][0]['prs'][0]['groups'][0]['fns'][0]['risks']], [1, 2])
+        self.assertEqual(found[0], {'id': 1, 'pr': 7, 'url': f'https://github.com/o/r/pull/7/files#diff-{DIGEST}R4',
+                                    'path': 'src/a.ts', 'line': 4, 'fn': 'Dialog', 'title': 'r', 'what': 'w', 'why': '',
+                                    'suggestion': ''})
+        # A risk without a line points at the declaration of its function.
+        self.assertEqual((found[1]['path'], found[1]['line'], found[1]['url']),
+                         ('src/Dialog.tsx', None, f'https://github.com/o/r/pull/7/files#diff-{hashlib.sha256(b"src/Dialog.tsx").hexdigest()}'))
+
+    def test_folder_of_the_report(self):
+        out = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, out)
+        (out / 'data.json').write_text(json.dumps(with_risks({'title': 'r', 'at': 'src/a.ts:4'})))
+        report.main([str(out / 'data.json'), '--cache', '/c'])
+        data = json.loads((out / 'data.json').read_text())
+        self.assertEqual(data['report'], 'report/index.html')
+        findings = json.loads((out / 'report' / 'findings.json').read_text())
+        self.assertEqual((findings['title'], findings['repo'], len(findings['findings'])), ('Map: risks of the functions', 'o/r', 1))
+        context = (out / 'report' / 'context.md').read_text()
+        self.assertIn('`git --git-dir /c/o__r show refs/prmap/<n>:<path>`', context)
+        self.assertIn('- Dialog: #7 from the bottom; the top PR is #7.', context)
+
+
+class Merge(unittest.TestCase):
+    def test_fields_of_each_pr(self):
+        data = order_data()
+        found = {7: {'fns': {'Dialog': {'about': 'a', 'risks': [], 'why': 'w'},
+                             'moved': {'about': 'b'}, 'Nobody': {'about': 'c'}}}, 9: {'fns': {}}}
+        problems = merge.merge(data, found)
+        dialog = data['stacks'][0]['prs'][0]['groups'][0]['fns'][0]
+        self.assertEqual((dialog['about'], dialog['risks'], dialog['why']), ('a', [], 'why Dialog'))
+        self.assertEqual(problems, ['#7: Dialog: why left out', '#7: moved is not a function of the PR to analyse',
+                                    '#7: Nobody is not a function of the PR to analyse',
+                                    '#7: no analysis of closeOnTab, Row, tabbable', '#9: not a PR of the map'])
+        self.assertEqual(merge.merge(order_data(), {}), ['#7: no analysis'])
+
+    def test_files_of_the_folder(self):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder)
+        (folder / '7.json').write_text('{"pr": 7, "fns": {}}')
+        (folder / '8.json').write_text('{"fns": {}}')
+        (folder / 'bad.json').write_text('{')
+        analyses, problems = merge.read(folder)
+        self.assertEqual(sorted(analyses), [7, 8])
+        self.assertEqual(len(problems), 1)
+        self.assertTrue(problems[0].startswith('bad.json: '))
 
 
 class Cli(unittest.TestCase):

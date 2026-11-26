@@ -36,7 +36,7 @@
   --blur: none; --edge-w: 1px; --edge-r: 6; --edge-style: elbow; --sel-ring: 1px; --card-border: solid;
   --grid-image: none;
   --press-bg: var(--gh-selected); --press-fg: var(--ink); --sel: var(--accent); --sel-halo: var(--accent);
-  --card-frame: var(--frame); --card-fill: var(--surface);
+  --card-frame: var(--line); --card-fill: var(--surface);
 }
 [data-skin="studio"] {
   --bg-l: #e9ebee; --bg-d: #0a0b0d;
@@ -174,6 +174,8 @@
 }
 :root {
 /*CAT_LIGHT*/
+  /* Levels of a risk: Primer red, orange and yellow, the same in every skin and in the report of the map. */
+  --risk-high: #d1242f; --risk-mid: #e16f24; --risk-low: #bf8700;
   /* Distances of the tree; the script reads them to size the map without laying it out again. */
   --gap: 36px; --gap-stack: 26px; --gap-pr: 12px; --gap-group: 6px; --gap-col: 8px; --bracket: 14px; --pad: 28px;
   --cardw: 300px;
@@ -188,6 +190,7 @@
   }
   :root:not([data-theme="light"]) {
 /*CAT_DARK*/
+    --risk-high: #f85149; --risk-mid: #db6d28; --risk-low: #d29922;
     color-scheme: dark;
   }
 }
@@ -200,6 +203,7 @@
 }
 :root[data-theme="dark"] {
 /*CAT_DARK*/
+  --risk-high: #f85149; --risk-mid: #db6d28; --risk-low: #d29922;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -313,16 +317,19 @@ kbd { font: 500 10px/1.4 var(--font-code); color: var(--muted); border: 1px soli
 .index.rail .ph { padding-left: 0; justify-content: center; }
 .index.rail .ix-stack { grid-template-columns: auto; justify-items: center; padding: 7px 6px; }
 
-/* The panel of the selection: docked in the corner, or floating where the reader dragged it; its width follows the reader. */
+/* The panel of the selection: a drawer at the right edge over the map, or floating where the reader dragged it;
+   its width follows the reader. */
 .insp {
   grid-area: insp; align-self: start; display: flex; flex-direction: column; position: relative;
-  width: var(--insp-w, 296px); max-height: 100%; overflow: hidden; padding: 5px 5px 10px;
+  width: var(--insp-w, 320px); max-height: 100%; overflow: hidden; padding: 6px 6px 12px;
 }
+/* Stretch: a drawer sized to its content outgrows the window and slides under the bar. */
+.insp.drawer { position: absolute; grid-area: auto; z-index: 2; top: var(--drawer-top, 0px); right: 0; bottom: 0; align-self: stretch; max-height: none; border-width: 0 0 0 1px; border-radius: 0; }
 .insp.floating { position: absolute; grid-area: auto; z-index: 2; left: var(--insp-x); top: var(--insp-y); max-height: calc(100% - var(--insp-y) - 10px); }
+.mini, .dock { margin-right: var(--drawer-space, 0px); }
 .insp > .ph { cursor: grab; touch-action: none; }
 .insp.dragging, .insp.dragging > .ph { cursor: grabbing; user-select: none; }
 .insp.resizing { cursor: ew-resize; user-select: none; }
-.insp:not(.floating) #insp-dock { display: none; }
 .insp-grip { position: absolute; top: 0; bottom: 0; z-index: 1; width: 6px; cursor: ew-resize; touch-action: none; }
 .insp-grip.l { left: 0; }
 .insp-grip.r { right: 0; }
@@ -332,9 +339,27 @@ kbd { font: 500 10px/1.4 var(--font-code); color: var(--muted); border: 1px soli
 .insp.folded .insp-body { display: none; }
 .insp.folded #insp-fold .ic { transform: rotate(-90deg); }
 #insp-fold .ic { transform: rotate(90deg); }
-.insp-body { display: grid; gap: 8px; padding: 2px 8px 0; }
+.insp-body { display: grid; gap: 10px; padding: 2px 10px 0; }
 .insp-body h2 { margin: 0; font: 600 15px/1.25 var(--font-ui); text-wrap: balance; overflow-wrap: anywhere; }
 .insp-body h2.code { font: 500 13.5px/1.35 var(--font-code); }
+.insp > .ph { align-items: flex-start; }
+.insp-tags { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; padding-top: 1px; }
+.fn-title { display: flex; align-items: center; gap: 8px; }
+.fn-title .nm { min-width: 0; }
+.fn-title .owner { color: var(--muted); font-weight: 400; }
+.fn-title a.ib { margin-left: auto; color: var(--muted); }
+.fx { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: var(--r-ctl); background: var(--soft); color: var(--muted); flex: none; }
+.fx .ic { width: 13px; height: 13px; }
+.fx.m { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+.fn .fx { width: 16px; height: 16px; }
+.fn .fx .ic { width: 11px; height: 11px; }
+.insp-body p.why { font-weight: 600; }
+.insp-body hr { width: 100%; margin: 0; border: 0; border-top: 1px solid var(--line); }
+/* A moved function reads as a renamed file in the diff of a PR: the old path, an arrow, the new path. */
+.rename { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; font: 12px/1.5 var(--font-code); color: var(--muted); overflow-wrap: anywhere; }
+.rename .ic { width: 14px; height: 14px; }
+.place { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.place .ib { color: var(--muted); }
 .insp-body p { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
 .insp-body p.lead { color: var(--ink); }
 .insp-body p.branch { font: 500 11px/1.4 var(--font-code); overflow-wrap: anywhere; }
@@ -344,14 +369,37 @@ kbd { font: 500 10px/1.4 var(--font-code); color: var(--muted); border: 1px soli
 .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; padding: 2px 8px; border: 1px solid var(--line); border-radius: var(--r-pill); background: transparent; font-size: 11.5px; text-decoration: none; color: var(--ink); }
 button.chip:hover, a.chip:hover { border-color: var(--ink); }
 .chip[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
-.list { display: grid; gap: 1px; }
-.item { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; column-gap: 8px; align-items: center; width: 100%; padding: 4px 6px; border: 0; border-radius: var(--r-row); background: transparent; text-align: left; font-size: 12px; }
+.list { display: grid; gap: 2px; }
+.item { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; column-gap: 8px; align-items: center; width: 100%; padding: 5px 6px; border: 0; border-radius: var(--r-row); background: transparent; text-align: left; font-size: 12px; }
 .item:hover { background: var(--soft); }
 .item .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .item .nm.code { font: 500 11.5px var(--font-code); }
 .item .ct { font: 500 10.5px var(--font-code); color: var(--muted); }
 .item .num { font: 500 10.5px var(--font-code); color: var(--muted); }
 .item.numbered { grid-template-columns: max-content minmax(0, 1fr) auto; }
+/* The steps of a review as a strip: the current one ringed, a clear one filled, an unclear one dashed. */
+.order-bar { display: flex; flex-wrap: wrap; gap: 3px; }
+.order-bar button { min-width: 22px; height: 22px; padding: 0 5px; border: 1px solid var(--line); border-radius: var(--r-pill); background: transparent; color: var(--muted); font: 600 10.5px/1 var(--font-code); }
+.order-bar button:hover { border-color: var(--edge); color: var(--ink); }
+.order-bar button.ok { border-color: transparent; background: color-mix(in srgb, var(--c) 22%, transparent); color: var(--ink); }
+.order-bar button.unclear { border-style: dashed; border-color: var(--ink); color: var(--ink); }
+.order-bar button.main { border-radius: 4px; }
+.order-bar button[aria-current="step"] { border-color: var(--sel); box-shadow: inset 0 0 0 1px var(--sel); color: var(--ink); }
+.order-nav { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 2px; }
+.act { height: 28px; padding: 0 10px; border: 1px solid var(--line); border-radius: var(--r-ctl); background: transparent; color: var(--ink); font: 500 12px var(--font-ui); }
+.act:hover { background: var(--soft); }
+.act.go { margin-left: auto; border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
+.insp-body textarea.ask { width: 100%; min-height: 72px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--r-ctl); background: transparent; color: var(--ink); font: 12px/1.45 var(--font-ui); resize: vertical; }
+/* The risks of a function: each opens its card of the report and its line in the PR. */
+.risks { display: grid; gap: 6px; margin: 0; padding-left: 16px; color: var(--ink); font-size: 12.5px; line-height: 1.45; }
+.risks li::marker { color: var(--rk); }
+.risks .lv { margin-right: 6px; font: 600 10.5px var(--font-code); color: var(--rk); white-space: nowrap; }
+.risks li.rk-none { color: var(--muted); }
+.risks code { font: 11.5px var(--font-code); }
+.risks a { color: inherit; text-decoration: none; }
+.risks a:hover { text-decoration: underline; }
+.risks a .ic { width: 12px; height: 12px; margin-left: 3px; vertical-align: -1px; color: var(--muted); }
+.risks a.at { font: 11px var(--font-code); color: var(--muted); }
 
 .legend { grid-area: foot; align-self: end; justify-self: start; display: flex; align-items: flex-end; gap: 2px; max-width: 100%; padding: 4px; }
 .cats { display: flex; flex-wrap: wrap; gap: 1px; min-width: 0; }
@@ -385,6 +433,8 @@ button.chip:hover, a.chip:hover { border-color: var(--ink); }
 .edges path { fill: none; stroke: var(--edge); stroke-width: var(--edge-w); }
 .edges path.on { stroke: var(--sel); stroke-width: calc(var(--edge-w) + .5px); }
 .links path { fill: none; stroke: var(--c); stroke-width: 1.5; stroke-dasharray: 2 5; stroke-linecap: round; }
+.links path.dep { stroke-dasharray: none; }
+.links path.tip { fill: var(--c); stroke: none; }
 .mind { position: relative; display: flex; align-items: center; width: max-content; padding: var(--pad); }
 .mind ul { list-style: none; margin: 0; padding: 0; padding-inline-start: var(--gap); display: flex; flex-direction: column; justify-content: center; gap: var(--gap-group); }
 .mind li { display: flex; align-items: center; }
@@ -425,6 +475,18 @@ li.closed > ul { display: none; }
 .pr .t { font: 600 13px/1.3 var(--font-ui); }
 .pr .meta { margin-top: 5px; }
 .pr .meta .hit { color: var(--ink); }
+/* Risks of a node: a triangle in the color of the level with the number of risks of that level. */
+.rks { display: inline-flex; align-items: center; gap: 6px; }
+.rk { display: inline-flex; align-items: center; gap: 2px; color: var(--rk); font: 700 10.5px/1 var(--font-code); white-space: nowrap; }
+.rk svg { width: 11px; height: 11px; flex: none; fill: currentColor; }
+.rk-high { --rk: var(--risk-high); }
+.rk-mid { --rk: var(--risk-mid); }
+.rk-low { --rk: var(--risk-low); }
+.rk-none { --rk: var(--faint); }
+.root .rks { margin-top: 8px; padding: 3px 7px; border-radius: var(--r-pill); background: var(--surface); }
+.gh .rks { flex: none; }
+.fn .name .rks { margin-left: 6px; vertical-align: -1px; }
+.fn.is-dim .rk { color: inherit; }
 .mix { display: flex; gap: 1px; height: 3px; margin-top: 8px; border-radius: 2px; overflow: hidden; }
 .mix i { background: var(--c); flex: 1 1 0; transition: background-color .15s; }
 .mix i.off { background: color-mix(in srgb, var(--c) 15%, transparent); }
@@ -463,10 +525,10 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
 .d.key.is-dim i { box-shadow: 0 0 0 1.5px var(--surface), 0 0 0 3px var(--c); }
 .d.is-sel i { outline: 2px solid var(--ink); outline-offset: 3px; }
 .d.is-sim i { outline: 1.5px dashed var(--ink); outline-offset: 3px; }
-.rows { display: grid; gap: 1px; padding-top: 2px; }
+.rows { display: grid; gap: 2px; padding-top: 2px; }
 .fn {
   display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; column-gap: 8px; align-items: center; width: 100%;
-  padding: 4px 8px; border: 0; border-radius: var(--r-row); background: transparent; text-align: left; transition: background-color .12s, color .15s;
+  padding: 5px 8px; border: 0; border-radius: var(--r-row); background: transparent; text-align: left; transition: background-color .12s, color .15s;
 }
 .fn:hover { background: color-mix(in srgb, var(--c) 12%, transparent); }
 .fn .name { font: 500 12px/1.35 var(--font-code); overflow-wrap: anywhere; }
@@ -474,15 +536,24 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
 .fn .tags { display: inline-flex; align-items: center; gap: 5px; }
 .fn .kind { font: 500 9px var(--font-code); letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
 .fn .kind.u { color: var(--ink); }
-.fn .sim { display: none; min-width: 16px; padding: 0 4px; border-radius: min(5px, var(--r-ctl)); background: var(--ink); color: var(--invert); font: 700 10.5px/16px var(--font-code); text-align: center; }
-.fn .why { grid-column: 2 / -1; font-size: 11.5px; line-height: 1.3; color: var(--muted); }
+/* Hidden, not removed: the row keeps its width and height when the mark shows. */
+.fn .sim { visibility: hidden; min-width: 16px; padding: 0 4px; border-radius: min(5px, var(--r-ctl)); background: var(--ink); color: var(--invert); font: 700 10.5px/16px var(--font-code); text-align: center; }
+.fn .why { grid-column: 2 / -1; margin-top: 1px; font-size: 11.5px; line-height: 1.4; color: var(--muted); }
+.fn .name .fx { margin-right: 6px; vertical-align: -3px; }
 .d-s .fn .why { display: none; }
 .fn.is-sel { background: color-mix(in srgb, var(--c) 16%, transparent); box-shadow: inset 0 0 0 1.5px var(--c); }
 .fn.is-sim { outline: 1px dashed var(--ink); outline-offset: -1px; }
-.fn.is-sim .sim { display: inline-block; }
+.fn.is-sim .sim { visibility: visible; }
 .fn.is-dim { color: color-mix(in srgb, var(--ink) 30%, transparent); }
 .fn.is-dim .why, .fn.is-dim .kind, .fn.is-dim .star { color: inherit; }
 .fn.is-dim .dot { background: color-mix(in srgb, var(--faint) 55%, transparent); }
+/* In the review order the step of a function stands in place of its dot: filled once it is clear, square for a main one. */
+.fn .step { display: none; grid-column: 1; grid-row: 1; place-items: center; min-width: 16px; height: 16px; padding: 0 3px; border-radius: var(--r-pill); box-shadow: inset 0 0 0 1.5px var(--c); color: var(--c); font: 700 9.5px/1 var(--font-code); }
+.fn.in-order { grid-template-columns: 16px minmax(0, 1fr) auto; }
+.fn.in-order .dot { display: none; }
+.fn.in-order .step { display: inline-grid; }
+.fn .step.ok { background: var(--c); color: var(--surface); }
+.fn .step.main { border-radius: 4px; }
 
 /* ---------- Skin menu ---------- */
 [aria-expanded="true"][data-tip]::after { display: none; }
@@ -522,7 +593,7 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
 [data-skin="github"] .bar {
   margin: -10px calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
   padding: 8px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px)); gap: 8px;
-  border: 0; border-radius: 0; background: var(--gh-inset); box-shadow: inset 0 -1px 0 var(--frame);
+  border: 0; border-radius: 0; background: var(--gh-inset); box-shadow: inset 0 -1px 0 var(--line);
 }
 [data-skin="github"] .mark { margin: 0; font: 600 14px/1.5 var(--font-ui); letter-spacing: 0; text-transform: none; }
 [data-skin="github"] .mark button { padding: 0 8px; }
@@ -558,7 +629,7 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
 [data-skin="github"] .tg { border-color: var(--frame); box-shadow: var(--node-shadow); font: 600 12px/1 var(--font-ui); }
 [data-skin="github"] li.closed > .node > .tg { border-color: var(--gh-neutral); background: var(--gh-neutral); color: #ffffff; }
 /* Label; the accent one marks the logic of the PR itself. */
-[data-skin="github"] .chip, [data-skin="github"] .fn .kind { padding: 0 7px; min-height: 0; border: 1px solid var(--frame); border-radius: 2em; color: var(--muted); font: 500 12px/18px var(--font-ui); letter-spacing: 0; text-transform: none; }
+[data-skin="github"] .chip, [data-skin="github"] .fn .kind { padding: 0 7px; min-height: 0; border: 1px solid var(--line); border-radius: 2em; color: var(--muted); font: 500 12px/18px var(--font-ui); letter-spacing: 0; text-transform: none; }
 [data-skin="github"] .fn .kind.u { border-color: var(--accent); color: var(--gh-link); }
 [data-skin="github"] .fn.is-dim .kind { border-color: currentColor; color: inherit; }
 [data-skin="github"] button.chip:hover { border-color: var(--muted); }
@@ -568,14 +639,15 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
 [data-skin="github"] a.chip:hover { border-color: transparent; text-decoration: underline; }
 [data-skin="github"] a.chip .ic { width: 14px; height: 14px; }
 /* The panel of the selection reads as the sidebar of a PR: a heading per section and a rule between sections. */
-[data-skin="github"] .insp-body { gap: 6px; padding: 0 8px; }
+[data-skin="github"] .insp-body { gap: 8px; padding: 2px 10px; }
 [data-skin="github"] .insp-body h2 { font: 600 14px/1.4 var(--font-ui); }
 [data-skin="github"] .insp-body h2.code { font: 600 13px/1.4 var(--font-code); }
 [data-skin="github"] .insp-body p { font-size: 13px; line-height: 1.5; }
 [data-skin="github"] .insp-body p.branch { font: 400 12px/1.5 var(--font-code); }
 [data-skin="github"] .insp-body p.micro { margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--line); }
+[data-skin="github"] .risks { font-size: 13px; line-height: 1.5; }
 /* Tree: Boxes; a PR card is a row of the pull request list, with the state icon before the title. */
-[data-skin="github"] .node { padding: 6px 10px; }
+[data-skin="github"] .node { padding: 7px 11px; border-color: var(--line); }
 [data-skin="github"] .node:hover { border-color: var(--frame); box-shadow: 0 0 0 1px var(--frame), var(--node-shadow); }
 [data-skin="github"] .node.is-sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--node-shadow); }
 [data-skin="github"] .branch.l .node { text-align: left; }
@@ -594,8 +666,8 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
 [data-skin="github"] .fn .name { font-weight: 400; }
 /* An open group is a Box with a Box-header. */
 [data-skin="github"] .gcard:not(.folded) { padding: 0; }
-[data-skin="github"] .gcard:not(.folded) > .gh { height: 28px; padding: 0 8px; border-bottom: 1px solid var(--frame); border-radius: calc(var(--r-card) - 1px) calc(var(--r-card) - 1px) 0 0; background: var(--gh-muted); }
-[data-skin="github"] .gcard:not(.folded) > .rows { padding: 4px; }
+[data-skin="github"] .gcard:not(.folded) > .gh { height: 28px; padding: 0 8px; border-bottom: 1px solid var(--line); border-radius: calc(var(--r-card) - 1px) calc(var(--r-card) - 1px) 0 0; background: var(--gh-muted); }
+[data-skin="github"] .gcard:not(.folded) > .rows { padding: 6px; }
 [data-skin="github"] .gh .nm { font: 600 13px/1.4 var(--font-ui); }
 
 [data-skin="strict"] .mark { font: 700 12px/1 var(--font-display); letter-spacing: .14em; }
@@ -649,6 +721,7 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
 
 <svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs>
 <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+<symbol id="i-risk" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M6.7 1.8a1.5 1.5 0 0 1 2.6 0l6 10.6A1.5 1.5 0 0 1 14 14.6H2a1.5 1.5 0 0 1-1.3-2.2ZM7.2 5.5h1.6v4.2H7.2Zm.8 5.4a.95.95 0 1 0 0 1.9.95.95 0 0 0 0-1.9Z"/></symbol>
 <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.7l5.9-.8Z"/></symbol>
 <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16l-6.2 7.4V18l-3.6 2v-7.6Z"/></symbol>
 <symbol id="i-both" viewBox="0 0 24 24"><rect x="9.5" y="9.5" width="5" height="5" rx="1.2"/><path d="M9.5 12H6m0-6v12M6 6H3m3 6H3m3 6H3M14.5 12H18m0-6v12m0-12h3m-3 6h3m-3 6h3"/></symbol>
@@ -668,6 +741,11 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
 <symbol id="i-expand" viewBox="0 0 24 24"><path d="M12 3v6M8.5 5.5 12 2l3.5 3.5M12 21v-6m-3.5 3.5L12 22l3.5-3.5M5 12h14"/></symbol>
 <symbol id="i-collapse" viewBox="0 0 24 24"><path d="M12 2v6M8.5 4.5 12 8l3.5-3.5M12 22v-6m-3.5 3.5L12 16l3.5 3.5M5 12h14"/></symbol>
 <symbol id="i-dock" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><rect x="13" y="7.5" width="5" height="6" rx="1"/></symbol>
+<symbol id="i-fn" viewBox="0 0 24 24"><path d="M16 4.5c-2.6-.7-4.3.4-4.7 3.1L9.8 16.4c-.4 2.6-2.1 3.8-4.8 3.1M8 10h8"/></symbol>
+<symbol id="i-guard" viewBox="0 0 24 24"><path d="M12 3.5 5 6.2v5.3c0 4.3 2.9 7.6 7 9 4.1-1.4 7-4.7 7-9V6.2Z"/><path d="m9 12 2.2 2.2 3.8-4"/></symbol>
+<symbol id="i-util" viewBox="0 0 24 24"><path d="M15 4.2a4.5 4.5 0 0 0-5.5 5.9l-5.3 5.3a1.8 1.8 0 0 0 2.5 2.5l5.3-5.3a4.5 4.5 0 0 0 5.9-5.5l-2.7 2.7-2.6-.7-.7-2.6Z"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+<symbol id="i-steps" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><path d="M9 6h6a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h6"/></symbol>
 <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M9.5 4.5v15"/></symbol>
 <!-- Octicons of the GitHub skin (primer/octicons, MIT). -->
 <symbol id="o-stack" viewBox="0 0 16 16"><path d="M7.122.392a1.75 1.75 0 0 1 1.756 0l5.003 2.902c.83.481.83 1.68 0 2.162L8.878 8.358a1.75 1.75 0 0 1-1.756 0L2.119 5.456a1.251 1.251 0 0 1 0-2.162ZM8.125 1.69a.248.248 0 0 0-.25 0l-4.63 2.685 4.63 2.685a.248.248 0 0 0 .25 0l4.63-2.685ZM1.601 7.789a.75.75 0 0 1 1.025-.273l5.249 3.044a.248.248 0 0 0 .25 0l5.249-3.044a.75.75 0 0 1 .752 1.298l-5.248 3.044a1.75 1.75 0 0 1-1.756 0L1.874 8.814A.75.75 0 0 1 1.6 7.789Zm0 3.5a.75.75 0 0 1 1.025-.273l5.249 3.044a.248.248 0 0 0 .25 0l5.249-3.044a.75.75 0 0 1 .752 1.298l-5.248 3.044a1.75 1.75 0 0 1-1.756 0l-5.248-3.044a.75.75 0 0 1-.273-1.025Z"/></symbol>
@@ -697,6 +775,7 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
       </div>
       <span class="grow"></span>
       <div class="tools">
+        <button class="ib" id="order" aria-pressed="false" aria-label="Review order" data-tip="Review order · R"><svg class="ic" aria-hidden="true"><use href="#i-steps"/></svg></button>
         <button class="ib" id="only-key" aria-pressed="false" aria-label="Key functions only" data-tip="Key functions only ★ · K"><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg></button>
         <button class="ib" id="filter" aria-pressed="false" aria-label="Hide other colors" data-tip="Hide other colors · F"><svg class="ic" aria-hidden="true"><use href="#i-filter"/></svg></button>
         <span class="sep"></span>
@@ -724,6 +803,9 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
         <h2 class="micro">Legend</h2>
         <dl>
           <dt>★</dt><dd>key function; its dot has a ring</dd>
+          <dt><span class="rks"><span class="rk rk-high"><svg aria-hidden="true"><use href="#i-risk"/></svg></span><span class="rk rk-mid"><svg aria-hidden="true"><use href="#i-risk"/></svg></span><span class="rk rk-low"><svg aria-hidden="true"><use href="#i-risk"/></svg></span></span></dt><dd>risks by severity: high, medium, low; the number is how many</dd>
+          <dt>◆</dt><dd>main function of a PR: the last step of its review</dd>
+          <dt>→</dt><dd>from a function to the ones that need it</dd>
           <dt>UNIQ</dt><dd>logic of the project itself</dd>
           <dt>STD</dt><dd>a usual pattern of the framework</dd>
           <dt>≈</dt><dd>similar to the selected function</dd>
@@ -740,6 +822,7 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
         <h2 class="micro">Keys</h2>
         <dl>
           <dt>/</dt><dd>search</dd>
+          <dt>R · , · .</dt><dd>review order · previous · next step</dd>
           <dt>K · F</dt><dd>key only · hide other colors</dd>
           <dt>E · [ · ]</dt><dd>expand or collapse all · tree depth</dd>
           <dt>D · L</dt><dd>density · layout</dd>
@@ -756,7 +839,7 @@ li.closed > .node > .tg { border-color: var(--accent); background: var(--accent)
     </nav>
     <aside class="insp glass" id="insp" hidden aria-live="polite">
       <div class="ph"><span class="micro" id="insp-label"></span><span class="grow"></span>
-        <button class="ib sm" id="insp-dock" aria-label="Dock the panel in the corner" data-tip="Back to the corner"><svg class="ic" aria-hidden="true"><use href="#i-dock"/></svg></button>
+        <button class="ib sm" id="insp-dock" aria-label="Float the panel" data-tip="Float the panel"><svg class="ic" aria-hidden="true"><use href="#i-dock"/></svg></button>
         <button class="ib sm" id="insp-fold" aria-label="Fold the panel" data-tip="Fold"><svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></button>
         <button class="ib sm tip-end" id="insp-close" aria-label="Clear the selection" data-tip="Clear · Esc"><svg class="ic" aria-hidden="true"><use href="#i-close"/></svg></button>
       </div>
@@ -807,6 +890,11 @@ const MARKUP_RU = {
   "About the map": "О карте",
   "Function or PR": "Функция или PR",
   "Find a function or PR": "Найти функцию или PR",
+  "Review order": "Порядок анализа",
+  "Review order · R": "Порядок анализа · R",
+  "main function of a PR: the last step of its review": "главная функция PR: последний шаг разбора",
+  "from a function to the ones that need it": "от функции к тем, что на неё опираются",
+  "review order · previous · next step": "порядок анализа · назад · дальше",
   "Key functions only": "Только ключевые",
   "Key functions only ★ · K": "Только ключевые ★ · K",
   "Hide other colors": "Скрыть остальные цвета",
@@ -836,6 +924,7 @@ const MARKUP_RU = {
   "Hide the interface · H": "Скрыть интерфейс · H",
   "Legend": "Обозначения",
   "key function; its dot has a ring": "ключевая функция; у точки — кольцо",
+  "risks by severity: high, medium, low; the number is how many": "риски по критичности: высокая, средняя, низкая; число — сколько их",
   "UNIQ": "УНИК",
   "logic of the project itself": "своя логика проекта",
   "STD": "СТАНД",
@@ -850,7 +939,7 @@ const MARKUP_RU = {
   "double click": "двойной клик",
   "zoom in, with Shift zoom out": "приблизить, с Shift — отдалить",
   "panel header": "заголовок панели",
-  "drag the panel; double click docks it": "перетащить панель; двойной клик — в угол",
+  "drag the panel; double click docks it": "перетащить панель; двойной клик — к правому краю",
   "panel edge": "край панели",
   "panel width": "ширина панели",
   "Keys": "Клавиши",
@@ -865,8 +954,6 @@ const MARKUP_RU = {
   "Stacks and PRs": "Стеки и PR",
   "Fold the list of stacks": "Свернуть список стеков",
   "Fold or unfold the list": "Свернуть или развернуть список",
-  "Dock the panel in the corner": "Вернуть панель в угол",
-  "Back to the corner": "Вернуть в угол",
   "Fold the panel": "Свернуть панель",
   "Fold": "Свернуть",
   "Clear the selection": "Сбросить выбор",
@@ -932,6 +1019,17 @@ const oct = (name, cls) => {
   return s;
 };
 const PR_ICON = {open: 'pr', draft: 'pr-draft', merged: 'merge', closed: 'pr-closed'};
+const TYPE_ICON = {logic: 'fn', guard: 'guard', util: 'util'};
+const unchangedMove = (f) => Boolean(f.moved) && !f.moved.changed;
+const fileName = (path) => path.split('/').pop();
+/** The badge of a function: its type by the icon, a method by the accent color. */
+function typeBadge(f) {
+  const type = f.type ?? 'logic', method = /\./.test(f.name.replace(/\s*\(.*\)$/, ''));
+  const b = h('span', `fx${method ? ' m' : ''}`, icon(TYPE_ICON[type]));
+  b.title = `${{logic: say('Logic', 'Логика'), guard: say('Type guard', 'Проверка типа'), util: say('Utility', 'Утилита')}[type]}`
+    + ` · ${method ? say('method', 'метод') : say('function', 'функция')}`;
+  return b;
+}
 const cvar = (cat) => `var(--c-${cat})`;
 const withColor = (e, cat) => { e.style.setProperty('--c', cvar(cat)); return e; };
 const plural = (n, one, few, many) => {
@@ -943,6 +1041,26 @@ const count = (n, en, ru) => (RU ? plural(n, ...ru) : `${n} ${n === 1 ? en[0] : 
 const fnWord = (n) => count(n, ['function', 'functions'], ['функция', 'функции', 'функций']);
 const prWord = (n) => count(n, ['PR', 'PRs'], ['PR', 'PR', 'PR']);
 const stackWord = (n) => count(n, ['stack', 'stacks'], ['стек', 'стека', 'стеков']);
+const stepWord = (n) => count(n, ['step', 'steps'], ['шаг', 'шага', 'шагов']);
+/** Levels of a risk, high first. A refuted risk is `none` and counts nowhere; a risk without a level counts as `mid`. */
+const LEVELS = ['high', 'mid', 'low'];
+const LEVEL_NAME = {high: say('high', 'высокая'), mid: say('medium', 'средняя'), low: say('low', 'низкая'), none: say('no harm', 'без вреда')};
+const levelOf = (r) => (r.verdict === 'refuted' ? 'none' : r.level ?? 'mid');
+const risksIn = (list) => list.flatMap((F) => F.f.risks ?? []);
+/** The risks of `found` by level: a triangle in the color of the level and their number; `short` leaves out a 1. */
+function riskMarks(found, short = false) {
+  const box = h('span', 'rks');
+  for (const level of LEVELS) {
+    const n = found.filter((r) => levelOf(r) === level).length;
+    if (!n) continue;
+    const triangle = svgEl('svg', {'aria-hidden': 'true'});
+    triangle.append(svgEl('use', {href: '#i-risk'}));
+    const mark = h('span', `rk rk-${level}`, triangle, short && n === 1 ? null : String(n));
+    mark.title = say(`Risks of ${LEVEL_NAME[level]} severity: ${n}`, `Риски, критичность ${LEVEL_NAME[level]}: ${n}`);
+    box.append(mark);
+  }
+  return box.childElementCount ? box : null;
+}
 /** `ref` is the GitHub page of a stack or a PR: {kind: 'stack' | 'pr', n, url}. */
 const refText = (ref) => `${ref.kind === 'stack' ? say('Stack', 'Стек') : 'PR'} #${ref.n}`;
 function refLink(ref, cls, ...kids) {
@@ -975,12 +1093,24 @@ DATA.stacks.forEach((st, i) => {
   }
 });
 const simsOf = (F) => (F.f.sims ?? []).map((id) => simById[id]).filter(Boolean);
+// `needs`: the map functions a function calls; `users`: the ones that call it.
+for (const F of fns) Object.assign(F, {needs: (F.f.needs ?? []).map((name) => fnByName.get(name)).filter(Boolean), users: []});
+for (const U of fns) for (const F of U.needs) F.users.push(U);
 
-/** `onlyKey` hides functions without ★; `filter` hides functions of other colors instead of graying them. */
-const state = {sel: null, cat: null, fn: null, onlyKey: false, filter: false, density: 'm', layout: 'both', skin: 'github'};
+/**
+ * `onlyKey` hides functions without ★; `filter` hides functions of other colors instead of graying them;
+ * `order` is the review of a PR under way: {P, steps: [{F, note}], i}.
+ */
+const state = {sel: null, cat: null, fn: null, order: null, onlyKey: false, filter: false, density: 'm', layout: 'both', skin: 'github'};
+const stored = (key) => { try { return JSON.parse(localStorage.getItem(key)) ?? {}; } catch { return {}; } };
+const store = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} };
 const PREFS = 'pr-mindmap:v4';
-const prefs = (() => { try { return JSON.parse(localStorage.getItem(PREFS)) ?? {}; } catch { return {}; } })();
-const savePrefs = (patch) => { Object.assign(prefs, patch); try { localStorage.setItem(PREFS, JSON.stringify(prefs)); } catch {} };
+const prefs = stored(PREFS);
+const savePrefs = (patch) => { Object.assign(prefs, patch); store(PREFS, prefs); };
+/** The steps of the review order the reader went through: function name → 'ok' or 'unclear'. */
+const READ = `pr-mindmap:read:${DATA.title}:${prs[0]?.pr.url ?? ''}`;
+const read = stored(READ);
+const markRead = (F, how) => { read[F.f.name] = how; store(READ, read); };
 
 /* ---------- Tree DOM ---------- */
 const app = $('app'), board = $('board'), canvas = $('canvas'), mind = $('mind');
@@ -1019,11 +1149,16 @@ function toggleButton(owner) {
   });
   return b;
 }
-const pickFn = (F) => select(state.fn === F ? {cat: F.f.cat} : {fn: F});
+/** A click on a function: its step while its PR is under review, else the function or, once more, its color. */
+function pickFn(F) {
+  const k = state.order ? state.order.steps.findIndex((s) => s.F === F) : -1;
+  if (k >= 0) goStep(k + 1);
+  else select(state.fn === F ? {cat: F.f.cat} : {fn: F});
+}
 
 const rootNode = nodeBox('root', () => select(state.sel?.root ? null : {root: true}));
-rootNode.append(h('b', null, DATA.root.title),
-  h('span', 'meta', `${prWord(prs.length)} · ${fnWord(fns.length)}`), h('span', 'ess', DATA.root.essence));
+rootNode.append(...[h('b', null, DATA.root.title), h('span', 'meta', `${prWord(prs.length)} · ${fnWord(fns.length)}`),
+  riskMarks(risksIn(fns)), h('span', 'ess', DATA.root.essence)].filter(Boolean));
 const branchL = h('ul', 'branch l'), branchR = h('ul', 'branch r');
 mind.append(branchL, rootNode, branchR);
 
@@ -1031,7 +1166,7 @@ for (const S of stacks) {
   S.node = nodeBox('stack', () => select(state.sel?.stack === S ? null : {stack: S}));
   const size = S.ref?.kind === 'pr' ? `${S.fns.length} fn` : `${prWord(S.prs.length)} · ${S.fns.length} fn`;
   S.node.append(h('span', 'head', oct('stack'), h('span', 'nm', S.st.name)),
-    h('span', 'meta', S.ref ? refLink(S.ref, 'n') : h('span', null, S.st.gh), h('span', null, size)),
+    h('span', 'meta', S.ref ? refLink(S.ref, 'n') : h('span', null, S.st.gh), h('span', null, size), riskMarks(risksIn(S.fns))),
     h('span', 'ess', S.st.essence), mixBar(S.fns));
   S.tg = toggleButton(S);
   S.node.append(S.tg);
@@ -1043,7 +1178,8 @@ for (const S of stacks) {
     P.hit = h('span', 'hit');
     const stateIcon = PR_ICON[pr.state] ? oct(PR_ICON[pr.state], `s-${pr.state}`) : oct('pr');
     P.node.append(h('span', 'head', stateIcon, h('span', 't', pr.title)), h('span', 'ess', pr.essence), mixBar(P.fns),
-      h('span', 'meta', refLink(prRef(pr), 'n'), h('span', null, `${P.fns.length} fn · ★ ${P.fns.filter((F) => F.f.key).length}`), P.hit));
+      h('span', 'meta', refLink(prRef(pr), 'n'), h('span', null, `${P.fns.length} fn · ★ ${P.fns.filter((F) => F.f.key).length}`),
+        riskMarks(risksIn(P.fns)), P.hit));
     P.tg = toggleButton(P);
     P.node.append(P.tg);
     P.ul = h('ul');
@@ -1051,7 +1187,7 @@ for (const S of stacks) {
     S.ul.append(P.li);
     for (const G of P.groups) {
       G.ct = h('span', 'ct');
-      G.head = h('button', 'gh', icon('chev'), h('span', 'nm', G.g.name), G.ct);
+      G.head = h('button', 'gh', icon('chev'), h('span', 'nm', G.g.name), riskMarks(risksIn(G.fns)), G.ct);
       G.head.addEventListener('click', () => { G.folded = !G.folded; refresh({anchor: G.card}); });
       G.dots = h('span', 'dots');
       G.rows = h('div', 'rows');
@@ -1060,17 +1196,22 @@ for (const S of stacks) {
       P.ul.append(G.li);
       for (const F of G.fns) {
         const {f} = F;
-        const name = h('span', 'name', f.name);
+        const name = h('span', 'name', f.type === 'guard' || f.type === 'util' ? typeBadge(f) : null, f.name);
         if (f.key) name.append(h('span', 'star', '★'));
-        const sim = h('span', 'sim', '≈');
-        sim.title = say('Similar to the selected function', 'Похожа на выбранную функцию');
-        F.row = withColor(h('button', 'fn', h('span', 'dot'), name,
-          h('span', 'tags', sim, h('span', `kind ${f.kind}`, f.kind === 'u' ? say('uniq', 'уник') : say('std', 'станд'))), h('span', 'why', f.why)), f.cat);
-        F.row.title = f.why;
+        const marks = riskMarks(f.risks ?? [], true);
+        if (marks) name.append(marks);
+        const why = unchangedMove(f) ? `${fileName(f.moved.from)} → ${fileName(f.moved.to)}` : f.why;
+        const sim = simsOf(F).length ? h('span', 'sim', '≈') : null;
+        if (sim) sim.title = say('Similar to the selected function', 'Похожа на выбранную функцию');
+        const tags = h('span', 'tags', sim, h('span', `kind ${f.kind}`, f.kind === 'u' ? say('uniq', 'уник') : say('std', 'станд')));
+        if (f.moved) tags.append(h('span', 'kind', say('moved', 'перенос')));
+        F.step = h('span', 'step');
+        F.row = withColor(h('button', 'fn', h('span', 'dot'), F.step, name, tags, h('span', 'why', why)), f.cat);
+        F.row.title = why;
         F.row.setAttribute('aria-pressed', 'false');
         F.row.addEventListener('click', () => pickFn(F));
         F.dot = withColor(h('button', `d${f.key ? ' key' : ''}`, h('i')), f.cat);
-        F.dot.title = `${f.name} — ${f.why}`;
+        F.dot.title = `${f.name} — ${why}`;
         F.dot.setAttribute('aria-label', f.name);
         F.dot.addEventListener('click', () => pickFn(F));
         G.rows.append(F.row);
@@ -1305,14 +1446,15 @@ function moveTo(target, animate = true) {
   };
   anim = requestAnimationFrame(step);
 }
-/** The part of the board that the bar, the index and the dock do not cover. */
-function safeArea() {
+/** The part of the board that the bar, the index and the dock do not cover; with `drawer`, the drawer either. */
+function safeArea(drawer = false) {
   const b = board.getBoundingClientRect();
   const shown = (e) => e.offsetParent !== null;
   const top = shown($('bar')) ? $('bar').getBoundingClientRect().bottom - b.top + 12 : 12;
   const bottom = shown($('dock')) ? b.bottom - $('dock').getBoundingClientRect().top + 12 : 12;
   const left = shown($('index')) ? $('index').getBoundingClientRect().right - b.left + 12 : 12;
-  return {x: left, y: top, w: Math.max(80, b.width - left - 12), h: Math.max(80, b.height - top - bottom)};
+  const panel = $('insp'), right = drawer && shown(panel) && panel.classList.contains('drawer') ? b.right - panel.getBoundingClientRect().left + 12 : 12;
+  return {x: left, y: top, w: Math.max(80, b.width - left - right), h: Math.max(80, b.height - top - bottom)};
 }
 function boardPoint(clientX, clientY) {
   const r = board.getBoundingClientRect();
@@ -1346,9 +1488,14 @@ function flyTo(target, scale = Math.min(1.1, Math.max(view.s, 0.85))) {
   const r = target.getBoundingClientRect(), c = canvas.getBoundingClientRect();
   const cx = (r.left + r.width / 2 - c.left) / view.s;
   const cy = (r.top + r.height / 2 - c.top) / view.s;
-  const a = safeArea(), s = clamp(scale);
+  const a = safeArea(true), s = clamp(scale);
   fitting = false;
   moveTo({s, x: a.x + a.w / 2 - cx * s, y: a.y + a.h / 2 - cy * s});
+}
+/** Flies to `target` when the chrome covers a part of it. */
+function bringIntoView(target) {
+  const r = target.getBoundingClientRect(), b = board.getBoundingClientRect(), a = safeArea(true);
+  if (r.left < b.left + a.x || r.right > b.left + a.x + a.w || r.top < b.top + a.y || r.bottom > b.top + a.y + a.h) flyTo(target, view.s < 0.6 ? 0.9 : view.s);
 }
 
 let lastPoint = null;
@@ -1582,32 +1729,50 @@ function visibleFace(F) {
   if (F.row.hidden) return F.group.card;
   return F.group.folded ? F.dot : F.row;
 }
-/** Dashed curves from the selected function to the functions similar to it. */
+/**
+ * A curve from box `a` to box `b`: across the gap between their columns, or within one column out to its free side
+ * `out` and back; `x` and `dir` are where and which way it comes into `b`.
+ */
+function curve(a, b, out) {
+  if (b.l > a.r + 40) return {d: `M${a.r} ${a.y}C${a.r + 90} ${a.y} ${b.l - 90} ${b.y} ${b.l} ${b.y}`, x: b.l, dir: 1};
+  if (b.r < a.l - 40) return {d: `M${a.l} ${a.y}C${a.l - 90} ${a.y} ${b.r + 90} ${b.y} ${b.r} ${b.y}`, x: b.r, dir: -1};
+  const ax = out > 0 ? a.r : a.l, bx = out > 0 ? b.r : b.l;
+  const bow = (out > 0 ? Math.max(ax, bx) : Math.min(ax, bx)) + out * Math.min(140, 40 + Math.abs(b.y - a.y) / 4);
+  return {d: `M${ax} ${a.y}C${bow} ${a.y} ${bow} ${b.y} ${bx} ${b.y}`, x: bx, dir: -out};
+}
+/**
+ * Dashed curves from the selected function to the similar ones, and arrows from a function to the ones that need it:
+ * around the selected function, or across the PR under review, the ones of the current step on top.
+ */
 function drawLinks(R = rectsReader()) {
-  const paths = [];
-  const from = state.fn && visibleFace(state.fn);
-  if (from) {
-    const a = R(from);
-    const done = new Set([from]);
-    for (const other of relatedSet()) {
-      const to = visibleFace(other);
-      if (!to || done.has(to)) continue;
-      done.add(to);
-      const b = R(to);
-      let d;
-      if (b.l > a.r + 40) d = `M${a.r} ${a.y}C${a.r + 90} ${a.y} ${b.l - 90} ${b.y} ${b.l} ${b.y}`;
-      else if (b.r < a.l - 40) d = `M${a.l} ${a.y}C${a.l - 90} ${a.y} ${b.r + 90} ${b.y} ${b.r} ${b.y}`;
-      else {
-        // Same column: the curve bows out to the free side of the branch.
-        const out = state.fn.stack.side === 'r' ? 1 : -1;
-        const ax = out > 0 ? a.r : a.l, bx = out > 0 ? b.r : b.l;
-        const bow = (out > 0 ? Math.max(ax, bx) : Math.min(ax, bx)) + out * Math.min(140, 40 + Math.abs(b.y - a.y) / 4);
-        d = `M${ax} ${a.y}C${bow} ${a.y} ${bow} ${b.y} ${bx} ${b.y}`;
+  const under = [], over = [], seen = new Map();
+  const link = (A, B, kind, color, top = true) => {
+    const from = visibleFace(A), to = visibleFace(B);
+    if (!from || !to || from === to) return;
+    const pairs = seen.get(from) ?? new Set();
+    if (pairs.has(to)) return;
+    seen.set(from, pairs.add(to));
+    const a = R(from), b = R(to), c = curve(a, b, A.stack.side === 'r' ? 1 : -1);
+    const out = top ? over : under;
+    out.push(svgEl('path', {class: kind, d: c.d, style: `--c: ${color}`}));
+    if (kind === 'dep') out.push(svgEl('path', {class: 'tip', d: `M${c.x} ${b.y}l${-c.dir * 7} -3.5v7z`, style: `--c: ${color}`}));
+  };
+  const o = state.order;
+  if (o) {
+    const inPr = new Set(o.steps.map((s) => s.F)), current = state.fn;
+    for (const B of inPr) {
+      for (const A of B.needs) {
+        const now = A === current || B === current;
+        if (inPr.has(A)) link(A, B, 'dep', now ? cvar(A.f.cat) : 'var(--edge)', now);
       }
-      paths.push(withColor(svgEl('path', {d}), state.fn.f.cat));
     }
+  } else if (state.fn) {
+    const F = state.fn;
+    for (const other of relatedSet()) if (other !== F) link(F, other, 'sim', cvar(F.f.cat));
+    for (const A of F.needs) link(A, F, 'dep', cvar(A.f.cat));
+    for (const B of F.users) link(F, B, 'dep', cvar(F.f.cat));
   }
-  linksSvg.replaceChildren(...paths);
+  linksSvg.replaceChildren(...under, ...over);
 }
 
 /* ---------- Refresh ---------- */
@@ -1622,6 +1787,7 @@ function syncControls() {
   $('expand-all').dataset.tip = `${expandLabel} · E`;
   $('only-key').setAttribute('aria-pressed', String(state.onlyKey));
   $('filter').setAttribute('aria-pressed', String(state.filter));
+  $('order').setAttribute('aria-pressed', String(Boolean(state.order)));
   app.classList.remove('d-s', 'd-m', 'd-l');
   app.classList.add(`d-${state.density}`);
 }
@@ -1651,18 +1817,23 @@ function refresh({anchor = null, rearrange = !anchor} = {}) {
 }
 
 /* ---------- Selection ---------- */
+/** Under review, the functions of the PR show their steps and the rest of the map is gray. */
 function paint() {
-  const related = relatedSet();
+  const related = relatedSet(), o = state.order;
+  const stepOf = new Map(o ? o.steps.map((s, j) => [s.F, j + 1]) : []);
   for (const F of fns) {
-    const sel = state.fn === F;
-    const dim = Boolean(state.cat) && F.f.cat !== state.cat && !related.has(F);
-    const sim = Boolean(state.fn) && !sel && related.has(F);
+    const sel = state.fn === F, k = stepOf.get(F);
+    const dim = o ? !k : Boolean(state.cat) && F.f.cat !== state.cat && !related.has(F);
+    const sim = !o && Boolean(state.fn) && !sel && related.has(F);
     for (const e of [F.row, F.dot]) {
       e.classList.toggle('is-dim', dim);
       e.classList.toggle('is-sel', sel);
       e.classList.toggle('is-sim', sim);
     }
     F.row.setAttribute('aria-pressed', String(sel));
+    F.row.classList.toggle('in-order', Boolean(k));
+    F.step.textContent = k ?? '';
+    F.step.className = `step${F.f.main ? ' main' : ''}${read[F.f.name] === 'ok' ? ' ok' : ''}`;
   }
   rootNode.classList.toggle('is-sel', Boolean(state.sel?.root));
   for (const S of stacks) S.node.classList.toggle('is-sel', state.sel?.stack === S);
@@ -1672,11 +1843,15 @@ function paint() {
   const current = state.sel?.stack ?? state.sel?.pr?.stack ?? state.sel?.fn?.stack;
   if (current) markStack(current);
 }
-/** `sel` is null or one of {fn}, {cat}, {pr}, {stack}, {root}. A function also selects its color. */
-function select(sel) {
+/**
+ * `sel` is null or one of {fn}, {cat}, {pr}, {stack}, {root}. A function also selects its color, except on a step of
+ * the review `order`; a selection without `order` ends the review.
+ */
+function select(sel, order = null) {
+  state.order = order;
   state.sel = sel;
   state.fn = sel?.fn ?? null;
-  state.cat = sel?.fn ? sel.fn.f.cat : sel?.cat ?? null;
+  state.cat = order ? null : sel?.fn?.f.cat ?? sel?.cat ?? null;
   paint();
   // A selection changes the layout only while the filter hides the other colors.
   refresh({rearrange: state.filter});
@@ -1706,6 +1881,11 @@ const chip = (text, cat) => {
   c.append(text);
   return c;
 };
+/** A chip with the risks of `list` by level, or nothing for a list without risks. */
+function riskChip(list) {
+  const marks = riskMarks(risksIn(list));
+  return marks ? h('span', 'chip', marks) : null;
+}
 function listItem({cat, num, name, code, count, onClick}) {
   const b = h('button', cat ? 'item' : 'item numbered', cat ? withColor(h('span', 'dot'), cat) : h('span', 'num', num ?? ''),
     h('span', `nm${code ? ' code' : ''}`, name), h('span', 'ct', count ?? ''));
@@ -1727,35 +1907,98 @@ function showPr(P) {
   markStack(P.stack);
   flyTo(P.node);
 }
+const outLink = (cls, text, href, title = '') => Object.assign(h('a', cls, text), {href, title, target: '_blank', rel: 'noopener'});
+const newTab = (href, title) => {
+  const a = outLink('ib sm', icon('ext'), href, title);
+  a.setAttribute('aria-label', title);
+  return a;
+};
+/** The name of a function with its badge; a method reads `Owner.method`; the link opens its declaration. */
+function fnTitle(f) {
+  const dot = f.name.replace(/\s*\(.*\)$/, '').lastIndexOf('.');
+  const name = dot > 0 ? [h('span', 'owner', f.name.slice(0, dot + 1)), f.name.slice(dot + 1)] : [f.name];
+  const title = h('h2', 'code fn-title', typeBadge(f), h('span', 'nm', ...name));
+  if (f.code) title.append(newTab(f.code, say('Open the code', 'Открыть код')));
+  else if (f.diff) title.append(newTab(f.diff, say('Open the declaration in the PR', 'Открыть объявление в PR')));
+  return title;
+}
+/** The places that use a function: the map ones lead to the function, the others to the code. */
+function usesOf(f) {
+  if (f.uses == null) return [];
+  const n = Array.isArray(f.uses) ? f.uses.length : f.uses;
+  const head = h('p', 'micro', n ? `${say('Used in', 'Используется в')} ${count(n, ['place', 'places'], ['месте', 'местах', 'местах'])}`
+    : say('Not used elsewhere in the code', 'В коде больше нигде не используется'));
+  head.title = say('Product code without tests and stories', 'Код продукта без тестов и демо');
+  if (!Array.isArray(f.uses) || !n) return [head];
+  const list = h('div', 'list');
+  for (const u of f.uses) {
+    const other = fnByName.get(u.in);
+    const go = other ? () => navigate({fn: other}) : () => window.open(u.url, '_blank', 'noopener');
+    list.append(h('div', 'place', listItem({cat: other?.f.cat, name: u.in, code: true, count: u.pr ? `#${u.pr}` : DATA.default ?? 'main', onClick: go}),
+      newTab(u.url, say('Open the code', 'Открыть код'))));
+  }
+  return [head, list];
+}
+const withCode = (text) => text.split('`').map((part, i) => (i % 2 ? h('code', null, part) : part));
+/** The risks of `f`: a risk opens its card of the report in a new window, its file name opens its line in the PR. */
+function risksOf(f) {
+  if (!f.risks?.length) return [];
+  const list = h('ul', 'risks');
+  for (const r of f.risks) {
+    const level = levelOf(r), item = h('li', `rk-${level}`);
+    if (r.level || r.verdict === 'refuted') item.append(h('span', 'lv', r.verdict === 'refuted' ? say('refuted', 'опровергнут') : LEVEL_NAME[level]));
+    if (r.card) {
+      const card = outLink(null, null, r.card, say('Open the card of the report in a new window', 'Открыть карточку доклада в новом окне'));
+      card.append(...withCode(r.title), icon('ext'));
+      item.append(card);
+    } else item.append(...withCode(r.title));
+    if (r.url) item.append(' ', outLink('at', r.at.split('/').pop(), r.url, r.at));
+    list.append(item);
+  }
+  return [h('p', 'micro', count(f.risks.length, ['risk', 'risks'], ['риск', 'риска', 'рисков'])), list];
+}
 function renderInspector() {
   const sel = state.sel;
   insp.hidden = !sel;
-  if (!sel) return;
   fitPane();
-  const kids = [];
-  let label = '';
-  if (sel.fn) {
+  if (!sel) return;
+  let kids = [], label = '';
+  if (state.order) {
+    ({label, kids} = orderView(state.order));
+  } else if (sel.fn) {
     const F = sel.fn, {f} = F;
-    label = say('Function', 'Функция');
     const catChip = withColor(h('button', 'chip', h('span', 'dot'), catById[f.cat].name), f.cat);
     catChip.addEventListener('click', () => select({cat: f.cat}));
     const where = h('button', 'chip', `#${F.pr.pr.n} · ${F.group.g.name}`);
     where.title = F.pr.pr.title;
     where.addEventListener('click', () => navigate({pr: F.pr}));
-    const chips = h('div', 'chips', catChip, where);
-    if (f.key) chips.append(chip(say('★ key', '★ ключевая')));
-    chips.append(chip(f.kind === 'u' ? say('uniq · own logic', 'уник · своя логика') : say('std · usual pattern', 'станд · обычный приём')));
-    kids.push(h('h2', 'code', f.name), h('p', 'lead', f.why), chips);
-    const sims = simsOf(F);
-    if (!sims.length) kids.push(h('p', null, say('No similar functions.', 'Похожих функций нет.')));
-    for (const s of sims) {
-      const list = h('div', 'list');
-      for (const name of s.members) {
-        const other = fnByName.get(name);
-        if (!other || other === F) continue;
-        list.append(listItem({cat: other.f.cat, name, code: true, count: `#${other.pr.pr.n}`, onClick: () => navigate({fn: other})}));
+    label = [catChip, where];
+    kids.push(fnTitle(f));
+    if (f.moved) kids.push(h('div', 'rename', h('span', null, f.moved.from), icon('arrow'), h('span', null, f.moved.to)));
+    if (unchangedMove(f)) {
+      kids.push(h('p', null, say('Moved without changes.', 'Перенесена без изменений.')));
+    } else {
+      if (f.ext) label.push(Object.assign(chip(f.ext), {title: say('Plugin or extension', 'Плагин или расширение')}));
+      if (f.main) label.push(chip(say('◆ main', '◆ главная')));
+      if (f.key) label.push(chip(say('★ key', '★ ключевая')));
+      label.push(chip(f.kind === 'u' ? say('uniq · own logic', 'уник · своя логика') : say('std · usual pattern', 'станд · обычный приём')));
+      kids.push(h('p', 'lead why', f.why));
+      if (f.about) kids.push(h('p', 'lead', f.about));
+      if (f.without) kids.push(h('hr'), h('p', null, f.without));
+      kids.push(...risksOf(f), ...usesOf(f));
+      if (F.needs.length) kids.push(h('p', 'micro', say('Relies on', 'Опирается на')), fnList(F.needs));
+      // A similar function that is a place of use is listed once, among the places.
+      const placed = new Set(Array.isArray(f.uses) ? f.uses.map((u) => u.in) : []);
+      for (const s of simsOf(F)) {
+        const others = s.members.filter((name) => name !== f.name && !placed.has(name) && fnByName.has(name));
+        if (!others.length) continue;
+        const list = h('div', 'list');
+        for (const name of others) {
+          const other = fnByName.get(name);
+          list.append(listItem({cat: other.f.cat, name, code: true, count: `#${other.pr.pr.n}`, onClick: () => navigate({fn: other})}));
+        }
+        kids.push(h('p', 'sim-label', `≈ ${s.label}`), list);
       }
-      kids.push(h('p', 'sim-label', `≈ ${s.label}`), list);
     }
   } else if (sel.cat) {
     const c = catById[sel.cat];
@@ -1777,9 +2020,15 @@ function renderInspector() {
     label = refText(prRef(pr));
     const links = [refLink(prRef(pr), 'chip', icon('ext'))];
     if (P.stack.ref?.kind === 'stack') links.push(refLink(P.stack.ref, 'chip', icon('ext')));
+    if (stepsOf(P).length) {
+      const review = h('button', 'chip', icon('steps'), say('Review order', 'Порядок анализа'));
+      review.title = say('Go through the functions of the PR, the helpers first · R', 'Пройти функции PR, сначала вспомогательные · R');
+      review.addEventListener('click', () => startOrder(P));
+      links.push(review);
+    }
     const std = P.fns.filter((F) => F.f.kind === 's').length;
     kids.push(h('h2', null, pr.title), h('p', 'lead', pr.essence),
-      h('div', 'chips', ...links, chip(fnWord(P.fns.length)), chip(`★ ${P.fns.filter((F) => F.f.key).length}`),
+      h('div', 'chips', ...links, chip(fnWord(P.fns.length)), chip(`★ ${P.fns.filter((F) => F.f.key).length}`), riskChip(P.fns),
         chip(say(`std ${std} · uniq ${P.fns.length - std}`, `станд ${std} · уник ${P.fns.length - std}`))));
     if (pr.branch) kids.push(h('p', 'branch', pr.branch));
     kids.push(h('p', 'micro', say('Kinds of work', 'Типы работы')), catBreakdown(P.fns));
@@ -1789,30 +2038,171 @@ function renderInspector() {
     const list = h('div', 'list');
     for (const P of S.prs) list.append(listItem({num: `#${P.pr.n}`, name: P.pr.title, count: P.fns.length, onClick: () => navigate({pr: P})}));
     kids.push(h('h2', null, S.st.name), h('p', 'lead', S.st.essence),
-      h('div', 'chips', S.ref ? refLink(S.ref, 'chip', icon('ext')) : chip(S.st.gh), chip(prWord(S.prs.length)), chip(fnWord(S.fns.length))),
+      h('div', 'chips', S.ref ? refLink(S.ref, 'chip', icon('ext')) : chip(S.st.gh), chip(prWord(S.prs.length)), chip(fnWord(S.fns.length)), riskChip(S.fns)),
       h('p', 'micro', 'PR'), list);
   } else {
     label = say('About the map', 'О карте');
     const list = h('div', 'list');
     for (const S of stacks) list.append(listItem({num: S.tag, name: S.st.name, count: prWord(S.prs.length), onClick: () => navigate({stack: S})}));
     kids.push(h('h2', null, DATA.root.title), h('p', 'lead', DATA.root.essence),
-      h('div', 'chips', chip(stackWord(stacks.length)), chip(prWord(prs.length)), chip(fnWord(fns.length))), h('p', 'micro', say('Stacks', 'Стеки')), list);
+      h('div', 'chips', chip(stackWord(stacks.length)), chip(prWord(prs.length)), chip(fnWord(fns.length)), riskChip(fns)), h('p', 'micro', say('Stacks', 'Стеки')), list);
   }
-  $('insp-label').textContent = label;
+  const tagsOrLabel = $('insp-label');
+  tagsOrLabel.className = Array.isArray(label) ? 'insp-tags' : 'micro';
+  tagsOrLabel.replaceChildren(...(Array.isArray(label) ? label : [label]));
   inspBody.replaceChildren(...kids);
 }
-$('insp-close').addEventListener('click', () => select(null));
+$('insp-close').addEventListener('click', () => (state.order ? stopOrder() : select(null)));
 $('insp-fold').addEventListener('click', () => insp.classList.toggle('folded'));
 
+/* ---------- Review order ---------- */
+const stepsOf = (P) => (P.pr.order ?? []).map((s) => ({F: fnByName.get(s.fn), note: s.note})).filter((s) => s.F);
+/** The PR to review: the selected one or the one of the selected function, else the first one with steps. */
+function prToReview() {
+  const P = state.sel?.pr ?? state.sel?.fn?.pr;
+  return P && stepsOf(P).length ? P : prs.find((other) => stepsOf(other).length);
+}
+function startOrder(P) {
+  const steps = stepsOf(P);
+  if (!steps.length) return;
+  P.stack.closed = false;
+  P.closed = false;
+  for (const G of P.groups) G.folded = false;
+  if (state.onlyKey || state.filter) {
+    state.onlyKey = state.filter = false;
+    refresh();
+  }
+  // A review begun before goes on from its first step that is not clear yet.
+  const open = steps.findIndex((s) => read[s.F.f.name] !== 'ok');
+  const begun = steps.some((s) => read[s.F.f.name]);
+  goStep(!begun ? 0 : open < 0 ? steps.length + 1 : open + 1, {P, steps, i: 0}, true);
+}
+function stopOrder() { if (state.order) select({pr: state.order.P}); }
+function toggleOrder() {
+  const P = state.order ? null : prToReview();
+  if (P) startOrder(P);
+  else stopOrder();
+}
+/** Step 0 is the essence of the PR, steps 1…n are its functions, n + 1 is the end of the review. */
+function goStep(i, o = state.order, fly = false) {
+  o.i = Math.max(0, Math.min(o.steps.length + 1, i));
+  const F = o.steps[o.i - 1]?.F, target = F ? F.row : o.P.node;
+  select(F ? {fn: F} : {pr: o.P}, o);
+  if (fly) flyTo(target);
+  else bringIntoView(target);
+}
+/** Map functions as a list: the ones of the PR under review by their step, the others by their PR. */
+function fnList(list, o = null) {
+  const box = h('div', 'list');
+  for (const F of list) {
+    const k = o ? o.steps.findIndex((s) => s.F === F) + 1 : 0;
+    box.append(listItem({cat: F.f.cat, name: F.f.name, code: true, count: k ? say(`step ${k}`, `шаг ${k}`) : `#${F.pr.pr.n}`,
+      onClick: () => (k ? goStep(k) : navigate({fn: F}))}));
+  }
+  return box;
+}
+function act(text, onClick, tip = '', cls = '') {
+  const b = h('button', cls ? `act ${cls}` : 'act', text);
+  if (tip) b.title = tip;
+  b.addEventListener('click', onClick);
+  return b;
+}
+/** A question about a step to ask a model: the function, its PR and file, and the functions that need it. */
+function question(F, P) {
+  const {f} = F, at = f.file ? `${f.file}${f.line ? `:${f.line}` : ''}` : '';
+  const users = F.users.map((U) => U.f.name).join(', ');
+  return say(
+    `Explain in plain words, as to a child: what does ${f.name} do in PR ${P.pr.url}${at ? `, file ${at}` : ''}?${users ? ` Why does ${users} need it?` : ''}`,
+    `Объясни простыми словами, как маленькому: что делает ${f.name} в PR ${P.pr.url}${at ? `, файл ${at}` : ''}?${users ? ` Зачем она нужна для ${users}?` : ''}`);
+}
+/** The Artifact frame may deny the clipboard: then the hidden text field copies it, or nothing does. */
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {}
+  const area = Object.assign(h('textarea'), {value: text});
+  area.style.cssText = 'position:fixed;opacity:0';
+  document.body.append(area);
+  area.select();
+  let done = false;
+  try { done = document.execCommand('copy'); } catch {}
+  area.remove();
+  return done;
+}
+/** The panel of the review: the strip of steps, then the essence of the PR, a step or the end of the review. */
+function orderView(o) {
+  const {P, steps} = o, n = steps.length, k = o.i, F = steps[k - 1]?.F;
+  const bar = h('div', 'order-bar');
+  steps.forEach((s, j) => {
+    const b = withColor(h('button', [read[s.F.f.name], s.F.f.main && 'main'].filter(Boolean).join(' '), String(j + 1)), s.F.f.cat);
+    b.title = `${j + 1}. ${s.F.f.name}`;
+    if (j + 1 === k) b.setAttribute('aria-current', 'step');
+    b.addEventListener('click', () => goStep(j + 1));
+    bar.append(b);
+  });
+  const kids = [bar], nav = h('div', 'order-nav');
+  if (k > 0) nav.append(act('←', () => goStep(k - 1), say('Back · ,', 'Назад · ,')));
+  if (k === 0) {
+    const main = steps.filter((s) => s.F.f.main).map((s) => s.F);
+    kids.push(h('h2', null, P.pr.title), h('p', 'lead', P.pr.essence),
+      h('p', null, say(`${stepWord(n)}: the helpers first, the main functions last.`, `${stepWord(n)}: сначала вспомогательные функции, главные в конце.`)));
+    if (main.length) kids.push(h('p', 'micro', say('Goal', 'Цель')), fnList(main, o));
+    nav.append(act(say('Start →', 'Начать →'), () => goStep(1), say('First step · .', 'Первый шаг · .'), 'go'));
+  } else if (F) {
+    const {f} = F, note = steps[k - 1].note;
+    kids.push(fnTitle(f));
+    if (f.main) kids.push(h('p', 'micro', `◆ ${say('Main function', 'Главная функция')}`));
+    if (f.file) kids.push(h('p', 'branch', f.file));
+    kids.push(h('p', 'lead why', f.why));
+    if (note || f.about) kids.push(h('p', 'lead', note || f.about));
+    if (F.needs.length) kids.push(h('p', 'micro', say('Relies on', 'Опирается на')), fnList(F.needs, o));
+    if (F.users.length) kids.push(h('p', 'micro', say('Needed for', 'Нужна для')), fnList(F.users, o));
+    kids.push(...risksOf(f));
+    const ask = act(say('Unclear — copy a question', 'Непонятно — скопировать вопрос'), async () => {
+      markRead(F, 'unclear');
+      bar.children[k - 1].className = `unclear${f.main ? ' main' : ''}`;
+      paint();
+      const text = question(F, P);
+      if (await copyText(text)) {
+        ask.textContent = say('Question copied', 'Вопрос скопирован');
+      } else if (!nav.nextElementSibling) {
+        const area = Object.assign(h('textarea', 'ask'), {value: text, readOnly: true});
+        nav.after(area);
+        area.select();
+      }
+    }, say('A question for Claude about this step', 'Вопрос к Claude об этом шаге'));
+    nav.append(ask, act(say('Clear →', 'Понятно →'), () => { markRead(F, 'ok'); goStep(k + 1); }, say('Mark the step clear and go on', 'Отметить шаг и перейти дальше'), 'go'));
+  } else {
+    const ok = steps.filter((s) => read[s.F.f.name] === 'ok').length;
+    const unclear = steps.filter((s) => read[s.F.f.name] === 'unclear').map((s) => s.F);
+    kids.push(h('h2', null, say('Review done', 'Разбор закончен')), h('p', 'lead', say(`Clear: ${ok} of ${n}.`, `Понятно: ${ok} из ${n}.`)));
+    if (unclear.length) kids.push(h('p', 'micro', say('Unclear', 'Непонятно')), fnList(unclear, o));
+    const next = prs.slice(prs.indexOf(P) + 1).find((other) => stepsOf(other).length);
+    if (next) nav.append(act(`${say('Next PR', 'Следующий PR')} #${next.pr.n} →`, () => startOrder(next), next.pr.title, 'go'));
+  }
+  kids.push(nav);
+  return {label: `${say('Review order', 'Порядок анализа')} · #${P.pr.n}`, kids};
+}
+
 /* ---------- Panel of the selection: place and width ---------- */
-const PANE = {min: 240, max: 720, margin: 8, header: 48};
+const PANE = {min: 240, margin: 8, header: 48};
 const chromeBox = $('chrome');
-/** `floating` puts the panel at x, y of the chrome; `w` is null until the reader changes the width. */
+/** `floating` puts the panel at x, y of the chrome, else it is a drawer at the right edge; `w` is null until the reader changes the width. */
 const pane = {floating: false, x: 0, y: 0, w: null, ...prefs.pane};
 const narrow = () => Boolean(window.matchMedia?.('(max-width: 760px)').matches);
 const within = (v, lo, hi) => Math.min(Math.max(v, lo), Math.max(lo, hi));
+const widest = (c) => c.width - 2 * PANE.margin;
 function applyPane() {
+  const drawer = !pane.floating && !narrow(), bar = $('bar');
   insp.classList.toggle('floating', pane.floating);
+  insp.classList.toggle('drawer', drawer);
+  insp.style.setProperty('--drawer-top', `${bar.offsetTop + bar.offsetHeight}px`);
+  // The controls in the corner under the drawer move aside.
+  chromeBox.style.setProperty('--drawer-space', `${drawer && !insp.hidden ? insp.offsetWidth : 0}px`);
+  const dock = $('insp-dock'), tip = pane.floating ? say('Dock to the right edge', 'Прижать к правому краю') : say('Float the panel', 'Открепить панель');
+  dock.dataset.tip = tip;
+  dock.setAttribute('aria-label', tip);
   if (pane.w) insp.style.setProperty('--insp-w', `${pane.w}px`);
   else insp.style.removeProperty('--insp-w');
   insp.style.setProperty('--insp-x', `${pane.x}px`);
@@ -1820,9 +2210,12 @@ function applyPane() {
 }
 /** Keeps the panel inside the window, so its header stays within reach. */
 function fitPane() {
-  if (insp.hidden || narrow()) return;
+  if (insp.hidden || narrow()) {
+    applyPane();
+    return;
+  }
   const c = chromeBox.getBoundingClientRect();
-  if (pane.w) pane.w = within(pane.w, PANE.min, Math.min(PANE.max, c.width - 2 * PANE.margin));
+  if (pane.w) pane.w = within(pane.w, PANE.min, widest(c));
   if (pane.floating) {
     pane.x = within(pane.x, PANE.margin, c.width - (pane.w ?? insp.offsetWidth) - PANE.margin);
     pane.y = within(pane.y, PANE.margin, c.height - PANE.header);
@@ -1853,7 +2246,7 @@ const paneHead = insp.querySelector('.ph');
 paneHead.addEventListener('pointerdown', (e) => {
   if (e.button !== 0 || narrow() || e.target.closest('button')) return;
   trackPane(e, 'dragging', (dx, dy, start, c) => {
-    // A click on the header without a move leaves a docked panel in its corner.
+    // A click on the header without a move leaves the drawer at its edge.
     if (!pane.floating && Math.hypot(dx, dy) < 4) return;
     pane.floating = true;
     pane.w ??= start.w;
@@ -1867,8 +2260,8 @@ for (const grip of insp.querySelectorAll('.insp-grip')) {
     if (e.button !== 0 || narrow()) return;
     const left = grip.classList.contains('l');
     trackPane(e, 'resizing', (dx, _dy, start, c) => {
-      pane.w = within(start.w + (left ? -dx : dx), PANE.min, Math.min(PANE.max, c.width - 2 * PANE.margin));
-      // A docked panel grows from its corner; a floating one keeps the edge across from the grip in place.
+      pane.w = within(start.w + (left ? -dx : dx), PANE.min, widest(c));
+      // The drawer grows from the right edge; a floating panel keeps the edge across from the grip in place.
       if (pane.floating && left) pane.x = start.x + start.w - pane.w;
       applyPane();
     });
@@ -1879,7 +2272,18 @@ function dockPane() {
   applyPane();
   savePrefs({pane: {...pane}});
 }
-$('insp-dock').addEventListener('click', dockPane);
+/** A drawer floats a little left of where it was; a floating panel goes back to the edge. */
+function togglePane() {
+  if (pane.floating) {
+    dockPane();
+    return;
+  }
+  const c = chromeBox.getBoundingClientRect(), r = insp.getBoundingClientRect();
+  Object.assign(pane, {floating: true, w: pane.w ?? r.width, x: r.left - c.left - 24, y: r.top - c.top + 24});
+  fitPane();
+  savePrefs({pane: {...pane}});
+}
+$('insp-dock').addEventListener('click', togglePane);
 paneHead.addEventListener('dblclick', (e) => { if (pane.floating && !e.target.closest('button')) dockPane(); });
 window.addEventListener('resize', fitPane);
 applyPane();
@@ -1945,7 +2349,7 @@ const search = $('search'), results = $('results');
 const searchItems = [
   ...stacks.map((S) => ({text: `${S.tag} ${S.st.name} ${S.st.gh}`, label: S.st.name, detail: `${S.ref ? refText(S.ref) : S.st.gh} · ${prWord(S.prs.length)}`, go: () => navigate({stack: S})})),
   ...prs.map((P) => ({text: `#${P.pr.n} ${P.pr.title} ${P.pr.branch ?? ''}`, label: `#${P.pr.n} ${P.pr.title}`, detail: P.pr.branch ?? P.stack.st.name, go: () => navigate({pr: P})})),
-  ...fns.map((F) => ({text: `${F.f.name} ${F.f.why}`, label: F.f.name, detail: `#${F.pr.pr.n} · ${F.f.why}`, cat: F.f.cat, go: () => navigate({fn: F})})),
+  ...fns.map((F) => ({text: `${F.f.name} ${F.f.why ?? ''} ${F.f.ext ?? ''}`, label: F.f.name, detail: `#${F.pr.pr.n}${F.f.why ? ` · ${F.f.why}` : ''}`, cat: F.f.cat, go: () => navigate({fn: F})})),
 ].map((item) => ({...item, text: item.text.toLocaleLowerCase()}));
 function closeSearch() { results.hidden = true; search.setAttribute('aria-expanded', 'false'); }
 function runSearch() {
@@ -2050,6 +2454,7 @@ function stepDepth(delta) {
 }
 $('only-key').addEventListener('click', () => { state.onlyKey = !state.onlyKey; refresh(); });
 $('filter').addEventListener('click', () => { state.filter = !state.filter; refresh(); renderInspector(); });
+$('order').addEventListener('click', toggleOrder);
 /** Every branch open down to the functions, or only the stacks. */
 function toggleAll() { setDepth(currentDepth() === 4 ? 1 : 4); refresh(); }
 $('expand-all').addEventListener('click', toggleAll);
@@ -2073,6 +2478,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (!results.hidden || !$('help-pop').hidden || !$('skin-pop').hidden) { closeSearch(); setHelp(false); setSkinMenu(false); search.blur(); return; }
     if (app.classList.contains('zen')) { setZen(false); return; }
+    if (state.order) { stopOrder(); return; }
     select(null);
     return;
   }
@@ -2096,6 +2502,7 @@ document.addEventListener('keydown', (e) => {
     KeyS: () => setSkin(SKINS[(SKINS.findIndex((skin) => skin.id === state.skin) + 1) % SKINS.length].id),
     KeyH: () => setZen(!app.classList.contains('zen')),
     BracketLeft: () => stepDepth(-1), BracketRight: () => stepDepth(1), KeyE: toggleAll,
+    KeyR: toggleOrder, Period: () => state.order && goStep(state.order.i + 1), Comma: () => state.order && goStep(state.order.i - 1),
   };
   // `?` is Shift + Slash on the US layout.
   if (e.code === 'Slash' && e.shiftKey) { e.preventDefault(); setHelp($('help-pop').hidden); return; }
@@ -2103,11 +2510,7 @@ document.addEventListener('keydown', (e) => {
   if (action) { e.preventDefault(); action(); }
 });
 // A node focused with Tab comes into view.
-mind.addEventListener('focusin', (e) => {
-  if (!tabbing) return;
-  const r = e.target.getBoundingClientRect(), b = board.getBoundingClientRect(), a = safeArea();
-  if (r.left < b.left + a.x || r.right > b.left + a.x + a.w || r.top < b.top + a.y || r.bottom > b.top + a.y + a.h) flyTo(e.target, view.s < 0.6 ? 0.9 : view.s);
-});
+mind.addEventListener('focusin', (e) => { if (tabbing) bringIntoView(e.target); });
 
 /* ---------- Start ---------- */
 $('counts').textContent = `${prWord(prs.length)} · ${fns.length} fn`;

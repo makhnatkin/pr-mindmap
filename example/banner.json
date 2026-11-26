@@ -261,6 +261,52 @@
      "state": "draft",
      "title": "Shared settings windows and copying the banner as Markdown",
      "essence": "The settings dialog, row and switch are shared by all windows; popovers close on Tab and ignore their own anchor; Copy copies the banner Markdown.",
+     "path": [
+      {
+       "fn": "tabbable",
+       "note": "Which controls of a window take the focus: the Tab rule of the next step counts on this list."
+      },
+      {
+       "fn": "closeOnTabOut",
+       "note": "Tab past the last control and Shift+Tab before the first one close the window."
+      },
+      {
+       "fn": "nodeAnchor",
+       "note": "The window takes its place on the page from the banner block."
+      },
+      {
+       "fn": "closeUnlessAnchor",
+       "note": "A click on the button that opened the window must not close it and open it again."
+      },
+      {
+       "fn": "SettingsRow",
+       "note": "The label is tied to its control, so a screen reader reads them together."
+      },
+      {
+       "fn": "SettingsSwitch",
+       "note": "A row of the previous step with a switch: only the control differs."
+      },
+      {
+       "fn": "headerAt",
+       "note": "Finds the banner at a position; outside a banner there is none."
+      },
+      {
+       "fn": "headerMarkup",
+       "note": "The Markdown that Copy gives must be the same text the document saves."
+      },
+      {
+       "fn": "HeaderCopyButton",
+       "note": "Copies the Markdown of the previous step; check what the user sees after a click."
+      },
+      {
+       "fn": "HeaderToolbar",
+       "note": "The toolbar opens the shared windows instead of windows of its own."
+      },
+      {
+       "fn": "SettingsDialog",
+       "note": "The shared window: the rows and the Tab and click rules of the earlier steps meet here."
+      }
+     ],
      "groups": [
       {
        "name": "Settings windows",
@@ -270,21 +316,110 @@
          "why": "Shared block settings window",
          "key": true,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "about": "The settings window that opens next to a banner. It shows the window title and a close button and holds the fields of the part being set up. It closes on a click outside, on Tab past the last field and on the close button, so every settings window of the banner behaves the same and a new window does not repeat that work.",
+         "without": "It cannot go: the banner settings window is built on it. Without it each window would need its own title, close button and closing rules, and the windows would start to behave differently.",
+         "ext": "editor-banner-extension",
+         "type": "logic",
+         "file": "packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsDialog.tsx",
+         "line": 31,
+         "uses": [
+          {
+           "in": "BannerSettings",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/978723588a9cf3cdc7a865e251f0c9e6d87b4fb3/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BannerSettings.tsx#L66"
+          }
+         ],
+         "code": "https://github.com/gravity-ui/markdown-editor/blob/d475f5ad018ba7f7f8822cf01046dc08cd597e32/packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsDialog.tsx#L31",
+         "main": true,
+         "risks": [
+          {
+           "title": "Shift+Tab while the window itself has the focus, after a click on its empty part, moves the focus out and leaves the window open: `event.target` is the `dialog`, not the first control.",
+           "level": "mid",
+           "at": "packages/editor-banner-extension/src/wysiwyg/utils/popup.ts:41"
+          },
+          {
+           "title": "Without `closeAnchor` a click on the banner that opened the window counts as a click outside: the window closes, and the same click may open it again.",
+           "level": "mid",
+           "at": "packages/editor-banner-extension/src/wysiwyg/utils/popup.ts:20"
+          }
+         ]
         },
         {
          "name": "SettingsRow",
          "why": "Row: label and control linked via aria",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "about": "One line of a settings window: a caption and the control next to it, such as a size or an alignment picker. It links the caption to the control, so a screen reader says what the control changes. All rows of the settings windows look the same because they come from here.",
+         "without": "It can go, but every row would repeat the caption markup, and a missed link between a caption and its control would leave a screen reader user without a hint.",
+         "ext": "editor-banner-extension",
+         "type": "logic",
+         "file": "packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsRow.tsx",
+         "line": 7,
+         "uses": [
+          {
+           "in": "AlignmentSelect",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/978723588a9cf3cdc7a865e251f0c9e6d87b4fb3/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/AlignmentSelect.tsx#L20"
+          },
+          {
+           "in": "DimensionSelect",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/978723588a9cf3cdc7a865e251f0c9e6d87b4fb3/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/DimensionSelect.tsx#L25"
+          }
+         ],
+         "code": "https://github.com/gravity-ui/markdown-editor/blob/d475f5ad018ba7f7f8822cf01046dc08cd597e32/packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsRow.tsx#L7",
+         "risks": [
+          {
+           "title": "The caption names the control only when `children` puts `labelId` into `aria-labelledby`; a control that ignores it stays without a name for a screen reader.",
+           "level": "low",
+           "at": "packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsRow.tsx:20"
+          },
+          {
+           "title": "A click on the caption does not move the focus to the control: the caption is `Text`, while in `SettingsSwitch` it is a `label`.",
+           "level": "low",
+           "at": "packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsRow.tsx:17"
+          }
+         ]
         },
         {
          "name": "SettingsSwitch",
          "why": "Row with a switch",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "about": "A settings row with an on/off switch, for example to show or hide the banner image or a button. It moved from the banner settings to the shared settings parts. Now the window that shows the switch keeps its state and decides what a click does, so the same switch serves any block.",
+         "without": "It cannot go: the banner settings use it to turn the image, the buttons and other parts of the banner on and off.",
+         "ext": "editor-banner-extension",
+         "moved": {
+          "from": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/SettingsSwitch.tsx",
+          "to": "packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsSwitch.tsx",
+          "changed": true
+         },
+         "type": "logic",
+         "file": "packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsSwitch.tsx",
+         "line": 12,
+         "uses": [
+          {
+           "in": "SettingsFields",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/978723588a9cf3cdc7a865e251f0c9e6d87b4fb3/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/SettingsFields.tsx#L33"
+          }
+         ],
+         "code": "https://github.com/gravity-ui/markdown-editor/blob/d475f5ad018ba7f7f8822cf01046dc08cd597e32/packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsSwitch.tsx#L12",
+         "risks": [
+          {
+           "title": "With `checked` and no `onUpdate` the switch does not move on a click: the window that shows it keeps the state now.",
+           "level": "low",
+           "at": "packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsSwitch.tsx:22"
+          },
+          {
+           "title": "The click is no longer logged here: `logClick` went away with the state, so the window that keeps the state logs it, or the metric stops.",
+           "level": "mid",
+           "at": "packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsSwitch.tsx:24"
+          }
+         ]
         }
        ]
       },
@@ -296,28 +431,80 @@
          "why": "Popover anchor from the block DOM node",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "type": "util",
+         "file": "packages/editor-banner-extension/src/wysiwyg/utils/popup.ts",
+         "line": 6,
+         "uses": [
+          {
+           "in": "ButtonSettings",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/978723588a9cf3cdc7a865e251f0c9e6d87b4fb3/packages/editor-banner-extension/src/wysiwyg/extensions/Button/ButtonNodeView/components/ButtonSettings.tsx#L104"
+          }
+         ],
+         "code": "https://github.com/gravity-ui/markdown-editor/blob/d475f5ad018ba7f7f8822cf01046dc08cd597e32/packages/editor-banner-extension/src/wysiwyg/utils/popup.ts#L6"
         },
         {
          "name": "closeUnlessAnchor",
          "why": "Stay open on a click on its own anchor",
          "key": true,
          "kind": "u",
-         "cat": "ui"
+         "cat": "ui",
+         "file": "packages/editor-banner-extension/src/wysiwyg/utils/popup.ts",
+         "line": 13,
+         "uses": [
+          {
+           "in": "ButtonSettings",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/978723588a9cf3cdc7a865e251f0c9e6d87b4fb3/packages/editor-banner-extension/src/wysiwyg/extensions/Button/ButtonNodeView/components/ButtonSettings.tsx#L101"
+          },
+          {
+           "in": "SettingsDialog",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/978723588a9cf3cdc7a865e251f0c9e6d87b4fb3/packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsDialog.tsx#L43"
+          }
+         ],
+         "code": "https://github.com/gravity-ui/markdown-editor/blob/d475f5ad018ba7f7f8822cf01046dc08cd597e32/packages/editor-banner-extension/src/wysiwyg/utils/popup.ts#L13"
         },
         {
          "name": "closeOnTabOut",
          "why": "Close on Tab past the first/last control",
          "key": true,
          "kind": "u",
-         "cat": "ui"
+         "cat": "ui",
+         "uses": [
+          {
+           "in": "ButtonSettings",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/978723588a9cf3cdc7a865e251f0c9e6d87b4fb3/packages/editor-banner-extension/src/wysiwyg/extensions/Button/ButtonNodeView/components/ButtonSettings.tsx#L102"
+          },
+          {
+           "in": "SettingsDialog",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/978723588a9cf3cdc7a865e251f0c9e6d87b4fb3/packages/editor-banner-extension/src/wysiwyg/components/settings/SettingsDialog.tsx#L44"
+          }
+         ],
+         "file": "packages/editor-banner-extension/src/wysiwyg/utils/popup.ts",
+         "line": 34,
+         "code": "https://github.com/gravity-ui/markdown-editor/blob/d475f5ad018ba7f7f8822cf01046dc08cd597e32/packages/editor-banner-extension/src/wysiwyg/utils/popup.ts#L34"
         },
         {
          "name": "tabbable",
          "why": "Focusable controls of the window",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "type": "util",
+         "file": "packages/editor-banner-extension/src/wysiwyg/utils/popup.ts",
+         "line": 26,
+         "uses": [
+          {
+           "in": "closeOnTabOut",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/978723588a9cf3cdc7a865e251f0c9e6d87b4fb3/packages/editor-banner-extension/src/wysiwyg/utils/popup.ts#L39"
+          }
+         ],
+         "code": "https://github.com/gravity-ui/markdown-editor/blob/d475f5ad018ba7f7f8822cf01046dc08cd597e32/packages/editor-banner-extension/src/wysiwyg/utils/popup.ts#L26"
         }
        ]
       },
@@ -329,28 +516,32 @@
          "why": "Banner node at a position or null",
          "key": false,
          "kind": "s",
-         "cat": "cmd"
+         "cat": "cmd",
+         "uses": []
         },
         {
          "name": "headerMarkup",
          "why": "Banner Markdown as it will be saved",
          "key": true,
          "kind": "u",
-         "cat": "md"
+         "cat": "md",
+         "uses": []
         },
         {
          "name": "HeaderCopyButton",
          "why": "Copy button: banner Markdown to clipboard",
          "key": false,
          "kind": "u",
-         "cat": "ui"
+         "cat": "ui",
+         "uses": []
         },
         {
          "name": "HeaderToolbar",
          "why": "Banner toolbar on shared windows",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "uses": []
         }
        ]
       }
@@ -372,35 +563,66 @@
          "why": "Part description from the node spec",
          "key": false,
          "kind": "s",
-         "cat": "schema"
+         "cat": "schema",
+         "uses": []
         },
         {
          "name": "headerPartTypes",
          "why": "Part types available in the schema",
          "key": false,
          "kind": "s",
-         "cat": "schema"
+         "cat": "schema",
+         "uses": []
         },
         {
          "name": "findParts",
          "why": "Find part blocks inside the banner",
          "key": true,
          "kind": "u",
-         "cat": "cmd"
+         "cat": "cmd",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/parts.ts",
+         "line": 43,
+         "uses": [
+          {
+           "in": "bannerParts",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/parts.ts#L62"
+          },
+          {
+           "in": "setBannerPart",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/commands.ts#L141"
+          },
+          {
+           "in": "toggleBannerPart",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/commands.ts#L175"
+          }
+         ]
         },
         {
          "name": "lastPartBefore",
          "why": "Last part before the given one in order",
          "key": false,
          "kind": "u",
-         "cat": "cmd"
+         "cat": "cmd",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/parts.ts",
+         "line": 53,
+         "uses": [
+          {
+           "in": "setBannerPart",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/commands.ts#L157"
+          }
+         ]
         },
         {
          "name": "headerParts",
          "why": "Parts present in the banner",
          "key": false,
          "kind": "s",
-         "cat": "cmd"
+         "cat": "cmd",
+         "uses": []
         }
        ]
       },
@@ -412,49 +634,106 @@
          "why": "Insert/remove a part at its place",
          "key": true,
          "kind": "u",
-         "cat": "cmd"
+         "cat": "cmd",
+         "uses": []
         },
         {
          "name": "toggleHeaderPart",
          "why": "Toggle a part and restore a removed one",
          "key": true,
          "kind": "u",
-         "cat": "cmd"
+         "cat": "cmd",
+         "uses": []
         },
         {
          "name": "insertChild",
          "why": "Insert a block replacing an empty paragraph",
          "key": false,
          "kind": "u",
-         "cat": "cmd"
+         "cat": "cmd",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/commands.ts",
+         "line": 113,
+         "uses": [
+          {
+           "in": "setBannerPart",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/commands.ts#L158"
+          }
+         ]
         },
         {
          "name": "onlyParagraph",
          "why": "The only banner paragraph or null",
          "key": false,
          "kind": "u",
-         "cat": "cmd"
+         "cat": "cmd",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/commands.ts",
+         "line": 108,
+         "uses": [
+          {
+           "in": "insertChild",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/commands.ts#L114"
+          },
+          {
+           "in": "setBannerPart",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/commands.ts#L151"
+          }
+         ]
         },
         {
          "name": "keepSelection",
          "why": "Select the banner and close the undo step",
          "key": false,
          "kind": "u",
-         "cat": "cmd"
+         "cat": "cmd",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/commands.ts",
+         "line": 123,
+         "uses": [
+          {
+           "in": "setBannerPart",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/commands.ts#L163"
+          }
+         ]
         },
         {
          "name": "removeChild",
          "why": "Remove a block keeping the parent valid",
          "key": false,
          "kind": "s",
-         "cat": "cmd"
+         "cat": "cmd",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/commands.ts",
+         "line": 11,
+         "uses": [
+          {
+           "in": "setBannerPart",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/commands.ts#L146"
+          }
+         ]
         },
         {
          "name": "runCommand",
          "why": "Run a command on the view",
          "key": false,
          "kind": "s",
-         "cat": "cmd"
+         "cat": "cmd",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/commands.ts",
+         "line": 7,
+         "uses": [
+          {
+           "in": "BannerToolbar",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/BannerToolbar.tsx#L73"
+          },
+          {
+           "in": "content.onPartChange",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/BannerToolbar.tsx#L67"
+          }
+         ]
         }
        ]
       },
@@ -466,49 +745,92 @@
          "why": "Select a node of a type next to the cursor",
          "key": true,
          "kind": "s",
-         "cat": "nav"
+         "cat": "nav",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/commands.ts",
+         "line": 28,
+         "uses": [
+          {
+           "in": "commands.ts",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Button/commands.ts#L27"
+          }
+         ]
         },
         {
          "name": "nodeBeside",
          "why": "Inline node before or after the cursor",
          "key": false,
          "kind": "s",
-         "cat": "nav"
+         "cat": "nav",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/commands.ts",
+         "line": 22,
+         "uses": [
+          {
+           "in": "commands.ts",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Button/commands.ts#L27"
+          }
+         ]
         },
         {
          "name": "selectButtonBefore/After",
          "why": "Backspace/Delete select the button",
          "key": false,
          "kind": "s",
-         "cat": "nav"
+         "cat": "nav",
+         "uses": []
         },
         {
          "name": "selectionInsidePlugin",
          "why": "Keep the selection inside the block",
          "key": true,
          "kind": "u",
-         "cat": "nav"
+         "cat": "nav",
+         "file": "packages/editor-banner-extension/src/wysiwyg/plugins/SelectionInsidePlugin/plugin.ts",
+         "line": 34,
+         "uses": []
         },
         {
          "name": "selectionInside",
          "why": "Clip the selection to the block text",
          "key": false,
          "kind": "u",
-         "cat": "nav"
+         "cat": "nav",
+         "file": "packages/editor-banner-extension/src/wysiwyg/plugins/SelectionInsidePlugin/plugin.ts",
+         "line": 16,
+         "uses": [
+          {
+           "in": "selectionInsidePlugin",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/plugins/SelectionInsidePlugin/plugin.ts#L35"
+          }
+         ]
         },
         {
          "name": "findDepth",
          "why": "Depth of the nearest ancestor of a type",
          "key": false,
          "kind": "s",
-         "cat": "nav"
+         "cat": "nav",
+         "file": "packages/editor-banner-extension/src/wysiwyg/plugins/SelectionInsidePlugin/plugin.ts",
+         "line": 5,
+         "uses": [
+          {
+           "in": "selectionInside",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/plugins/SelectionInsidePlugin/plugin.ts#L22"
+          }
+         ]
         },
         {
          "name": "textRange",
          "why": "First and last text in the block",
          "key": false,
          "kind": "s",
-         "cat": "nav"
+         "cat": "nav",
+         "file": "packages/editor-banner-extension/src/wysiwyg/plugins/SelectionInsidePlugin/plugin.ts",
+         "line": 11,
+         "uses": []
         }
        ]
       },
@@ -520,21 +842,53 @@
          "why": "Directive attributes {a=\"b\"} on one line",
          "key": true,
          "kind": "s",
-         "cat": "md"
+         "cat": "md",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/directive.ts",
+         "line": 10,
+         "uses": [
+          {
+           "in": "BannerSerializerSpecs",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/BannerSpecs/serializer.ts#L18"
+          },
+          {
+           "in": "ButtonSerializerSpecs",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Button/ButtonSpecs/serializer.ts#L16"
+          }
+         ]
         },
         {
          "name": "escapeDirectiveLabel",
          "why": "Escape [ ] and \\ in a label",
          "key": false,
          "kind": "s",
-         "cat": "md"
+         "cat": "md",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/directive.ts",
+         "line": 7,
+         "uses": [
+          {
+           "in": "ButtonSerializerSpecs",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Button/ButtonSpecs/serializer.ts#L21"
+          }
+         ]
         },
         {
          "name": "singleLine",
          "why": "Line breaks → space",
          "key": false,
          "kind": "s",
-         "cat": "md"
+         "cat": "md",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/directive.ts",
+         "line": 5,
+         "uses": [
+          {
+           "in": "directiveAttrs",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/directive.ts#L12"
+          }
+         ]
         }
        ]
       },
@@ -546,21 +900,49 @@
          "why": "Panel fields: part switches",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/SettingsFields.tsx",
+         "line": 40,
+         "uses": [
+          {
+           "in": "BannerSettings",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BannerSettings.tsx#L99"
+          }
+         ],
+         "code": "https://github.com/gravity-ui/markdown-editor/blob/d475f5ad018ba7f7f8822cf01046dc08cd597e32/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/SettingsFields.tsx#L19"
         },
         {
          "name": "PartSwitch",
          "why": "Switch for one part",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/SettingsFields.tsx",
+         "line": 29,
+         "uses": [
+          {
+           "in": "SettingsFields",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/SettingsFields.tsx#L48"
+          }
+         ]
         },
         {
          "name": "removedPartsOf",
          "why": "Removed banner parts to restore",
          "key": false,
          "kind": "u",
-         "cat": "cmd"
+         "cat": "cmd",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/BannerToolbar.tsx",
+         "line": 35,
+         "uses": [
+          {
+           "in": "content.onPartChange",
+           "pr": 1476,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/5954c60edd0e3abc5d9911cc67142125828fb453/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/BannerToolbar.tsx#L67"
+          }
+         ]
         }
        ]
       }
@@ -582,49 +964,154 @@
          "why": "Link or file, replace, cancel upload",
          "key": true,
          "kind": "u",
-         "cat": "upload"
+         "cat": "upload",
+         "file": "packages/editor-banner-extension/src/wysiwyg/components/settings/ImageSource.tsx",
+         "line": 29,
+         "uses": [
+          {
+           "in": "ImageTab",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundPopup.tsx#L208"
+          }
+         ]
         },
         {
          "name": "keepEnterInField",
          "why": "Enter in a field keeps the window open",
          "key": false,
          "kind": "u",
-         "cat": "upload"
+         "cat": "upload",
+         "uses": []
         },
         {
          "name": "imageFileError",
          "why": "File type or size error",
          "key": false,
          "kind": "s",
-         "cat": "upload"
+         "cat": "upload",
+         "file": "packages/editor-banner-extension/src/wysiwyg/components/settings/image.ts",
+         "line": 47,
+         "uses": [
+          {
+           "in": "ImageSource",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/components/settings/ImageSource.tsx#L137"
+          }
+         ]
         },
         {
          "name": "uploadHint",
          "why": "Hint on formats and the limit",
          "key": false,
          "kind": "s",
-         "cat": "upload"
+         "cat": "upload",
+         "file": "packages/editor-banner-extension/src/wysiwyg/components/settings/image.ts",
+         "line": 36,
+         "uses": [
+          {
+           "in": "ImageSource",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/components/settings/ImageSource.tsx#L163"
+          },
+          {
+           "in": "FileForm",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor/src/forms/FileForm.tsx#L43"
+          },
+          {
+           "in": "FileForm.tsx",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor/src/forms/FileForm.tsx#L33"
+          },
+          {
+           "in": "ImageForm",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor/src/forms/ImageForm.tsx#L54"
+          },
+          {
+           "in": "ImageForm.tsx",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor/src/forms/ImageForm.tsx#L39"
+          },
+          {
+           "in": "ToolbarFilePopup",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor/src/bundle/toolbar/custom/ToolbarFilePopup.tsx#L35"
+          },
+          {
+           "in": "ToolbarFilePopup.tsx",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor/src/bundle/toolbar/custom/ToolbarFilePopup.tsx#L23"
+          },
+          {
+           "in": "ToolbarImagePopup",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor/src/bundle/toolbar/custom/ToolbarImagePopup.tsx#L34"
+          },
+          {
+           "in": "ToolbarImagePopup.tsx",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor/src/bundle/toolbar/custom/ToolbarImagePopup.tsx#L22"
+          }
+         ]
         },
         {
          "name": "imageName",
          "why": "File name from a URL",
          "key": false,
          "kind": "s",
-         "cat": "upload"
+         "cat": "upload",
+         "file": "packages/editor-banner-extension/src/wysiwyg/components/settings/image.ts",
+         "line": 12,
+         "uses": [
+          {
+           "in": "BackgroundField",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundField.tsx#L57"
+          },
+          {
+           "in": "ImageSource",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/components/settings/ImageSource.tsx#L94"
+          }
+         ]
         },
         {
          "name": "formatImageSize",
          "why": "Size in KB/MB",
          "key": false,
          "kind": "s",
-         "cat": "upload"
+         "cat": "upload",
+         "file": "packages/editor-banner-extension/src/wysiwyg/components/settings/image.ts",
+         "line": 21,
+         "uses": [
+          {
+           "in": "imageFileError",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/components/settings/image.ts#L52"
+          },
+          {
+           "in": "uploadHint",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/components/settings/image.ts#L40"
+          }
+         ]
         },
         {
          "name": "imageFormat",
          "why": "Format from a MIME type",
          "key": false,
          "kind": "s",
-         "cat": "upload"
+         "cat": "upload",
+         "file": "packages/editor-banner-extension/src/wysiwyg/components/settings/image.ts",
+         "line": 30,
+         "uses": [
+          {
+           "in": "uploadHint",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/components/settings/image.ts#L37"
+          }
+         ]
         }
        ]
       },
@@ -636,21 +1123,24 @@
          "why": "Upload and write into the node where it is now",
          "key": true,
          "kind": "u",
-         "cat": "upload"
+         "cat": "upload",
+         "uses": []
         },
         {
          "name": "cancelHeaderUploads",
          "why": "Cancel uploads into a node",
          "key": true,
          "kind": "u",
-         "cat": "upload"
+         "cat": "upload",
+         "uses": []
         },
         {
          "name": "headerUploadPlugin",
          "why": "Track upload positions",
          "key": false,
          "kind": "u",
-         "cat": "upload"
+         "cat": "upload",
+         "uses": []
         }
        ]
       },
@@ -662,14 +1152,43 @@
          "why": "Image URL without an unsafe scheme",
          "key": true,
          "kind": "u",
-         "cat": "model"
+         "cat": "model",
+         "file": "packages/plugin-banner/src/url.ts",
+         "line": 17,
+         "uses": [
+          {
+           "in": "ImageSource",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/components/settings/ImageSource.tsx#L125"
+          },
+          {
+           "in": "bannerBackground",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/plugin-banner/src/banner/utils.ts#L36"
+          },
+          {
+           "in": "uploadBannerFile",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/plugins/BannerUploadPlugin/plugin.ts#L93"
+          }
+         ]
         },
         {
          "name": "hasControlChars",
          "why": "Whether control characters are present",
          "key": false,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "type": "guard",
+         "file": "packages/plugin-banner/src/url.ts",
+         "line": 13,
+         "uses": [
+          {
+           "in": "safeImageUrl",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/plugin-banner/src/url.ts#L19"
+          }
+         ]
         }
        ]
       }
@@ -698,35 +1217,48 @@
          "why": "Normalize background: color, image, theme",
          "key": true,
          "kind": "u",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         },
         {
          "name": "headerBackgroundValues",
          "why": "Background values other than the default",
          "key": false,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         },
         {
          "name": "headerBackgroundFromAttrs",
          "why": "Background from data attributes",
          "key": false,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         },
         {
          "name": "toCssUrl",
          "why": "Safe CSS url() from a URL",
          "key": true,
          "kind": "u",
-         "cat": "model"
+         "cat": "model",
+         "file": "packages/plugin-banner/src/url.ts",
+         "line": 24,
+         "uses": [
+          {
+           "in": "bannerRender",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/plugin-banner/src/banner/attrs.ts#L26"
+          }
+         ]
         },
         {
          "name": "percentEncode",
          "why": "Encode characters that break CSS",
          "key": false,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         }
        ]
       },
@@ -738,35 +1270,89 @@
          "why": "HTML attributes of the banner",
          "key": true,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         },
         {
          "name": "headerDimensionsFromAttrs",
          "why": "Dimensions from data attributes",
          "key": false,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         },
         {
          "name": "valuesOtherThan",
          "why": "Values other than defaults, as strings",
          "key": true,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "file": "packages/plugin-banner/src/utils.ts",
+         "line": 6,
+         "uses": [
+          {
+           "in": "bannerBackgroundValues",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/plugin-banner/src/banner/utils.ts#L49"
+          }
+         ]
         },
         {
          "name": "includes",
          "why": "Value is in a list (type guard)",
          "key": false,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "file": "packages/plugin-banner/src/utils.ts",
+         "line": 1,
+         "uses": [
+          {
+           "in": "bannerBackground",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/plugin-banner/src/banner/utils.ts#L38"
+          },
+          {
+           "in": "isBannerHeight",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/plugin-banner/src/banner/utils.ts#L18"
+          },
+          {
+           "in": "isBannerWidth",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/plugin-banner/src/banner/utils.ts#L22"
+          },
+          {
+           "in": "isButtonTarget",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/plugin-banner/src/button/model.ts#L59"
+          },
+          {
+           "in": "isButtonView",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/plugin-banner/src/button/model.ts#L55"
+          }
+         ]
         },
         {
          "name": "AttrGetter",
          "why": "Type: reading an attribute by name",
          "key": false,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "file": "packages/plugin-banner/src/utils.ts",
+         "line": 4,
+         "uses": [
+          {
+           "in": "attrs.ts",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/plugin-banner/src/banner/attrs.ts#L61"
+          },
+          {
+           "in": "attrs.ts",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/plugin-banner/src/button/attrs.ts#L23"
+          }
+         ]
         }
        ]
       },
@@ -778,35 +1364,85 @@
          "why": "Write only changes to the DOM, PM classes",
          "key": true,
          "kind": "u",
-         "cat": "dom"
+         "cat": "dom",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/nodeview.ts",
+         "line": 11,
+         "uses": [
+          {
+           "in": "WBannerNodeView.renderAttrs",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/BannerNodeView/NodeView.ts#L35"
+          },
+          {
+           "in": "WButtonNodeView.renderAttrs",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Button/ButtonNodeView/NodeView.tsx#L79"
+          }
+         ]
         },
         {
          "name": "changedAttrs",
          "why": "Pairs with a changed value",
          "key": true,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/attrs.ts",
+         "line": 2,
+         "uses": [
+          {
+           "in": "setBannerBackground",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/commands.ts#L82"
+          },
+          {
+           "in": "setBannerDimension",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/commands.ts#L64"
+          },
+          {
+           "in": "setButtonAttrs",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Button/commands.ts#L18"
+          },
+          {
+           "in": "syncDomAttrs",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/nodeview.ts#L23"
+          }
+         ]
         },
         {
          "name": "WHeaderNodeView.renderAttrs",
          "why": "Banner attributes via syncDomAttrs",
          "key": false,
          "kind": "s",
-         "cat": "dom"
+         "cat": "dom",
+         "uses": []
         },
         {
          "name": "setHeaderDimension",
          "why": "Dimension; the same one, no transaction",
          "key": false,
          "kind": "s",
-         "cat": "cmd"
+         "cat": "cmd",
+         "uses": []
         },
         {
          "name": "setButtonAttrs",
          "why": "Button attributes, only changed ones",
          "key": false,
          "kind": "s",
-         "cat": "cmd"
+         "cat": "cmd",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Button/commands.ts",
+         "line": 10,
+         "uses": [
+          {
+           "in": "ButtonSettings",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Button/ButtonNodeView/components/ButtonSettings.tsx#L74"
+          }
+         ],
+         "code": "https://github.com/gravity-ui/markdown-editor/blob/d475f5ad018ba7f7f8822cf01046dc08cd597e32/packages/editor-banner-extension/src/wysiwyg/extensions/Button/commands.ts#L7"
         }
        ]
       }
@@ -828,14 +1464,16 @@
          "why": "Background in one undo step, theme reset",
          "key": true,
          "kind": "u",
-         "cat": "cmd"
+         "cat": "cmd",
+         "uses": []
         },
         {
          "name": "dropHeaderUploads",
          "why": "Drop uploads in the same transaction",
          "key": true,
          "kind": "u",
-         "cat": "upload"
+         "cat": "upload",
+         "uses": []
         }
        ]
       },
@@ -847,21 +1485,24 @@
          "why": "Node attributes from Markdown and DOM",
          "key": false,
          "kind": "s",
-         "cat": "schema"
+         "cat": "schema",
+         "uses": []
         },
         {
          "name": "headerRender",
          "why": "Classes, CSS URL and data attributes",
          "key": true,
          "kind": "u",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         },
         {
          "name": "Header (options)",
          "why": "fileUploadHandler, imageTypes, maxSize",
          "key": false,
          "kind": "s",
-         "cat": "schema"
+         "cat": "schema",
+         "uses": []
         }
        ]
       },
@@ -873,63 +1514,159 @@
          "why": "Window: fill and image tabs",
          "key": true,
          "kind": "u",
-         "cat": "ui"
+         "cat": "ui",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundPopup.tsx",
+         "line": 68,
+         "uses": [
+          {
+           "in": "BackgroundField",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundField.tsx#L81"
+          }
+         ]
         },
         {
          "name": "FillPalette",
          "why": "Palette with arrow navigation",
          "key": true,
          "kind": "u",
-         "cat": "ui"
+         "cat": "ui",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundPopup.tsx",
+         "line": 110,
+         "uses": [
+          {
+           "in": "BackgroundPopup",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundPopup.tsx#L100"
+          }
+         ]
         },
         {
          "name": "BannerPreview",
          "why": "Banner preview in light/dark theme",
          "key": false,
          "kind": "u",
-         "cat": "ui"
+         "cat": "ui",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundPopup.tsx",
+         "line": 234,
+         "uses": [
+          {
+           "in": "ImageTab",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundPopup.tsx#L218"
+          }
+         ]
         },
         {
          "name": "ImageTab",
          "why": "Image tab on ImageSource",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundPopup.tsx",
+         "line": 203,
+         "uses": [
+          {
+           "in": "BackgroundPopup",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundPopup.tsx#L103"
+          }
+         ]
         },
         {
          "name": "SegmentedSelect",
          "why": "Row with an icon choice",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/SegmentedSelect.tsx",
+         "line": 18,
+         "uses": [
+          {
+           "in": "AlignmentSelect",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/AlignmentSelect.tsx#L24"
+          },
+          {
+           "in": "BannerPreview",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundPopup.tsx#L241"
+          }
+         ]
         },
         {
          "name": "BackgroundField",
          "why": "Background field in the panel",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundField.tsx",
+         "line": 22,
+         "uses": [
+          {
+           "in": "SettingsFields",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/SettingsFields.tsx#L118"
+          }
+         ]
         },
         {
          "name": "BackgroundPreview",
          "why": "Background thumbnail in the field",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundField.tsx",
+         "line": 93,
+         "uses": [
+          {
+           "in": "BackgroundField",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundField.tsx#L54"
+          }
+         ]
         },
         {
          "name": "bgColorLabel",
          "why": "Palette color label",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/utils.ts",
+         "line": 20,
+         "uses": [
+          {
+           "in": "BackgroundField",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundField.tsx#L58"
+          },
+          {
+           "in": "Swatch",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundPopup.tsx#L181"
+          }
+         ]
         },
         {
          "name": "bgColorStyle",
          "why": "Color swatch style",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/utils.ts",
+         "line": 28,
+         "uses": [
+          {
+           "in": "BackgroundPreview",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundField.tsx#L96"
+          },
+          {
+           "in": "Swatch",
+           "pr": 1477,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/68b81318a46491da3c4b1c780c5ed6ac70ca52d8/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundPopup.tsx#L191"
+          }
+         ]
         }
        ]
       }
@@ -958,14 +1695,16 @@
          "why": "The ::header-title directive and rendering",
          "key": true,
          "kind": "s",
-         "cat": "md"
+         "cat": "md",
+         "uses": []
         },
         {
          "name": "headerHasTitle",
          "why": "Whether this banner already has a title",
          "key": true,
          "kind": "u",
-         "cat": "md"
+         "cat": "md",
+         "uses": []
         }
        ]
       },
@@ -977,35 +1716,48 @@
          "why": "Normalize size and color",
          "key": false,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         },
         {
          "name": "oneOf",
          "why": "List value from a number or a string",
          "key": false,
          "kind": "u",
-         "cat": "model"
+         "cat": "model",
+         "file": "packages/plugin-banner/src/banner-title/model.ts",
+         "line": 24,
+         "uses": [
+          {
+           "in": "bannerTitleModel",
+           "pr": 1480,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/plugin-banner/src/banner-title/model.ts#L31"
+          }
+         ]
         },
         {
          "name": "headerTitleValues",
          "why": "Values other than the default",
          "key": false,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         },
         {
          "name": "headerTitleAttrs",
          "why": "HTML attributes of the title",
          "key": false,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         },
         {
          "name": "headerTitleFromAttrs",
          "why": "Model from data attributes",
          "key": false,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         }
        ]
       }
@@ -1027,42 +1779,82 @@
          "why": "Title node and banner part",
          "key": false,
          "kind": "s",
-         "cat": "schema"
+         "cat": "schema",
+         "uses": []
         },
         {
          "name": "HeaderTitleParserSpecs",
          "why": "Token → node",
          "key": false,
          "kind": "s",
-         "cat": "md"
+         "cat": "md",
+         "uses": []
         },
         {
          "name": "HeaderTitleSerializerSpecs",
          "why": "Node → ::header-title",
          "key": false,
          "kind": "s",
-         "cat": "md"
+         "cat": "md",
+         "uses": []
         },
         {
          "name": "plainParagraph",
          "why": "Paragraph without marks → title",
          "key": false,
          "kind": "u",
-         "cat": "schema"
+         "cat": "schema",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/BannerTitleSpecs/schema.ts",
+         "line": 17,
+         "uses": [
+          {
+           "in": "bannerPart.adopt",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/BannerTitleSpecs/schema.ts#L29"
+          }
+         ]
         },
         {
          "name": "attrSpecs",
          "why": "Schema attrs from a defaults object",
          "key": false,
          "kind": "s",
-         "cat": "schema"
+         "cat": "schema",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/schema.ts",
+         "line": 4,
+         "uses": [
+          {
+           "in": "BannerTitleSchemaSpecs",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/BannerTitleSpecs/schema.ts#L43"
+          }
+         ]
         },
         {
          "name": "placeholderSpec",
          "why": "Placeholder of an empty block",
          "key": false,
          "kind": "s",
-         "cat": "schema"
+         "cat": "schema",
+         "uses": [
+          {
+           "in": "BannerTitleSchemaSpecs",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/BannerTitleSpecs/schema.ts#L33"
+          },
+          {
+           "in": "addDecoration",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor/src/extensions/behavior/Placeholder/index.ts#L93"
+          },
+          {
+           "in": "getPlaceholderWidgetSpecs",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor/src/extensions/behavior/Placeholder/index.ts#L181"
+          }
+         ],
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/schema.ts",
+         "line": 7
         }
        ]
       },
@@ -1074,42 +1866,77 @@
          "why": "Enter does not split the title",
          "key": false,
          "kind": "u",
-         "cat": "cmd"
+         "cat": "cmd",
+         "uses": []
         },
         {
          "name": "deleteHeaderTitleText",
          "why": "Deleting up to blocks keeps the title",
          "key": false,
          "kind": "u",
-         "cat": "cmd"
+         "cat": "cmd",
+         "uses": []
         },
         {
          "name": "stopAtHeaderTitleStart/End",
          "why": "Title edges do not join",
          "key": false,
          "kind": "u",
-         "cat": "nav"
+         "cat": "nav",
+         "uses": []
         },
         {
          "name": "stopAtBlockEdge",
          "why": "Backspace/Delete at a block do not join",
          "key": true,
          "kind": "u",
-         "cat": "nav"
+         "cat": "nav",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/commands.ts",
+         "line": 78,
+         "uses": [
+          {
+           "in": "stopAtBannerTitleEdge",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/commands.ts#L61"
+          }
+         ]
         },
         {
          "name": "siblingBlock",
          "why": "Neighbor block at the text edge",
          "key": false,
          "kind": "s",
-         "cat": "nav"
+         "cat": "nav",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/commands.ts",
+         "line": 51,
+         "uses": [
+          {
+           "in": "holdBannerTitleEdge",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/commands.ts#L56"
+          },
+          {
+           "in": "stopAtBlockEdge",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/commands.ts#L113"
+          }
+         ]
         },
         {
          "name": "atTextblockEdge",
          "why": "Cursor at the block start/end",
          "key": false,
          "kind": "s",
-         "cat": "nav"
+         "cat": "nav",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/commands.ts",
+         "line": 47,
+         "uses": [
+          {
+           "in": "siblingBlock",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/commands.ts#L81"
+          }
+         ]
         }
        ]
       },
@@ -1121,28 +1948,66 @@
          "why": "Reject a second part of the same type",
          "key": true,
          "kind": "u",
-         "cat": "guard"
+         "cat": "guard",
+         "uses": []
         },
         {
          "name": "keepsTitles",
          "why": "An edit keeps titles intact",
          "key": true,
          "kind": "u",
-         "cat": "guard"
+         "cat": "guard",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/plugins/BannerTitleGuardPlugin/plugin.ts",
+         "line": 22,
+         "uses": [
+          {
+           "in": "bannerTitleGuardPlugin",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/plugins/BannerTitleGuardPlugin/plugin.ts#L40"
+          }
+         ]
         },
         {
          "name": "changedRange",
          "why": "Range changed by a transaction",
          "key": true,
          "kind": "s",
-         "cat": "guard"
+         "cat": "guard",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/changedRange.ts",
+         "line": 14,
+         "uses": [
+          {
+           "in": "coveringRanges",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/changedRange.ts#L56"
+          },
+          {
+           "in": "keepsTitles",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/plugins/BannerTitleGuardPlugin/plugin.ts#L24"
+          },
+          {
+           "in": "oneChildPerBanner",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/oneChildPerBanner.ts#L22"
+          }
+         ]
         },
         {
          "name": "coveringRanges",
          "why": "Ranges of a transaction batch",
          "key": false,
          "kind": "s",
-         "cat": "guard"
+         "cat": "guard",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/changedRange.ts",
+         "line": 53,
+         "uses": [
+          {
+           "in": "joinTextLines",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/joinTextLines.ts#L12"
+          }
+         ]
         }
        ]
       },
@@ -1154,56 +2019,125 @@
          "why": "Typing without marks",
          "key": false,
          "kind": "u",
-         "cat": "text"
+         "cat": "text",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/plainTextInput.ts",
+         "line": 7,
+         "uses": [
+          {
+           "in": "bannerTitleGuardPlugin",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/plugins/BannerTitleGuardPlugin/plugin.ts#L48"
+          }
+         ]
         },
         {
          "name": "joinTextLines",
          "why": "Join lines into one",
          "key": false,
          "kind": "u",
-         "cat": "text"
+         "cat": "text",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/joinTextLines.ts",
+         "line": 7,
+         "uses": [
+          {
+           "in": "bannerTitleGuardPlugin",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/plugins/BannerTitleGuardPlugin/plugin.ts#L42"
+          }
+         ]
         },
         {
          "name": "pasteLine",
          "why": "Paste as one line of text",
          "key": true,
          "kind": "u",
-         "cat": "text"
+         "cat": "text",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/pasteTarget.ts",
+         "line": 94,
+         "uses": [
+          {
+           "in": "bannerTitleTextPastePlugin",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/plugins/BannerTitlePastePlugin/plugin.ts#L74"
+          }
+         ]
         },
         {
          "name": "dropLine",
          "why": "Drop as one line",
          "key": false,
          "kind": "u",
-         "cat": "text"
+         "cat": "text",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/pasteTarget.ts",
+         "line": 74,
+         "uses": [
+          {
+           "in": "bannerTitlePastePlugin",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/plugins/BannerTitlePastePlugin/plugin.ts#L92"
+          }
+         ]
         },
         {
          "name": "trackDrop",
          "why": "Remember the drop position",
          "key": false,
          "kind": "s",
-         "cat": "text"
+         "cat": "text",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/pasteTarget.ts",
+         "line": 19,
+         "uses": [
+          {
+           "in": "bannerTitlePastePlugin",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/plugins/BannerTitlePastePlugin/plugin.ts#L101"
+          }
+         ]
         },
         {
          "name": "innerSlice",
          "why": "Unwrap slice wrappers",
          "key": false,
          "kind": "s",
-         "cat": "text"
+         "cat": "text",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/pasteTarget.ts",
+         "line": 61,
+         "uses": [
+          {
+           "in": "bannerTitlePastePlugin",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/plugins/BannerTitlePastePlugin/plugin.ts#L92"
+          },
+          {
+           "in": "dropLine",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/pasteTarget.ts#L75"
+          }
+         ]
         },
         {
          "name": "markupSlice",
          "why": "Slice Markdown for parsing",
          "key": false,
          "kind": "s",
-         "cat": "text"
+         "cat": "text",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/pasteTarget.ts",
+         "line": 45,
+         "uses": [
+          {
+           "in": "bannerTitlePastePlugin",
+           "pr": 1481,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/plugins/BannerTitlePastePlugin/plugin.ts#L116"
+          }
+         ]
         },
         {
          "name": "headerTitlePastePlugin",
          "why": "Paste and drop into the title",
          "key": false,
          "kind": "u",
-         "cat": "text"
+         "cat": "text",
+         "uses": []
         }
        ]
       }
@@ -1225,35 +2159,80 @@
          "why": "Block toolbar with menus and focus",
          "key": true,
          "kind": "u",
-         "cat": "ui"
+         "cat": "ui",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/blockToolbar.tsx",
+         "line": 116,
+         "uses": [
+          {
+           "in": "BannerTitleToolbar",
+           "pr": 1482,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/plugins/BannerTitleTooltipPlugin/BannerTitleToolbar.tsx#L65"
+          }
+         ]
         },
         {
          "name": "blockTooltip",
          "why": "Toolbar display at the block under the cursor",
          "key": true,
          "kind": "u",
-         "cat": "ui"
+         "cat": "ui",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/blockToolbar.tsx",
+         "line": 277,
+         "uses": [
+          {
+           "in": "bannerTitleTooltip",
+           "pr": 1482,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/plugins/BannerTitleTooltipPlugin/index.tsx#L9"
+          }
+         ]
         },
         {
          "name": "optionsButton",
          "why": "Menu button for choosing a value",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "uses": [
+          {
+           "in": "BannerTitleToolbar",
+           "pr": 1482,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/plugins/BannerTitleTooltipPlugin/BannerTitleToolbar.tsx#L48"
+          }
+         ],
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/blockToolbar.tsx",
+         "line": 58
         },
         {
          "name": "moveFocus",
          "why": "Arrows between buttons and items",
          "key": false,
          "kind": "u",
-         "cat": "nav"
+         "cat": "nav",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/blockToolbar.tsx",
+         "line": 93,
+         "uses": [
+          {
+           "in": "BlockToolbar",
+           "pr": 1482,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/blockToolbar.tsx#L132"
+          }
+         ]
         },
         {
          "name": "pointerFocusEvents",
          "why": "Mouse focus without showing the toolbar",
          "key": false,
          "kind": "u",
-         "cat": "ui"
+         "cat": "ui",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/blockToolbar.tsx",
+         "line": 261,
+         "uses": [
+          {
+           "in": "blockTooltip",
+           "pr": 1482,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/blockToolbar.tsx#L288"
+          }
+         ]
         }
        ]
       },
@@ -1265,28 +2244,48 @@
          "why": "Title size and color menus",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "uses": []
         },
         {
          "name": "setHeaderTitleAttrs",
          "why": "Title size and color",
          "key": false,
          "kind": "s",
-         "cat": "cmd"
+         "cat": "cmd",
+         "uses": []
         },
         {
          "name": "setNodeAttrs",
          "why": "Factory: changed node attributes",
          "key": true,
          "kind": "s",
-         "cat": "cmd"
+         "cat": "cmd",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/commands.ts",
+         "line": 27,
+         "uses": [
+          {
+           "in": "commands.ts",
+           "pr": 1482,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/commands.ts#L12"
+          }
+         ]
         },
         {
          "name": "colorIcon",
          "why": "Color swatch icon",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/plugins/BannerTitleTooltipPlugin/BannerTitleToolbar.tsx",
+         "line": 19,
+         "uses": [
+          {
+           "in": "BannerTitleToolbar.tsx",
+           "pr": 1482,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/0349e8d3a7016109d06d4de2516a1cce859ea5e3/packages/editor-banner-extension/src/wysiwyg/extensions/BannerTitle/plugins/BannerTitleTooltipPlugin/BannerTitleToolbar.tsx#L34"
+          }
+         ]
         }
        ]
       }
@@ -1315,35 +2314,48 @@
          "why": "The :::header-content container",
          "key": true,
          "kind": "s",
-         "cat": "md"
+         "cat": "md",
+         "uses": []
         },
         {
          "name": "keepOneDescriptionPerHeader",
          "why": "One description per banner",
          "key": true,
          "kind": "u",
-         "cat": "md"
+         "cat": "md",
+         "uses": []
         },
         {
          "name": "keepOneTitlePerHeader",
          "why": "A second title from the description → text",
          "key": false,
          "kind": "u",
-         "cat": "md"
+         "cat": "md",
+         "uses": []
         },
         {
          "name": "asParagraph",
          "why": "A block as a paragraph from the source",
          "key": false,
          "kind": "u",
-         "cat": "md"
+         "cat": "md",
+         "file": "packages/plugin-banner/src/banner-content/plugin.ts",
+         "line": 44,
+         "uses": [
+          {
+           "in": "keepOneTitlePerBanner",
+           "pr": 1483,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/plugin-banner/src/banner-content/plugin.ts#L81"
+          }
+         ]
         },
         {
          "name": "headerContentAttrs",
          "why": "Description class",
          "key": false,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         }
        ]
       }
@@ -1365,28 +2377,32 @@
          "why": "Description node",
          "key": false,
          "kind": "s",
-         "cat": "schema"
+         "cat": "schema",
+         "uses": []
         },
         {
          "name": "HeaderContentParserSpecs",
          "why": "Tokens → node",
          "key": false,
          "kind": "s",
-         "cat": "md"
+         "cat": "md",
+         "uses": []
         },
         {
          "name": "unwrapOutsideHeader",
          "why": "Description outside a banner → blocks",
          "key": false,
          "kind": "u",
-         "cat": "md"
+         "cat": "md",
+         "uses": []
         },
         {
          "name": "HeaderContentSerializerSpecs",
          "why": "Node → :::header-content",
          "key": false,
          "kind": "s",
-         "cat": "md"
+         "cat": "md",
+         "uses": []
         }
        ]
       },
@@ -1398,21 +2414,24 @@
          "why": "Enter in an empty paragraph does nothing",
          "key": false,
          "kind": "u",
-         "cat": "cmd"
+         "cat": "cmd",
+         "uses": []
         },
         {
          "name": "clearHeaderContent",
          "why": "Delete all → empty paragraph",
          "key": false,
          "kind": "u",
-         "cat": "cmd"
+         "cat": "cmd",
+         "uses": []
         },
         {
          "name": "stopAtHeaderContentStart/End",
          "why": "Description edges do not join",
          "key": false,
          "kind": "u",
-         "cat": "nav"
+         "cat": "nav",
+         "uses": []
         }
        ]
       },
@@ -1424,28 +2443,40 @@
          "why": "Extra descriptions after an edit → blocks",
          "key": true,
          "kind": "u",
-         "cat": "guard"
+         "cat": "guard",
+         "uses": []
         },
         {
          "name": "misplacedHeaderContents",
          "why": "Find extra descriptions",
          "key": true,
          "kind": "u",
-         "cat": "guard"
+         "cat": "guard",
+         "uses": []
         },
         {
          "name": "unwrapHeaderContents",
          "why": "Replace a description with its blocks",
          "key": false,
          "kind": "u",
-         "cat": "guard"
+         "cat": "guard",
+         "uses": []
         },
         {
          "name": "changedBlocks",
          "why": "Blocks touched by transactions",
          "key": false,
          "kind": "s",
-         "cat": "guard"
+         "cat": "guard",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/BannerContent/plugins/BannerContentUnwrapPlugin/plugin.ts",
+         "line": 9,
+         "uses": [
+          {
+           "in": "bannerContentUnwrapPlugin",
+           "pr": 1484,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/2830e3090edb5ae7262ede585c1568b62562d1bc/packages/editor-banner-extension/src/wysiwyg/extensions/BannerContent/plugins/BannerContentUnwrapPlugin/plugin.ts#L64"
+          }
+         ]
         }
        ]
       }
@@ -1467,14 +2498,16 @@
          "why": "New description with sample text",
          "key": false,
          "kind": "s",
-         "cat": "schema"
+         "cat": "schema",
+         "uses": []
         },
         {
          "name": "headerPart.adopt",
          "why": "The only paragraph → description",
          "key": true,
          "kind": "u",
-         "cat": "schema"
+         "cat": "schema",
+         "uses": []
         }
        ]
       }
@@ -1503,14 +2536,24 @@
          "why": "The ::header-image directive and rendering",
          "key": true,
          "kind": "s",
-         "cat": "md"
+         "cat": "md",
+         "uses": []
         },
         {
          "name": "afterBannerImage",
          "why": "The banner already has an image",
          "key": true,
          "kind": "u",
-         "cat": "md"
+         "cat": "md",
+         "file": "packages/plugin-banner/src/banner-image/plugin.ts",
+         "line": 11,
+         "uses": [
+          {
+           "in": "bannerImagePlugin",
+           "pr": 1486,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/plugin-banner/src/banner-image/plugin.ts#L33"
+          }
+         ]
         }
        ]
       },
@@ -1522,35 +2565,54 @@
          "why": "Normalize src, alt, title",
          "key": false,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         },
         {
          "name": "headerImageValues",
          "why": "Values other than the default",
          "key": false,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         },
         {
          "name": "headerImageAttrs",
          "why": "HTML attributes and gallery exclusion",
          "key": false,
          "kind": "u",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         },
         {
          "name": "headerImageFromAttrs",
          "why": "Model from attributes",
          "key": false,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         },
         {
          "name": "isExcludedFromGallery",
          "why": "Viewer: skip in the gallery",
          "key": false,
          "kind": "s",
-         "cat": "md"
+         "cat": "md",
+         "type": "guard",
+         "file": "packages/viewer/src/extensions/FilesGallery/helpers/collect-gallery.ts",
+         "line": 12,
+         "uses": [
+          {
+           "in": "FilesGallery",
+           "pr": 1486,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/viewer/src/extensions/FilesGallery/FilesGallery.tsx#L54"
+          },
+          {
+           "in": "collectGallery",
+           "pr": 1486,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/viewer/src/extensions/FilesGallery/helpers/collect-gallery.ts#L33"
+          }
+         ]
         }
        ]
       }
@@ -1572,35 +2634,40 @@
          "why": "Atom node and banner part",
          "key": false,
          "kind": "s",
-         "cat": "schema"
+         "cat": "schema",
+         "uses": []
         },
         {
          "name": "HeaderImageParserSpecs",
          "why": "Token → node",
          "key": false,
          "kind": "s",
-         "cat": "md"
+         "cat": "md",
+         "uses": []
         },
         {
          "name": "HeaderImageSerializerSpecs",
          "why": "Node → ::header-image",
          "key": false,
          "kind": "s",
-         "cat": "md"
+         "cat": "md",
+         "uses": []
         },
         {
          "name": "WHeaderImageNodeView",
          "why": "img or placeholder in the editor",
          "key": true,
          "kind": "u",
-         "cat": "dom"
+         "cat": "dom",
+         "uses": []
         },
         {
          "name": "HeaderImagePlaceholder",
          "why": "\"Add image\" placeholder",
          "key": false,
          "kind": "s",
-         "cat": "dom"
+         "cat": "dom",
+         "uses": []
         }
        ]
       },
@@ -1612,28 +2679,32 @@
          "why": "Attributes; an unsafe URL is rejected",
          "key": true,
          "kind": "s",
-         "cat": "cmd"
+         "cat": "cmd",
+         "uses": []
         },
         {
          "name": "removeHeaderImage",
          "why": "Remove and place the cursor nearby",
          "key": false,
          "kind": "u",
-         "cat": "cmd"
+         "cat": "cmd",
+         "uses": []
         },
         {
          "name": "selectHeaderImageBefore/After",
          "why": "Backspace/Delete select the image",
          "key": false,
          "kind": "s",
-         "cat": "nav"
+         "cat": "nav",
+         "uses": []
         },
         {
          "name": "selectedHeaderImage",
          "why": "Selected image",
          "key": false,
          "kind": "s",
-         "cat": "nav"
+         "cat": "nav",
+         "uses": []
         }
        ]
       },
@@ -1645,14 +2716,16 @@
          "why": "Click selects and opens the window",
          "key": false,
          "kind": "u",
-         "cat": "dom"
+         "cat": "dom",
+         "uses": []
         },
         {
          "name": "headerImageGuardPlugin",
          "why": "One image per banner",
          "key": false,
          "kind": "s",
-         "cat": "guard"
+         "cat": "guard",
+         "uses": []
         }
        ]
       }
@@ -1674,28 +2747,32 @@
          "why": "Open/close the window, Enter and Escape",
          "key": true,
          "kind": "u",
-         "cat": "ui"
+         "cat": "ui",
+         "uses": []
         },
         {
          "name": "HeaderImagePopupView",
          "why": "Window display at the selected image",
          "key": true,
          "kind": "u",
-         "cat": "ui"
+         "cat": "ui",
+         "uses": []
         },
         {
          "name": "HeaderImagePopup",
          "why": "Window with the ImageSource form",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "uses": []
         },
         {
          "name": "setHeaderImagePopupOpen",
          "why": "Open meta flag in a transaction",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "uses": []
         }
        ]
       },
@@ -1707,28 +2784,146 @@
          "why": "Upload a file into the image",
          "key": false,
          "kind": "s",
-         "cat": "upload"
+         "cat": "upload",
+         "uses": [
+          {
+           "in": "BackgroundField.tsx",
+           "pr": 1487,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundField.tsx#L18"
+          },
+          {
+           "in": "BannerToolbar",
+           "pr": 1487,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/BannerToolbar.tsx#L79"
+          },
+          {
+           "in": "ImageSource",
+           "pr": 1487,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor-banner-extension/src/wysiwyg/components/settings/ImageSource.tsx#L33"
+          },
+          {
+           "in": "ImageSource.tsx",
+           "pr": 1487,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor-banner-extension/src/wysiwyg/components/settings/ImageSource.tsx#L22"
+          },
+          {
+           "in": "ImageTab",
+           "pr": 1487,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BackgroundPopup.tsx#L204"
+          },
+          {
+           "in": "imageFileError",
+           "pr": 1487,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor-banner-extension/src/wysiwyg/components/settings/image.ts#L49"
+          },
+          {
+           "in": "plugin.ts",
+           "pr": 1487,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor-banner-extension/src/wysiwyg/plugins/BannerUploadPlugin/plugin.ts#L16"
+          },
+          {
+           "in": "uploadHint",
+           "pr": 1487,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor-banner-extension/src/wysiwyg/components/settings/image.ts#L41"
+          },
+          {
+           "in": "BannerImagePopup",
+           "pr": 1488,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor-banner-extension/src/wysiwyg/extensions/BannerImage/plugins/BannerImagePopupPlugin/BannerImagePopup.tsx#L26"
+          },
+          {
+           "in": "BannerImagePopup.tsx",
+           "pr": 1488,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor-banner-extension/src/wysiwyg/extensions/BannerImage/plugins/BannerImagePopupPlugin/BannerImagePopup.tsx#L15"
+          },
+          {
+           "in": "plugin.tsx",
+           "pr": 1488,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor-banner-extension/src/wysiwyg/extensions/BannerImage/plugins/BannerImagePopupPlugin/plugin.tsx#L80"
+          },
+          {
+           "in": "FileUploadWidget.createRenderItem",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor/src/markup/codemirror/files-upload-plugin/plugin.ts#L70"
+          },
+          {
+           "in": "FileUploadWidget.toDOM",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor/src/markup/codemirror/files-upload-plugin/plugin.ts#L38"
+          },
+          {
+           "in": "drop",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor/src/markup/codemirror/files-upload-plugin/plugin.ts#L284"
+          },
+          {
+           "in": "paste",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor/src/markup/codemirror/files-upload-plugin/plugin.ts#L263"
+          },
+          {
+           "in": "widget.tsx",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor/src/markup/codemirror/files-upload-plugin/widget.tsx#L24"
+          }
+         ]
         },
         {
          "name": "setSrc",
          "why": "Write a link, canceling the upload",
          "key": false,
          "kind": "u",
-         "cat": "upload"
+         "cat": "upload",
+         "uses": [
+          {
+           "in": "plugin.tsx",
+           "pr": 1488,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor-banner-extension/src/wysiwyg/extensions/BannerImage/plugins/BannerImagePopupPlugin/plugin.tsx#L113"
+          },
+          {
+           "in": "FileForm",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor/src/forms/FileForm.tsx#L48"
+          }
+         ]
         },
         {
          "name": "reset",
          "why": "Restore the placeholder",
          "key": false,
          "kind": "s",
-         "cat": "upload"
+         "cat": "upload",
+         "file": "packages/editor/src/bundle/MarkupManager.ts",
+         "line": 84,
+         "uses": [
+          {
+           "in": "MarkupManager.reset",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor/src/bundle/MarkupManager.ts#L88"
+          },
+          {
+           "in": "MarkupManager.ts",
+           "pr": null,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor/src/bundle/MarkupManager.ts#L12"
+          }
+         ],
+         "code": "https://github.com/gravity-ui/markdown-editor/blob/d475f5ad018ba7f7f8822cf01046dc08cd597e32/packages/editor/src/bundle/MarkupManager.ts#L84"
         },
         {
          "name": "cancelUpload",
          "why": "Cancel the upload into the image",
          "key": false,
          "kind": "s",
-         "cat": "upload"
+         "cat": "upload",
+         "uses": [
+          {
+           "in": "BannerImagePopup",
+           "pr": 1488,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor-banner-extension/src/wysiwyg/extensions/BannerImage/plugins/BannerImagePopupPlugin/BannerImagePopup.tsx#L27"
+          }
+         ],
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/BannerImage/plugins/BannerImagePopupPlugin/BannerImagePopup.tsx",
+         "line": 16
         }
        ]
       }
@@ -1757,21 +2952,24 @@
          "why": "Normalize align and vertical",
          "key": true,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         },
         {
          "name": "headerLayoutValues",
          "why": "Values other than the default",
          "key": false,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         },
         {
          "name": "headerLayoutFromAttrs",
          "why": "Layout from data attributes",
          "key": false,
          "kind": "s",
-         "cat": "model"
+         "cat": "model",
+         "uses": []
         }
        ]
       },
@@ -1783,14 +2981,25 @@
          "why": "Layout; one undo step per change",
          "key": true,
          "kind": "s",
-         "cat": "cmd"
+         "cat": "cmd",
+         "uses": []
         },
         {
          "name": "SettingsFields (alignment)",
          "why": "Two alignment SegmentedSelects",
          "key": false,
          "kind": "s",
-         "cat": "ui"
+         "cat": "ui",
+         "file": "packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/SettingsFields.tsx",
+         "line": 50,
+         "uses": [
+          {
+           "in": "BannerSettings",
+           "pr": 1369,
+           "url": "https://github.com/gravity-ui/markdown-editor/blob/15e1e07dfa6f5b4a975554c7f1e5dd07d0fd8b51/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/BannerSettings.tsx#L101"
+          }
+         ],
+         "code": "https://github.com/gravity-ui/markdown-editor/blob/d475f5ad018ba7f7f8822cf01046dc08cd597e32/packages/editor-banner-extension/src/wysiwyg/extensions/Banner/plugins/BannerTooltipPlugin/Settings/SettingsFields.tsx#L19"
         }
        ]
       }
@@ -1798,5 +3007,6 @@
     }
    ]
   }
- ]
+ ],
+ "default": "main"
 }
